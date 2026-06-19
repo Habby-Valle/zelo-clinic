@@ -22,6 +22,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { useClinic } from "@/features/clinic/hooks"
+import { useSystemConfig } from "@/features/system-config"
 
 type Environment = "development" | "homologation" | "production"
 
@@ -68,7 +69,7 @@ function EnvironmentBadge() {
   )
 }
 
-const navItems = [
+const allNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/patients", label: "Pacientes", icon: UserCircle },
   { href: "/users", label: "Cuidadores", icon: Users },
@@ -80,11 +81,15 @@ const navItems = [
   { href: "/plan", label: "Plano", icon: CreditCard },
   { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
-]
+] as const
 
 export function Sidebar() {
   const pathname = usePathname()
   const { data: clinic } = useClinic()
+  const { data: systemConfig } = useSystemConfig()
+  const navItems = allNavItems.filter(
+    (item) => item.href !== "/feedback" || systemConfig?.feedback_visible !== false
+  )
   const clinicLogo = clinic?.media_url
   const clinicName = clinic?.name ?? "Clínica"
 

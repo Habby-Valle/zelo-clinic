@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, startTransition } from "react"
 import { Camera, Loader2, Save, Lock } from "lucide-react"
 import { toast } from "sonner"
 import { useForm } from "react-hook-form"
@@ -59,16 +59,18 @@ export function SettingsClient() {
 
   useEffect(() => {
     if (!clinic) return
-    setPhone(clinic.phone ?? "")
-    setDocument(clinic.document ?? "")
-    setZipCode(clinic.address?.zip_code ?? "")
-    setStreet(clinic.address?.street ?? "")
-    setNumber(clinic.address?.number ?? "")
-    setComplement(clinic.address?.complement ?? "")
-    setNeighborhood(clinic.address?.neighborhood ?? "")
-    setCity(clinic.address?.city ?? "")
-    setState(clinic.address?.state ?? "")
-    setCountry(clinic.address?.country ?? "Brasil")
+    startTransition(() => {
+      setPhone(clinic.phone ?? "")
+      setDocument(clinic.document ?? "")
+      setZipCode(clinic.address?.zip_code ?? "")
+      setStreet(clinic.address?.street ?? "")
+      setNumber(clinic.address?.number ?? "")
+      setComplement(clinic.address?.complement ?? "")
+      setNeighborhood(clinic.address?.neighborhood ?? "")
+      setCity(clinic.address?.city ?? "")
+      setState(clinic.address?.state ?? "")
+      setCountry(clinic.address?.country ?? "Brasil")
+    })
   }, [clinic])
 
   const clinicName = clinic?.name ?? ""

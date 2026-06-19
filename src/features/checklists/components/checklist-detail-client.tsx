@@ -6,7 +6,7 @@ import { ArrowLeft, Calendar, CheckSquare, ListChecks, Pencil, Trash2, Loader2, 
 import { toast } from "sonner"
 
 import { useChecklist, useUpdateChecklist, useDeleteChecklist, useDuplicateChecklist } from "@/features/checklists/hooks"
-import type { ChecklistDetail, ChecklistItemType } from "@/features/checklists/types"
+import type { ChecklistDetail } from "@/features/checklists/types"
 import { MaterialIcon } from "@/components/shared/material-icon"
 import { MaterialIconPicker } from "@/components/shared/material-icon-picker"
 import { Badge } from "@/components/ui/badge"

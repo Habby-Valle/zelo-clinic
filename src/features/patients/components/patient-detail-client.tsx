@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, startTransition } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -92,9 +92,11 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
   useEffect(() => {
     if (patient?.caregiver_assignments) {
-      setSelectedCaregivers(
-        patient.caregiver_assignments.map((a) => String(a.caregiver_id))
-      )
+      startTransition(() => {
+        setSelectedCaregivers(
+          patient.caregiver_assignments.map((a) => String(a.caregiver_id))
+        )
+      })
     }
   }, [patient])
 

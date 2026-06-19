@@ -202,7 +202,7 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
 
         {items.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Nenhum item adicionado. Clique em "Adicionar Item" para começar.
+            Nenhum item adicionado. Clique em &ldquo;Adicionar Item&rdquo; para começar.
           </p>
         )}
 
