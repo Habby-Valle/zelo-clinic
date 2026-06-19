@@ -79,7 +79,7 @@ const allNavItems = [
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/plan", label: "Plano", icon: CreditCard },
-  { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
+  { href: "/audit-logs", label: "Logs de Auditoria", icon: ScrollText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
 ] as const;
 

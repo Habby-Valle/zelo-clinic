@@ -3,6 +3,8 @@ import { MessageSquare } from "lucide-react";
 import { FeedbackFormClient, FeedbackListClient } from "@/features/feedback";
 import { FeedbackGuard } from "@/features/feedback/components/feedback-guard";
 
+export const metadata = { title: "Feedback — Zelo Clinic" };
+
 export default function FeedbackPage() {
   return (
     <FeedbackGuard>

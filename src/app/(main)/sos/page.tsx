@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { SosClient } from "@/features/sos";
 
+export const metadata = { title: "SOS — Zelo Clinic" };
+
 export default function SosPage() {
   return (
     <div className="space-y-6">

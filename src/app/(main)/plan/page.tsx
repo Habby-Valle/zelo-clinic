@@ -52,6 +52,8 @@ async function PlanContent() {
   );
 }
 
+export const metadata = { title: "Plano — Zelo Clinic" };
+
 export default function PlanPage() {
   return (
     <div className="space-y-6">
