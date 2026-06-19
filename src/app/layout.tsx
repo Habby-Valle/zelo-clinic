@@ -19,6 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={cn("h-full antialiased font-sans", "font-sans", geist.variable)} suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+      </head>
       <body className="min-h-full flex flex-col">
         <Providers>
           {children}

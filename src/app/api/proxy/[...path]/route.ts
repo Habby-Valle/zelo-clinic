@@ -4,7 +4,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
 async function proxy(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params
-  const pathname = "/" + path.join("/")
+  const trailingSlash = request.nextUrl.pathname.endsWith("/") ? "/" : ""
+  const pathname = "/" + path.join("/") + trailingSlash
   const search = request.nextUrl.search
   const url = `${API_URL}${pathname}${search}`
 
