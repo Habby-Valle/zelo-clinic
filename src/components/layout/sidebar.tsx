@@ -79,7 +79,7 @@ const navItems = [
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/plan", label: "Plano", icon: CreditCard },
   { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/admin/settings", label: "Configurações", icon: Settings },
 ]
 
 export function Sidebar() {
