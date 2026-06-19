@@ -54,21 +54,21 @@ export function ResetPasswordForm() {
     return (
       <div className="space-y-8">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
             Senha redefinida!
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             Sua senha foi alterada com sucesso.
           </p>
         </div>
         <div className="space-y-4">
-          <Alert className="border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+          <Alert className="border-primary/20 bg-primary/5 text-primary">
             <CheckCircle2 className="mr-2 h-4 w-4" />
             <AlertDescription>Você já pode fazer login com sua nova senha.</AlertDescription>
           </Alert>
           <Button
             onClick={() => router.push("/login")}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full"
           >
             Ir para login
           </Button>
@@ -80,10 +80,10 @@ export function ResetPasswordForm() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
           Nova senha
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Crie uma senha segura para sua conta.
         </p>
       </div>
@@ -111,7 +111,7 @@ export function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -138,7 +138,7 @@ export function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowConfirm((p) => !p)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
             >
               {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -151,7 +151,7 @@ export function ResetPasswordForm() {
 
         <Button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

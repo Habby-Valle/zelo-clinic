@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -14,8 +15,58 @@ import {
   ScrollText,
   MessageSquare,
   CreditCard,
+  Bug,
+  TestTube,
+  CheckCircle,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { useClinic } from "@/features/clinic/hooks"
+
+type Environment = "development" | "homologation" | "production"
+
+const envConfig: Record<
+  Environment,
+  { label: string; icon: typeof Bug; color: string; bgColor: string }
+> = {
+  development: {
+    label: "DESENVOLVIMENTO",
+    icon: Bug,
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  homologation: {
+    label: "HOMOLOGAÇÃO",
+    icon: TestTube,
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+  },
+  production: {
+    label: "PRODUÇÃO",
+    icon: CheckCircle,
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+}
+
+function EnvironmentBadge() {
+  const env = (process.env.NEXT_PUBLIC_APP_ENV ?? "development") as Environment
+  const config = envConfig[env] ?? envConfig.development
+  const EnvIcon = config.icon
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-bold tracking-wider uppercase",
+        config.color,
+        config.bgColor
+      )}
+    >
+      <EnvIcon className="h-3 w-3" />
+      <span>{config.label}</span>
+    </div>
+  )
+}
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,29 +84,61 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { data: clinic } = useClinic()
+  const clinicLogo = clinic?.media_url
+  const clinicName = clinic?.name ?? "Clínica"
 
   return (
-    <div className="flex h-full flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex h-16 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
-        <span className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Zelo Clinic</span>
+    <aside className="flex h-full w-64 flex-col border-r bg-card">
+      <div className="flex h-16 items-center gap-3 border-b px-5">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+          <Image
+            src={clinicLogo || "/logo.png"}
+            alt={clinicLogo ? clinicName : "Zelo"}
+            fill
+            sizes="36px"
+            className="object-contain p-1"
+            unoptimized
+          />
+        </div>
+        <div className="min-w-0 leading-none">
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+            {clinicName}
+          </p>
+          <p className="truncate text-sm font-bold">{clinicName}</p>
+        </div>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              pathname.startsWith(href)
-                ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
-                : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
-            )}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </Link>
-        ))}
+
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+        {navItems.map((item) => {
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/")
+          const Icon = item.icon
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="flex-1">{item.label}</span>
+            </Link>
+          )
+        })}
       </nav>
-    </div>
+
+      <div className="border-t px-4 py-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-muted-foreground">v0.1.0</p>
+          <EnvironmentBadge />
+        </div>
+      </div>
+    </aside>
   )
 }

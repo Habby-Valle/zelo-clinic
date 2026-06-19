@@ -45,10 +45,10 @@ export function LoginForm() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
           Bem-vindo de volta
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Acesse o painel da sua clínica.
         </p>
       </div>
@@ -81,7 +81,7 @@ export function LoginForm() {
             <Label htmlFor="password">Senha</Label>
             <Link
               href="/forgot-password"
-              className="text-xs text-blue-600 hover:text-blue-700 hover:underline underline-offset-4"
+              className="text-xs text-primary hover:underline underline-offset-4"
             >
               Esqueceu a senha?
             </Link>
@@ -100,7 +100,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -111,7 +111,7 @@ export function LoginForm() {
           )}
         </div>
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isPending}>
+        <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

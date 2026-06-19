@@ -46,10 +46,10 @@ export function ForgotPasswordForm() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
           Recuperar senha
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Informe seu e-mail e enviaremos um código de verificação.
         </p>
       </div>
@@ -62,7 +62,7 @@ export function ForgotPasswordForm() {
         )}
 
         {sent && (
-          <Alert className="border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+          <Alert className="border-primary/20 bg-primary/5 text-primary">
             <CheckCircle2 className="mr-2 h-4 w-4" />
             <AlertDescription>Código enviado! Redirecionando…</AlertDescription>
           </Alert>
@@ -86,7 +86,7 @@ export function ForgotPasswordForm() {
 
         <Button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full"
           disabled={isSubmitting || sent}
         >
           {isSubmitting ? (
@@ -99,9 +99,9 @@ export function ForgotPasswordForm() {
           )}
         </Button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-muted-foreground">
           Lembrou a senha?{" "}
-          <Link href="/login" className="text-blue-600 hover:text-blue-700 hover:underline underline-offset-4">
+          <Link href="/login" className="text-primary hover:underline underline-offset-4">
             Voltar ao login
           </Link>
         </p>

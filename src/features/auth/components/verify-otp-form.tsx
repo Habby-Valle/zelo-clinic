@@ -51,12 +51,12 @@ export function VerifyOtpForm() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
           Verificar código
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Digite o código de 6 dígitos enviado para{" "}
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">{email || "seu e-mail"}</span>.
+          <span className="font-medium text-foreground">{email || "seu e-mail"}</span>.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export function VerifyOtpForm() {
 
         <Button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -103,7 +103,7 @@ export function VerifyOtpForm() {
 
         <p className="text-center text-sm text-zinc-500">
           Não recebeu o código?{" "}
-          <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 hover:underline underline-offset-4">
+          <Link href="/forgot-password" className="text-primary hover:underline underline-offset-4">
             Solicitar novo
           </Link>
         </p>
