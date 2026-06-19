@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { UserCheck, Download } from "lucide-react"
+import { UserCheck, Download } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -10,16 +10,16 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { CaregiverReportData } from "../types"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { CaregiverReportData } from "../types";
 
 interface CaregiversReportProps {
-  data: CaregiverReportData[]
-  loading: boolean
-  onExport?: () => void
+  data: CaregiverReportData[];
+  loading: boolean;
+  onExport?: () => void;
 }
 
 export function CaregiversReport({ data, loading, onExport }: CaregiversReportProps) {
@@ -33,7 +33,7 @@ export function CaregiversReport({ data, loading, onExport }: CaregiversReportPr
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -63,9 +63,15 @@ export function CaregiversReport({ data, loading, onExport }: CaregiversReportPr
                   <tr className="border-b text-left">
                     <th className="pb-2 font-medium text-muted-foreground">Cuidador</th>
                     <th className="pb-2 text-right font-medium text-muted-foreground">Turnos</th>
-                    <th className="pb-2 text-right font-medium text-muted-foreground">Concluídos</th>
-                    <th className="pb-2 text-right font-medium text-muted-foreground">Cancelados</th>
-                    <th className="pb-2 text-right font-medium text-muted-foreground">Checklists</th>
+                    <th className="pb-2 text-right font-medium text-muted-foreground">
+                      Concluídos
+                    </th>
+                    <th className="pb-2 text-right font-medium text-muted-foreground">
+                      Cancelados
+                    </th>
+                    <th className="pb-2 text-right font-medium text-muted-foreground">
+                      Checklists
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -102,8 +108,18 @@ export function CaregiversReport({ data, loading, onExport }: CaregiversReportPr
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="completedShifts" name="Turnos Concluídos" fill="#22c55e" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="completedChecklists" name="Checklists" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  <Bar
+                    dataKey="completedShifts"
+                    name="Turnos Concluídos"
+                    fill="#22c55e"
+                    radius={[0, 4, 4, 0]}
+                  />
+                  <Bar
+                    dataKey="completedChecklists"
+                    name="Checklists"
+                    fill="#3b82f6"
+                    radius={[0, 4, 4, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -111,5 +127,5 @@ export function CaregiversReport({ data, loading, onExport }: CaregiversReportPr
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

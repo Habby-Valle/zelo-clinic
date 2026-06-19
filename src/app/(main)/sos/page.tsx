@@ -1,6 +1,6 @@
-import { Suspense } from "react"
-import { AlertTriangle } from "lucide-react"
-import { SosClient } from "@/features/sos"
+import { Suspense } from "react";
+import { AlertTriangle } from "lucide-react";
+import { SosClient } from "@/features/sos";
 
 export default function SosPage() {
   return (
@@ -10,14 +10,12 @@ export default function SosPage() {
           <AlertTriangle className="h-6 w-6" />
           Alertas SOS
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          Alertas de emergência da clínica.
-        </p>
+        <p className="mt-1 text-muted-foreground">Alertas de emergência da clínica.</p>
       </div>
 
       <Suspense>
         <SosClient />
       </Suspense>
     </div>
-  )
+  );
 }

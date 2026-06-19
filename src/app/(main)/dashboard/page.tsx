@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "next/link";
 import {
   Users,
   UserCog,
@@ -9,11 +9,11 @@ import {
   ArrowRight,
   CheckCircle2,
   TrendingUp,
-} from "lucide-react"
-import { requireClinicAdmin } from "@/lib/auth"
-import { fetchDashboard, fetchRecentShifts } from "@/features/dashboard"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "lucide-react";
+import { requireClinicAdmin } from "@/lib/auth";
+import { fetchDashboard, fetchRecentShifts } from "@/features/dashboard";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,21 +21,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Dashboard — Zelo Clinic" }
+export const metadata = { title: "Dashboard — Zelo Clinic" };
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string | null): string {
-  if (!iso) return "—"
+  if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -43,23 +43,23 @@ const STATUS_LABEL: Record<string, string> = {
   completed: "Concluído",
   cancelled: "Cancelado",
   scheduled: "Agendado",
-}
+};
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   in_progress: "secondary",
   completed: "default",
   cancelled: "destructive",
   scheduled: "outline",
-}
+};
 
 // ─── components ─────────────────────────────────────────────────────────────
 
 interface KpiCardProps {
-  label: string
-  value: number | string
-  sub?: string
-  icon: React.ElementType
-  highlight?: "blue" | "red" | "green" | "default"
+  label: string;
+  value: number | string;
+  sub?: string;
+  icon: React.ElementType;
+  highlight?: "blue" | "red" | "green" | "default";
 }
 
 function KpiCard({ label, value, sub, icon: Icon, highlight = "default" }: KpiCardProps) {
@@ -90,7 +90,7 @@ function KpiCard({ label, value, sub, icon: Icon, highlight = "default" }: KpiCa
       <p className="mt-3 text-3xl font-bold text-zinc-900 dark:text-zinc-50">{value}</p>
       {sub && <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{sub}</p>}
     </div>
-  )
+  );
 }
 
 function QuickActionLink({
@@ -100,11 +100,11 @@ function QuickActionLink({
   description,
   variant = "default",
 }: {
-  href: string
-  icon: React.ElementType
-  label: string
-  description: string
-  variant?: "default" | "danger"
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  description: string;
+  variant?: "default" | "danger";
 }) {
   return (
     <Link
@@ -146,20 +146,20 @@ function QuickActionLink({
       </div>
       <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-zinc-400" />
     </Link>
-  )
+  );
 }
 
 // ─── page ───────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { user } = await requireClinicAdmin()
+  const { user } = await requireClinicAdmin();
 
   const [dashboard, recentShifts] = await Promise.all([
     fetchDashboard().catch(() => null),
     fetchRecentShifts(),
-  ])
+  ]);
 
-  const kpis = dashboard?.kpis
+  const kpis = dashboard?.kpis;
 
   return (
     <div className="space-y-6">
@@ -168,7 +168,8 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Bem-vindo, <span className="font-medium text-zinc-700 dark:text-zinc-300">{user.name}</span>
+            Bem-vindo,{" "}
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">{user.name}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -216,7 +217,10 @@ export default async function DashboardPage() {
           </>
         ) : (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <div
+              key={i}
+              className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
+            >
               <Skeleton className="h-4 w-24" />
               <Skeleton className="mt-3 h-8 w-12" />
               <Skeleton className="mt-1 h-3 w-32" />
@@ -258,7 +262,9 @@ export default async function DashboardPage() {
         <div className="lg:col-span-3">
           <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Turnos Recentes</h2>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Turnos Recentes
+              </h2>
               <Link
                 href="/shifts"
                 className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
@@ -312,7 +318,9 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div className="border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Ações Rápidas</h2>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Ações Rápidas
+              </h2>
             </div>
             <div className="space-y-2 p-4">
               <QuickActionLink
@@ -361,5 +369,5 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

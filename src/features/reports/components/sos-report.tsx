@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { AlertTriangle, Clock, CheckCircle, XCircle, Download } from "lucide-react"
+import { AlertTriangle, Clock, CheckCircle, XCircle, Download } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -10,16 +10,16 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { SosReportData } from "../types"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { SosReportData } from "../types";
 
 interface SosReportProps {
-  data: SosReportData
-  loading: boolean
-  onExport?: () => void
+  data: SosReportData;
+  loading: boolean;
+  onExport?: () => void;
 }
 
 export function SosReport({ data, loading, onExport }: SosReportProps) {
@@ -33,7 +33,7 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -105,10 +105,21 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="patientName" fontSize={12} tickLine={false} />
                       <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
                       <Legend />
                       <Bar dataKey="total" name="Total" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="resolved" name="Resolvidos" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        dataKey="resolved"
+                        name="Resolvidos"
+                        fill="#22c55e"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -129,15 +140,34 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
                         fontSize={12}
                         tickLine={false}
                         tickFormatter={(v: string) =>
-                          new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+                          new Date(v).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "short",
+                          })
                         }
                       />
                       <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
                       <Legend />
                       <Bar dataKey="total" name="Total" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="acknowledged" name="Confirmados" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="resolved" name="Resolvidos" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        dataKey="acknowledged"
+                        name="Confirmados"
+                        fill="#f59e0b"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="resolved"
+                        name="Resolvidos"
+                        fill="#22c55e"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -147,5 +177,5 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

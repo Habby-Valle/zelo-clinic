@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
-import type { AuthUser } from "@/types/auth"
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { AuthUser } from "@/types/auth";
 
 interface AuthState {
-  user: AuthUser | null
-  isLoading: boolean
-  setUser: (user: AuthUser | null) => void
-  setLoading: (loading: boolean) => void
-  clear: () => void
+  user: AuthUser | null;
+  isLoading: boolean;
+  setUser: (user: AuthUser | null) => void;
+  setLoading: (loading: boolean) => void;
+  clear: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -36,4 +36,4 @@ export const useAuthStore = create<AuthState>()(
           : {},
     }
   )
-)
+);

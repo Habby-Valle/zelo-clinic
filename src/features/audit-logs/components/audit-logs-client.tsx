@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { Download } from "lucide-react"
-import { useAuditLogs } from "../hooks"
-import { fetchAuditLogsApi } from "../services"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useMemo, useState } from "react";
+import { Download } from "lucide-react";
+import { useAuditLogs } from "../hooks";
+import { fetchAuditLogsApi } from "../services";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,13 +21,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 
-const ACTION_COLORS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const ACTION_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   create: "default",
   update: "secondary",
   delete: "destructive",
@@ -39,7 +36,7 @@ const ACTION_COLORS: Record<
   payment_failed: "destructive",
   subscription_activated: "secondary",
   subscription_cancelled: "secondary",
-}
+};
 
 const ACTION_LABELS: Record<string, string> = {
   create: "Criação",
@@ -53,7 +50,7 @@ const ACTION_LABELS: Record<string, string> = {
   payment_failed: "Falha Pagamento",
   subscription_activated: "Ativação",
   subscription_cancelled: "Cancelamento",
-}
+};
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleString("pt-BR", {
@@ -62,16 +59,16 @@ function formatDate(dateString: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 export function AuditLogsClient() {
-  const [action, setAction] = useState("")
-  const [contentType, setContentType] = useState("")
-  const [search, setSearch] = useState("")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
-  const [page, setPage] = useState(1)
+  const [action, setAction] = useState("");
+  const [contentType, setContentType] = useState("");
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
 
   const filters = useMemo(
     () => ({
@@ -84,23 +81,23 @@ export function AuditLogsClient() {
       page_size: 20,
     }),
     [action, contentType, search, dateFrom, dateTo, page]
-  )
+  );
 
-  const { data, isLoading } = useAuditLogs(filters)
+  const { data, isLoading } = useAuditLogs(filters);
 
-  const logs = data?.logs ?? []
-  const total = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / 20))
+  const logs = data?.logs ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / 20));
 
   function resetPage() {
-    setPage(1)
+    setPage(1);
   }
 
   async function handleExport() {
-    const result = await fetchAuditLogsApi({ ...filters, page: 1, page_size: 10000 })
-    const allLogs = result.logs
+    const result = await fetchAuditLogsApi({ ...filters, page: 1, page_size: 10000 });
+    const allLogs = result.logs;
 
-    const headers = ["Data/Hora", "Usuário", "Email", "Ação", "Entidade", "Descrição"]
+    const headers = ["Data/Hora", "Usuário", "Email", "Ação", "Entidade", "Descrição"];
     const rows = allLogs.map((log) => [
       formatDate(log.created_at),
       log.user_name ?? "—",
@@ -108,32 +105,27 @@ export function AuditLogsClient() {
       ACTION_LABELS[log.action] ?? log.action,
       log.content_type_name ?? "—",
       log.description,
-    ])
+    ]);
 
-    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
-    const csv = [
-      headers.map(escape).join(","),
-      ...rows.map((r) => r.map(escape).join(",")),
-    ].join("\n")
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const csv = [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join(
+      "\n"
+    );
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    link.href = URL.createObjectURL(blob)
-    link.download = `audit-logs-${new Date().toISOString().split("T")[0]}.csv`
-    link.click()
-    URL.revokeObjectURL(link.href)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `audit-logs-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Logs de Auditoria
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Ações realizadas na clínica.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Logs de Auditoria</h1>
+          <p className="mt-1 text-muted-foreground">Ações realizadas na clínica.</p>
         </div>
         <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
@@ -152,8 +144,8 @@ export function AuditLogsClient() {
             <Select
               value={action || "all"}
               onValueChange={(v) => {
-                setAction(v === "all" ? "" : (v ?? ""))
-                resetPage()
+                setAction(v === "all" ? "" : (v ?? ""));
+                resetPage();
               }}
             >
               <SelectTrigger className="w-40">
@@ -177,15 +169,13 @@ export function AuditLogsClient() {
             <Select
               value={contentType || "all"}
               onValueChange={(v) => {
-                setContentType(v === "all" ? "" : (v ?? ""))
-                resetPage()
+                setContentType(v === "all" ? "" : (v ?? ""));
+                resetPage();
               }}
             >
               <SelectTrigger className="w-40">
                 <SelectValue>
-                  {(v: string | null) =>
-                    v && v !== "all" ? v : "Todas entidades"
-                  }
+                  {(v: string | null) => (v && v !== "all" ? v : "Todas entidades")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -202,8 +192,8 @@ export function AuditLogsClient() {
               placeholder="Buscar descrição..."
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value)
-                resetPage()
+                setSearch(e.target.value);
+                resetPage();
               }}
               className="w-48"
             />
@@ -213,8 +203,8 @@ export function AuditLogsClient() {
                 type="date"
                 value={dateFrom}
                 onChange={(e) => {
-                  setDateFrom(e.target.value)
-                  resetPage()
+                  setDateFrom(e.target.value);
+                  resetPage();
                 }}
                 className="w-36"
               />
@@ -223,8 +213,8 @@ export function AuditLogsClient() {
                 type="date"
                 value={dateTo}
                 onChange={(e) => {
-                  setDateTo(e.target.value)
-                  resetPage()
+                  setDateTo(e.target.value);
+                  resetPage();
                 }}
                 className="w-36"
               />
@@ -245,35 +235,27 @@ export function AuditLogsClient() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="py-10 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
                       Carregando...
                     </TableCell>
                   </TableRow>
                 ) : logs.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="py-10 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
                       Nenhum log encontrado para os filtros selecionados.
                     </TableCell>
                   </TableRow>
                 ) : (
                   logs.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell className="whitespace-nowrap text-sm">
+                      <TableCell className="text-sm whitespace-nowrap">
                         {formatDate(log.created_at)}
                       </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{log.user_name ?? "—"}</p>
                           {log.user_email && (
-                            <p className="text-xs text-muted-foreground">
-                              {log.user_email}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{log.user_email}</p>
                           )}
                         </div>
                       </TableCell>
@@ -283,9 +265,7 @@ export function AuditLogsClient() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">
-                          {log.content_type_name ?? log.object_id}
-                        </Badge>
+                        <Badge variant="secondary">{log.content_type_name ?? log.object_id}</Badge>
                       </TableCell>
                       <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
                         {log.description}
@@ -300,8 +280,8 @@ export function AuditLogsClient() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                {total.toLocaleString("pt-BR")} registro{total !== 1 ? "s" : ""}{" "}
-                encontrado{total !== 1 ? "s" : ""}
+                {total.toLocaleString("pt-BR")} registro{total !== 1 ? "s" : ""} encontrado
+                {total !== 1 ? "s" : ""}
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -329,5 +309,5 @@ export function AuditLogsClient() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

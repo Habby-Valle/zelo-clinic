@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
+import { useState, useCallback } from "react";
 import {
   Plus,
   Clock,
@@ -11,12 +11,12 @@ import {
   Trash2,
   Pencil,
   FileText,
-} from "lucide-react"
-import { useQueryClient } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -24,25 +24,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,15 +52,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useShifts,
   useShiftTemplates,
   useClinicPatients,
   useClinicCaregivers,
   useChecklistOptions,
-} from "../hooks"
+} from "../hooks";
 import {
   createShift,
   finishShift,
@@ -69,25 +69,22 @@ import {
   createShiftTemplate,
   updateShiftTemplate,
   deleteShiftTemplate,
-} from "@/app/(main)/shifts/actions"
-import type { ShiftTemplateItem, ShiftFilters } from "../types"
+} from "@/app/(main)/shifts/actions";
+import type { ShiftTemplateItem, ShiftFilters } from "../types";
 
-const STATUS_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
-}
+};
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: "Agendado",
   in_progress: "Em andamento",
   completed: "Concluído",
   cancelled: "Cancelado",
-}
+};
 
 function formatDateTime(dateStr: string): string {
   return new Date(dateStr).toLocaleString("pt-BR", {
@@ -96,126 +93,126 @@ function formatDateTime(dateStr: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 function formatDuration(start: string, end: string): string {
-  const diffMs = new Date(end).getTime() - new Date(start).getTime()
-  if (diffMs < 0) return "—"
-  const totalMinutes = Math.floor(diffMs / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (hours === 0) return `${minutes}min`
-  return `${hours}h ${minutes}min`
+  const diffMs = new Date(end).getTime() - new Date(start).getTime();
+  if (diffMs < 0) return "—";
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}min`;
+  return `${hours}h ${minutes}min`;
 }
 
 export function ShiftsClient() {
-  const queryClient = useQueryClient()
-  const [tab, setTab] = useState("shifts")
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
-  const [page, setPage] = useState(1)
-  const pageSize = 20
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState("shifts");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  const filters: ShiftFilters = { search, status: statusFilter, page, page_size: pageSize }
-  const shiftsQuery = useShifts(filters)
-  const templatesQuery = useShiftTemplates()
-  const patientsQuery = useClinicPatients()
-  const caregiversQuery = useClinicCaregivers()
-  const checklistsQuery = useChecklistOptions()
+  const filters: ShiftFilters = { search, status: statusFilter, page, page_size: pageSize };
+  const shiftsQuery = useShifts(filters);
+  const templatesQuery = useShiftTemplates();
+  const patientsQuery = useClinicPatients();
+  const caregiversQuery = useClinicCaregivers();
+  const checklistsQuery = useChecklistOptions();
 
-  const shifts = shiftsQuery.data?.shifts ?? []
-  const shiftsTotal = shiftsQuery.data?.total ?? 0
-  const templates = templatesQuery.data ?? []
-  const patients = patientsQuery.data ?? []
-  const caregivers = caregiversQuery.data ?? []
-  const checklistOptions = checklistsQuery.data ?? []
+  const shifts = shiftsQuery.data?.shifts ?? [];
+  const shiftsTotal = shiftsQuery.data?.total ?? 0;
+  const templates = templatesQuery.data ?? [];
+  const patients = patientsQuery.data ?? [];
+  const caregivers = caregiversQuery.data ?? [];
+  const checklistOptions = checklistsQuery.data ?? [];
 
   // Create shift dialog
-  const [createOpen, setCreateOpen] = useState(false)
-  const [createLoading, setCreateLoading] = useState(false)
-  const [selectedChecklists, setSelectedChecklists] = useState<number[]>([])
-  const [formPatient, setFormPatient] = useState("")
-  const [formCaregiver, setFormCaregiver] = useState("")
-  const [formTemplate, setFormTemplate] = useState("")
-  const [formStart, setFormStart] = useState("")
-  const [formEnd, setFormEnd] = useState("")
-  const [formNotes, setFormNotes] = useState("")
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [selectedChecklists, setSelectedChecklists] = useState<number[]>([]);
+  const [formPatient, setFormPatient] = useState("");
+  const [formCaregiver, setFormCaregiver] = useState("");
+  const [formTemplate, setFormTemplate] = useState("");
+  const [formStart, setFormStart] = useState("");
+  const [formEnd, setFormEnd] = useState("");
+  const [formNotes, setFormNotes] = useState("");
 
   const filteredPatients = formCaregiver
     ? patients.filter((p) => p.caregiver_ids.includes(parseInt(formCaregiver)))
-    : []
+    : [];
 
   // Template CRUD dialog
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<ShiftTemplateItem | null>(null)
-  const [templateLoading, setTemplateLoading] = useState(false)
-  const [tplName, setTplName] = useState("")
-  const [tplStart, setTplStart] = useState("07:00")
-  const [tplEnd, setTplEnd] = useState("19:00")
-  const [tplInstructions, setTplInstructions] = useState("")
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ShiftTemplateItem | null>(null);
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const [tplName, setTplName] = useState("");
+  const [tplStart, setTplStart] = useState("07:00");
+  const [tplEnd, setTplEnd] = useState("19:00");
+  const [tplInstructions, setTplInstructions] = useState("");
 
   // Confirm actions
   const [confirmAction, setConfirmAction] = useState<{
-    type: "finish" | "cancel" | "delete"
-    shiftId: number
-  } | null>(null)
-  const [confirmLoading, setConfirmLoading] = useState(false)
+    type: "finish" | "cancel" | "delete";
+    shiftId: number;
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const invalidateShifts = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["shifts"] })
-  }, [queryClient])
+    queryClient.invalidateQueries({ queryKey: ["shifts"] });
+  }, [queryClient]);
 
   const invalidateTemplates = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["shift-templates"] })
-  }, [queryClient])
+    queryClient.invalidateQueries({ queryKey: ["shift-templates"] });
+  }, [queryClient]);
 
   function onTabChange(value: string) {
-    setTab(value)
-    setPage(1)
+    setTab(value);
+    setPage(1);
   }
 
   function openCreateDialog() {
-    setCreateOpen(true)
-    setFormPatient("")
-    setFormCaregiver("")
-    setFormTemplate("")
-    setFormNotes("")
-    setSelectedChecklists([])
-    const now = new Date()
-    now.setSeconds(0, 0)
-    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000)
-    setFormStart(now.toISOString().slice(0, 16))
-    setFormEnd(later.toISOString().slice(0, 16))
+    setCreateOpen(true);
+    setFormPatient("");
+    setFormCaregiver("");
+    setFormTemplate("");
+    setFormNotes("");
+    setSelectedChecklists([]);
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    setFormStart(now.toISOString().slice(0, 16));
+    setFormEnd(later.toISOString().slice(0, 16));
   }
 
   function handleTemplateSelect(value: string | null) {
-    const v = value ?? ""
-    setFormTemplate(v)
-    const tpl = templates.find((t) => String(t.id) === v)
+    const v = value ?? "";
+    setFormTemplate(v);
+    const tpl = templates.find((t) => String(t.id) === v);
     if (tpl) {
-      setFormNotes(tpl.instructions ?? "")
-      const now = new Date()
-      const [sh, sm] = tpl.start_time.split(":")
-      const [eh, em] = tpl.end_time.split(":")
-      now.setHours(parseInt(sh), parseInt(sm), 0, 0)
-      const startStr = now.toISOString().slice(0, 16)
-      now.setHours(parseInt(eh), parseInt(em), 0, 0)
-      const endStr = now.toISOString().slice(0, 16)
+      setFormNotes(tpl.instructions ?? "");
+      const now = new Date();
+      const [sh, sm] = tpl.start_time.split(":");
+      const [eh, em] = tpl.end_time.split(":");
+      now.setHours(parseInt(sh), parseInt(sm), 0, 0);
+      const startStr = now.toISOString().slice(0, 16);
+      now.setHours(parseInt(eh), parseInt(em), 0, 0);
+      const endStr = now.toISOString().slice(0, 16);
       if (
         parseInt(eh) > parseInt(sh) ||
         (parseInt(eh) === parseInt(sh) && parseInt(em) > parseInt(sm))
       ) {
-        setFormStart(startStr)
-        setFormEnd(endStr)
+        setFormStart(startStr);
+        setFormEnd(endStr);
       }
     }
   }
 
   async function handleCreateShift(e: React.FormEvent) {
-    e.preventDefault()
-    if (!formCaregiver || !formStart || !formEnd) return
-    setCreateLoading(true)
+    e.preventDefault();
+    if (!formCaregiver || !formStart || !formEnd) return;
+    setCreateLoading(true);
     const result = await createShift({
       caregiver_id: parseInt(formCaregiver),
       start: new Date(formStart).toISOString(),
@@ -223,55 +220,55 @@ export function ShiftsClient() {
       notes: formNotes || undefined,
       patient_id: formPatient ? parseInt(formPatient) : undefined,
       checklist_ids: selectedChecklists.length > 0 ? selectedChecklists : undefined,
-    })
+    });
     if (result.success) {
-      setCreateOpen(false)
-      invalidateShifts()
+      setCreateOpen(false);
+      invalidateShifts();
     }
-    setCreateLoading(false)
+    setCreateLoading(false);
   }
 
   async function handleConfirmAction() {
-    if (!confirmAction) return
-    setConfirmLoading(true)
-    let result: { success: boolean; error?: string }
-    if (confirmAction.type === "finish") result = await finishShift(confirmAction.shiftId)
-    else if (confirmAction.type === "cancel") result = await cancelShift(confirmAction.shiftId)
-    else result = await deleteShift(confirmAction.shiftId)
+    if (!confirmAction) return;
+    setConfirmLoading(true);
+    let result: { success: boolean; error?: string };
+    if (confirmAction.type === "finish") result = await finishShift(confirmAction.shiftId);
+    else if (confirmAction.type === "cancel") result = await cancelShift(confirmAction.shiftId);
+    else result = await deleteShift(confirmAction.shiftId);
     if (result.success) {
-      setConfirmAction(null)
-      invalidateShifts()
+      setConfirmAction(null);
+      invalidateShifts();
     }
-    setConfirmLoading(false)
+    setConfirmLoading(false);
   }
 
   function resetTemplateForm() {
-    setTplName("")
-    setTplStart("07:00")
-    setTplEnd("19:00")
-    setTplInstructions("")
-    setEditingTemplate(null)
+    setTplName("");
+    setTplStart("07:00");
+    setTplEnd("19:00");
+    setTplInstructions("");
+    setEditingTemplate(null);
   }
 
   function openTemplateCreate() {
-    resetTemplateForm()
-    setTemplateDialogOpen(true)
+    resetTemplateForm();
+    setTemplateDialogOpen(true);
   }
 
   function openTemplateEdit(tpl: ShiftTemplateItem) {
-    setEditingTemplate(tpl)
-    setTplName(tpl.name)
-    setTplStart(tpl.start_time.slice(0, 5))
-    setTplEnd(tpl.end_time.slice(0, 5))
-    setTplInstructions(tpl.instructions ?? "")
-    setTemplateDialogOpen(true)
+    setEditingTemplate(tpl);
+    setTplName(tpl.name);
+    setTplStart(tpl.start_time.slice(0, 5));
+    setTplEnd(tpl.end_time.slice(0, 5));
+    setTplInstructions(tpl.instructions ?? "");
+    setTemplateDialogOpen(true);
   }
 
   async function handleTemplateSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!tplName.trim() || !tplStart || !tplEnd) return
-    setTemplateLoading(true)
-    let result: { success: boolean; error?: string }
+    e.preventDefault();
+    if (!tplName.trim() || !tplStart || !tplEnd) return;
+    setTemplateLoading(true);
+    let result: { success: boolean; error?: string };
     if (editingTemplate) {
       result = await updateShiftTemplate({
         id: editingTemplate.id,
@@ -280,21 +277,21 @@ export function ShiftsClient() {
         end_time: tplEnd,
         instructions: tplInstructions || undefined,
         is_active: editingTemplate.is_active,
-      })
+      });
     } else {
       result = await createShiftTemplate({
         name: tplName.trim(),
         start_time: tplStart,
         end_time: tplEnd,
         instructions: tplInstructions || undefined,
-      })
+      });
     }
     if (result.success) {
-      setTemplateDialogOpen(false)
-      resetTemplateForm()
-      invalidateTemplates()
+      setTemplateDialogOpen(false);
+      resetTemplateForm();
+      invalidateTemplates();
     }
-    setTemplateLoading(false)
+    setTemplateLoading(false);
   }
 
   async function handleToggleTemplate(tpl: ShiftTemplateItem) {
@@ -305,25 +302,23 @@ export function ShiftsClient() {
       end_time: tpl.end_time.slice(0, 5),
       instructions: tpl.instructions || undefined,
       is_active: !tpl.is_active,
-    })
-    invalidateTemplates()
+    });
+    invalidateTemplates();
   }
 
   async function handleDeleteTemplate(id: number) {
-    await deleteShiftTemplate(id)
-    invalidateTemplates()
+    await deleteShiftTemplate(id);
+    invalidateTemplates();
   }
 
-  const shiftsTotalPages = Math.ceil(shiftsTotal / pageSize)
+  const shiftsTotalPages = Math.ceil(shiftsTotal / pageSize);
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Turnos</h1>
-          <p className="mt-1 text-muted-foreground">
-            Gestão de turnos de cuidado da clínica.
-          </p>
+          <p className="mt-1 text-muted-foreground">Gestão de turnos de cuidado da clínica.</p>
         </div>
         {tab === "shifts" && (
           <Button onClick={openCreateDialog}>
@@ -358,16 +353,16 @@ export function ShiftsClient() {
               placeholder="Buscar cuidador..."
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
+                setSearch(e.target.value);
+                setPage(1);
               }}
               className="max-w-xs"
             />
             <Select
               value={statusFilter || "all"}
               onValueChange={(v) => {
-                setStatusFilter((v ?? "") === "all" ? "" : (v ?? ""))
-                setPage(1)
+                setStatusFilter((v ?? "") === "all" ? "" : (v ?? ""));
+                setPage(1);
               }}
             >
               <SelectTrigger className="w-44">
@@ -401,12 +396,24 @@ export function ShiftsClient() {
                   {shiftsQuery.isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-36" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-24 rounded-full" />
+                        </TableCell>
                         <TableCell />
                       </TableRow>
                     ))
@@ -438,8 +445,7 @@ export function ShiftsClient() {
                           {formatDuration(shift.start, shift.end)}
                         </TableCell>
                         <TableCell>
-                          {shift.status === "scheduled" &&
-                          new Date(shift.start) > new Date() ? (
+                          {shift.status === "scheduled" && new Date(shift.start) > new Date() ? (
                             <Badge variant="outline">Aguardando início</Badge>
                           ) : (
                             <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"}>
@@ -499,8 +505,8 @@ export function ShiftsClient() {
           {shiftsTotalPages > 1 && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a{" "}
-                {Math.min(page * pageSize, shiftsTotal)} de {shiftsTotal} turnos
+                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, shiftsTotal)} de{" "}
+                {shiftsTotal} turnos
               </p>
               <div className="flex gap-2">
                 <Button
@@ -542,10 +548,18 @@ export function ShiftsClient() {
                   {templatesQuery.isLoading ? (
                     Array.from({ length: 3 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-10 rounded-full" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-36" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-48" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-10 rounded-full" />
+                        </TableCell>
                         <TableCell />
                       </TableRow>
                     ))
@@ -615,9 +629,7 @@ export function ShiftsClient() {
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Novo Turno</DialogTitle>
-            <DialogDescription>
-              Registre um novo turno de cuidados.
-            </DialogDescription>
+            <DialogDescription>Registre um novo turno de cuidados.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateShift} className="space-y-4">
             <div className="space-y-1.5">
@@ -652,15 +664,15 @@ export function ShiftsClient() {
               <Select
                 value={formCaregiver}
                 onValueChange={(v) => {
-                  const val = v ?? ""
-                  setFormCaregiver(val)
+                  const val = v ?? "";
+                  setFormCaregiver(val);
                   if (
                     formPatient &&
                     !patients
                       .find((p) => p.id === parseInt(formPatient))
                       ?.caregiver_ids.includes(parseInt(val))
                   ) {
-                    setFormPatient("")
+                    setFormPatient("");
                   }
                 }}
               >
@@ -685,16 +697,11 @@ export function ShiftsClient() {
 
             <div className="space-y-1.5">
               <Label>Paciente</Label>
-              <Select
-                value={formPatient}
-                onValueChange={(v) => setFormPatient(v ?? "")}
-              >
+              <Select value={formPatient} onValueChange={(v) => setFormPatient(v ?? "")}>
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
-                      formCaregiver
-                        ? "Selecione o paciente"
-                        : "Selecione um cuidador primeiro"
+                      formCaregiver ? "Selecione o paciente" : "Selecione um cuidador primeiro"
                     }
                   />
                 </SelectTrigger>
@@ -769,18 +776,13 @@ export function ShiftsClient() {
                         checked={selectedChecklists.includes(cl.id)}
                         onCheckedChange={(v) => {
                           if (v === true) {
-                            setSelectedChecklists((prev) => [...prev, cl.id])
+                            setSelectedChecklists((prev) => [...prev, cl.id]);
                           } else {
-                            setSelectedChecklists((prev) =>
-                              prev.filter((id) => id !== cl.id)
-                            )
+                            setSelectedChecklists((prev) => prev.filter((id) => id !== cl.id));
                           }
                         }}
                       />
-                      <Label
-                        htmlFor={`cl-${cl.id}`}
-                        className="cursor-pointer text-sm font-normal"
-                      >
+                      <Label htmlFor={`cl-${cl.id}`} className="cursor-pointer text-sm font-normal">
                         {cl.name}
                       </Label>
                     </div>
@@ -809,18 +811,14 @@ export function ShiftsClient() {
       <Dialog
         open={templateDialogOpen}
         onOpenChange={(open) => {
-          setTemplateDialogOpen(open)
-          if (!open) resetTemplateForm()
+          setTemplateDialogOpen(open);
+          if (!open) resetTemplateForm();
         }}
       >
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingTemplate ? "Editar Template" : "Novo Template"}
-            </DialogTitle>
-            <DialogDescription>
-              Configure horários e instruções padrão.
-            </DialogDescription>
+            <DialogTitle>{editingTemplate ? "Editar Template" : "Novo Template"}</DialogTitle>
+            <DialogDescription>Configure horários e instruções padrão.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleTemplateSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -867,8 +865,8 @@ export function ShiftsClient() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setTemplateDialogOpen(false)
-                  resetTemplateForm()
+                  setTemplateDialogOpen(false);
+                  resetTemplateForm();
                 }}
               >
                 Cancelar
@@ -911,7 +909,7 @@ export function ShiftsClient() {
               disabled={confirmLoading}
               className={
                 confirmAction?.type !== "finish"
-                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  ? "text-destructive-foreground bg-destructive hover:bg-destructive/90"
                   : ""
               }
             >
@@ -921,5 +919,5 @@ export function ShiftsClient() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

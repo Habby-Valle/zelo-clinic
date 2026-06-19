@@ -1,7 +1,7 @@
-import { Suspense } from "react"
-import { MessageSquare } from "lucide-react"
-import { FeedbackFormClient, FeedbackListClient } from "@/features/feedback"
-import { FeedbackGuard } from "@/features/feedback/components/feedback-guard"
+import { Suspense } from "react";
+import { MessageSquare } from "lucide-react";
+import { FeedbackFormClient, FeedbackListClient } from "@/features/feedback";
+import { FeedbackGuard } from "@/features/feedback/components/feedback-guard";
 
 export default function FeedbackPage() {
   return (
@@ -13,8 +13,7 @@ export default function FeedbackPage() {
             Enviar Feedback
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Compartilhe sugestões, reporte bugs ou envie elogios para a equipe
-            Zelo.
+            Compartilhe sugestões, reporte bugs ou envie elogios para a equipe Zelo.
           </p>
         </div>
 
@@ -29,5 +28,5 @@ export default function FeedbackPage() {
         </div>
       </div>
     </FeedbackGuard>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import { requireClinicAdmin } from "@/lib/auth"
-import { Sidebar } from "@/components/layout/sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { requireClinicAdmin } from "@/lib/auth";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Topbar } from "@/components/layout/topbar";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  await requireClinicAdmin()
+  await requireClinicAdmin();
 
   return (
     <div className="flex h-screen">
@@ -15,5 +15,5 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
-  )
+  );
 }

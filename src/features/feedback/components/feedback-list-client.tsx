@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,25 +8,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useMyFeedbacks } from "../hooks"
-import type { FeedbackFilters } from "../types"
+} from "@/components/ui/select";
+import { useMyFeedbacks } from "../hooks";
+import type { FeedbackFilters } from "../types";
 
 const TYPE_LABELS: Record<string, string> = {
   bug: "Bug",
   feature: "Melhoria",
   compliment: "Elogio",
   other: "Outro",
-}
+};
 
 const TYPE_FILTER_LABELS: Record<string, string> = {
   all: "Todos",
@@ -34,7 +34,7 @@ const TYPE_FILTER_LABELS: Record<string, string> = {
   feature: "Melhoria",
   compliment: "Elogio",
   other: "Outro",
-}
+};
 
 const STATUS_FILTER_LABELS: Record<string, string> = {
   all: "Todos",
@@ -42,34 +42,28 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
   in_review: "Em Análise",
   resolved: "Resolvido",
   closed: "Fechado",
-}
+};
 
-const TYPE_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const TYPE_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   bug: "destructive",
   feature: "default",
   compliment: "secondary",
   other: "outline",
-}
+};
 
 const STATUS_LABELS: Record<string, string> = {
   received: "Recebido",
   in_review: "Em Análise",
   resolved: "Resolvido",
   closed: "Fechado",
-}
+};
 
-const STATUS_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   received: "secondary",
   in_review: "outline",
   resolved: "default",
   closed: "outline",
-}
+};
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleString("pt-BR", {
@@ -78,13 +72,13 @@ function formatDate(dateString: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 export function FeedbackListClient() {
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [page, setPage] = useState(1)
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
 
   const filters: FeedbackFilters = useMemo(
     () => ({
@@ -94,13 +88,13 @@ export function FeedbackListClient() {
       page_size: 10,
     }),
     [typeFilter, statusFilter, page]
-  )
+  );
 
-  const { data, isLoading } = useMyFeedbacks(filters)
+  const { data, isLoading } = useMyFeedbacks(filters);
 
-  const feedbacks = data?.feedbacks ?? []
-  const total = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / 10))
+  const feedbacks = data?.feedbacks ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / 10));
 
   return (
     <div className="space-y-4">
@@ -110,8 +104,8 @@ export function FeedbackListClient() {
           <Select
             value={typeFilter}
             onValueChange={(v) => {
-              setTypeFilter(v ?? "all")
-              setPage(1)
+              setTypeFilter(v ?? "all");
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-36">
@@ -130,15 +124,13 @@ export function FeedbackListClient() {
           <Select
             value={statusFilter}
             onValueChange={(v) => {
-              setStatusFilter(v ?? "all")
-              setPage(1)
+              setStatusFilter(v ?? "all");
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-36">
               <SelectValue>
-                {(v: string | null) =>
-                  STATUS_FILTER_LABELS[v ?? "all"] ?? "Status"
-                }
+                {(v: string | null) => STATUS_FILTER_LABELS[v ?? "all"] ?? "Status"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -182,10 +174,7 @@ export function FeedbackListClient() {
               ))
             ) : feedbacks.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-8 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                   Nenhum feedback encontrado
                 </TableCell>
               </TableRow>
@@ -218,8 +207,7 @@ export function FeedbackListClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * 10 + 1} a {Math.min(page * 10, total)} de{" "}
-            {total}
+            Mostrando {(page - 1) * 10 + 1} a {Math.min(page * 10, total)} de {total}
           </p>
           <div className="flex gap-2">
             <Button
@@ -242,5 +230,5 @@ export function FeedbackListClient() {
         </div>
       )}
     </div>
-  )
+  );
 }

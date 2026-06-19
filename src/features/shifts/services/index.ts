@@ -1,1 +1,1 @@
-export * from "./shift.service"
+export * from "./shift.service";

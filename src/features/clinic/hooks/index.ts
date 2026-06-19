@@ -1,1 +1,1 @@
-export { useClinic, useUpdateClinic } from "./use-clinic"
+export { useClinic, useUpdateClinic } from "./use-clinic";

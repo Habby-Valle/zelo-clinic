@@ -1,28 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ListChecks, MoreHorizontal, Pencil, Plus, Trash2, Eye, Copy } from "lucide-react";
+import { toast } from "sonner";
+
 import {
-  ListChecks, MoreHorizontal, Pencil, Plus, Trash2, Eye, Copy,
-} from "lucide-react"
-import { toast } from "sonner"
-
-import { useChecklists, useDeleteChecklist, useDuplicateChecklist } from "@/features/checklists/hooks"
-import { useChecklist } from "@/features/checklists/hooks"
-import type { Checklist, ChecklistDetail } from "@/features/checklists/types"
-import { ChecklistDialog } from "./checklist-dialog"
-import { MaterialIcon } from "@/components/shared/material-icon"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+  useChecklists,
+  useDeleteChecklist,
+  useDuplicateChecklist,
+} from "@/features/checklists/hooks";
+import { useChecklist } from "@/features/checklists/hooks";
+import type { Checklist, ChecklistDetail } from "@/features/checklists/types";
+import { ChecklistDialog } from "./checklist-dialog";
+import { MaterialIcon } from "@/components/shared/material-icon";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,13 +32,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,59 +48,59 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 function EditChecklistDialog({
   id,
   open,
   onOpenChange,
 }: {
-  id: number
-  open: boolean
-  onOpenChange: (v: boolean) => void
+  id: number;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
 }) {
-  const { data: checklist } = useChecklist(id)
+  const { data: checklist } = useChecklist(id);
   return (
     <ChecklistDialog
       open={open}
       onOpenChange={onOpenChange}
       checklist={checklist as ChecklistDetail | undefined}
     />
-  )
+  );
 }
 
 export function ChecklistsPageClient() {
-  const router = useRouter()
-  const [search, setSearch] = useState("")
-  const [isActive, setIsActive] = useState("all")
-  const [page, setPage] = useState(1)
-  const pageSize = 10
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [isActive, setIsActive] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const { data, isLoading } = useChecklists({
     search,
     isActive: isActive === "all" ? "" : isActive,
     page,
     pageSize,
-  })
-  const deleteChecklist = useDeleteChecklist()
-  const duplicateChecklist = useDuplicateChecklist()
+  });
+  const deleteChecklist = useDeleteChecklist();
+  const duplicateChecklist = useDuplicateChecklist();
 
-  const checklists = data?.checklists ?? []
-  const total = data?.total ?? 0
-  const totalPages = Math.ceil(total / pageSize)
+  const checklists = data?.checklists ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / pageSize);
 
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Checklist | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Checklist | null>(null);
 
   function openCreate() {
-    setEditingId(null)
-    setDialogOpen(true)
+    setEditingId(null);
+    setDialogOpen(true);
   }
 
   function openEdit(cl: Checklist) {
-    setEditingId(cl.id)
-    setDialogOpen(true)
+    setEditingId(cl.id);
+    setDialogOpen(true);
   }
 
   return (
@@ -109,9 +111,7 @@ export function ChecklistsPageClient() {
             <ListChecks className="h-6 w-6" />
             Checklists
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Protocolos de cuidado e tarefas da clínica.
-          </p>
+          <p className="mt-1 text-muted-foreground">Protocolos de cuidado e tarefas da clínica.</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -124,16 +124,16 @@ export function ChecklistsPageClient() {
           placeholder="Buscar..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
+            setSearch(e.target.value);
+            setPage(1);
           }}
           className="max-w-xs"
         />
         <Select
           value={isActive}
           onValueChange={(v) => {
-            setIsActive(v ?? "all")
-            setPage(1)
+            setIsActive(v ?? "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-40">
@@ -162,10 +162,18 @@ export function ChecklistsPageClient() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-40" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
                   <TableCell />
                 </TableRow>
               ))
@@ -183,7 +191,7 @@ export function ChecklistsPageClient() {
               </TableRow>
             ) : (
               checklists.map((cl) => {
-                const isGlobal = cl.clinic_id === null
+                const isGlobal = cl.clinic_id === null;
                 return (
                   <TableRow
                     key={cl.id}
@@ -214,7 +222,7 @@ export function ChecklistsPageClient() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted hover:text-foreground transition-colors"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <MoreHorizontal className="h-4 w-4" />
@@ -222,8 +230,8 @@ export function ChecklistsPageClient() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/checklists/${cl.id}`)
+                              e.stopPropagation();
+                              router.push(`/checklists/${cl.id}`);
                             }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
@@ -231,12 +239,20 @@ export function ChecklistsPageClient() {
                           </DropdownMenuItem>
                           {!isGlobal ? (
                             <>
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(cl) }}>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEdit(cl);
+                                }}
+                              >
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={(e) => { e.stopPropagation(); setDeleteTarget(cl) }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteTarget(cl);
+                                }}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -246,11 +262,12 @@ export function ChecklistsPageClient() {
                           ) : (
                             <DropdownMenuItem
                               onClick={(e) => {
-                                e.stopPropagation()
+                                e.stopPropagation();
                                 duplicateChecklist.mutate(cl.id, {
-                                  onSuccess: () => toast.success("Checklist duplicado para a clínica"),
+                                  onSuccess: () =>
+                                    toast.success("Checklist duplicado para a clínica"),
                                   onError: () => toast.error("Erro ao duplicar checklist"),
-                                })
+                                });
                               }}
                             >
                               <Copy className="mr-2 h-4 w-4" />
@@ -261,7 +278,7 @@ export function ChecklistsPageClient() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                )
+                );
               })
             )}
           </TableBody>
@@ -294,16 +311,14 @@ export function ChecklistsPageClient() {
         </div>
       )}
 
-      {editingId === null && (
-        <ChecklistDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      )}
+      {editingId === null && <ChecklistDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
       {editingId !== null && (
         <EditChecklistDialog
           id={editingId}
           open={dialogOpen}
           onOpenChange={(v) => {
-            setDialogOpen(v)
-            if (!v) setEditingId(null)
+            setDialogOpen(v);
+            if (!v) setEditingId(null);
           }}
         />
       )}
@@ -312,25 +327,23 @@ export function ChecklistsPageClient() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir checklist?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteChecklist.isPending}
               onClick={() => {
-                if (!deleteTarget) return
+                if (!deleteTarget) return;
                 deleteChecklist.mutate(deleteTarget.id, {
                   onSuccess: () => {
-                    toast.success("Checklist excluído")
-                    setDeleteTarget(null)
+                    toast.success("Checklist excluído");
+                    setDeleteTarget(null);
                   },
                   onError: () => toast.error("Erro ao excluir checklist"),
-                })
+                });
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               {deleteChecklist.isPending ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
@@ -338,5 +351,5 @@ export function ChecklistsPageClient() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

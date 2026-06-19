@@ -1,5 +1,5 @@
-import { Settings } from "lucide-react"
-import { SettingsClient } from "@/features/clinic/components"
+import { Settings } from "lucide-react";
+import { SettingsClient } from "@/features/clinic/components";
 
 export default function AdminSettingsPage() {
   return (
@@ -9,12 +9,10 @@ export default function AdminSettingsPage() {
           <Settings className="h-6 w-6" />
           Configurações
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          Gerencie as informações da sua clínica.
-        </p>
+        <p className="mt-1 text-muted-foreground">Gerencie as informações da sua clínica.</p>
       </div>
 
       <SettingsClient />
     </div>
-  )
+  );
 }

@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect, startTransition } from "react"
-import { Camera, Loader2, Save, Lock } from "lucide-react"
-import { toast } from "sonner"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useState, useRef, useEffect, startTransition } from "react";
+import { Camera, Loader2, Save, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-import { useClinic, useUpdateClinic } from "@/features/clinic/hooks"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getInitials, formatCnpj, formatPhone, formatCep, unformat } from "@/lib/format"
+import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getInitials, formatCnpj, formatPhone, formatCep, unformat } from "@/lib/format";
 
 const passwordSchema = z
   .object({
@@ -26,58 +26,58 @@ const passwordSchema = z
   .refine((d) => d.new_password === d.confirm_password, {
     message: "Senhas não conferem",
     path: ["confirm_password"],
-  })
+  });
 
-type PasswordFormData = z.infer<typeof passwordSchema>
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export function SettingsClient() {
-  const { data: clinic, isLoading } = useClinic()
-  const updateClinic = useUpdateClinic()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { data: clinic, isLoading } = useClinic();
+  const updateClinic = useUpdateClinic();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [phone, setPhone] = useState("")
-  const [document, setDocument] = useState("")
-  const [zipCode, setZipCode] = useState("")
-  const [street, setStreet] = useState("")
-  const [number, setNumber] = useState("")
-  const [complement, setComplement] = useState("")
-  const [neighborhood, setNeighborhood] = useState("")
-  const [city, setCity] = useState("")
-  const [state, setState] = useState("")
-  const [country, setCountry] = useState("Brasil")
+  const [phone, setPhone] = useState("");
+  const [document, setDocument] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("Brasil");
 
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving] = useState(false);
   const [passwordResult, setPasswordResult] = useState<{
-    success: boolean
-    message: string
-  } | null>(null)
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
     defaultValues: { current_password: "", new_password: "", confirm_password: "" },
-  })
+  });
 
   useEffect(() => {
-    if (!clinic) return
+    if (!clinic) return;
     startTransition(() => {
-      setPhone(clinic.phone ?? "")
-      setDocument(clinic.document ?? "")
-      setZipCode(clinic.address?.zip_code ?? "")
-      setStreet(clinic.address?.street ?? "")
-      setNumber(clinic.address?.number ?? "")
-      setComplement(clinic.address?.complement ?? "")
-      setNeighborhood(clinic.address?.neighborhood ?? "")
-      setCity(clinic.address?.city ?? "")
-      setState(clinic.address?.state ?? "")
-      setCountry(clinic.address?.country ?? "Brasil")
-    })
-  }, [clinic])
+      setPhone(clinic.phone ?? "");
+      setDocument(clinic.document ?? "");
+      setZipCode(clinic.address?.zip_code ?? "");
+      setStreet(clinic.address?.street ?? "");
+      setNumber(clinic.address?.number ?? "");
+      setComplement(clinic.address?.complement ?? "");
+      setNeighborhood(clinic.address?.neighborhood ?? "");
+      setCity(clinic.address?.city ?? "");
+      setState(clinic.address?.state ?? "");
+      setCountry(clinic.address?.country ?? "Brasil");
+    });
+  }, [clinic]);
 
-  const clinicName = clinic?.name ?? ""
-  const clinicLogo = clinic?.media_url ?? null
+  const clinicName = clinic?.name ?? "";
+  const clinicLogo = clinic?.media_url ?? null;
 
   async function handleSaveClinic() {
-    setSaving(true)
+    setSaving(true);
     try {
       await updateClinic.mutateAsync({
         phone: unformat(phone) || undefined,
@@ -92,42 +92,42 @@ export function SettingsClient() {
           state,
           country,
         },
-      })
-      toast.success("Dados da clínica atualizados")
+      });
+      toast.success("Dados da clínica atualizados");
     } catch {
-      toast.error("Erro ao salvar dados da clínica")
+      toast.error("Erro ao salvar dados da clínica");
     }
-    setSaving(false)
+    setSaving(false);
   }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const uploadRes = await fetch("/api/proxy/media/upload/", {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (!uploadRes.ok) {
-        toast.error("Erro ao fazer upload da imagem")
-        return
+        toast.error("Erro ao fazer upload da imagem");
+        return;
       }
 
-      const mediaData = await uploadRes.json()
-      await updateClinic.mutateAsync({ media_id: mediaData.id })
-      toast.success("Logo da clínica atualizada")
+      const mediaData = await uploadRes.json();
+      await updateClinic.mutateAsync({ media_id: mediaData.id });
+      toast.success("Logo da clínica atualizada");
     } catch {
-      toast.error("Erro ao atualizar logo")
+      toast.error("Erro ao atualizar logo");
     }
   }
 
   async function handlePasswordChange(data: PasswordFormData) {
-    setPasswordResult(null)
+    setPasswordResult(null);
     try {
       const res = await fetch("/api/proxy/auth/change-password/", {
         method: "POST",
@@ -136,19 +136,19 @@ export function SettingsClient() {
           current_password: data.current_password,
           new_password: data.new_password,
         }),
-      })
+      });
 
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error ?? "Erro ao alterar senha")
+        const err = await res.json();
+        throw new Error(err.error ?? "Erro ao alterar senha");
       }
 
-      setPasswordResult({ success: true, message: "Senha alterada com sucesso!" })
-      passwordForm.reset()
-      toast.success("Senha alterada com sucesso")
+      setPasswordResult({ success: true, message: "Senha alterada com sucesso!" });
+      passwordForm.reset();
+      toast.success("Senha alterada com sucesso");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao alterar senha"
-      setPasswordResult({ success: false, message })
+      const message = err instanceof Error ? err.message : "Erro ao alterar senha";
+      setPasswordResult({ success: false, message });
     }
   }
 
@@ -162,14 +162,14 @@ export function SettingsClient() {
     neighborhood !== (clinic?.address?.neighborhood ?? "") ||
     city !== (clinic?.address?.city ?? "") ||
     state !== (clinic?.address?.state ?? "") ||
-    country !== (clinic?.address?.country ?? "Brasil")
+    country !== (clinic?.address?.country ?? "Brasil");
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-96 rounded-xl" />
       </div>
-    )
+    );
   }
 
   return (
@@ -206,9 +206,7 @@ export function SettingsClient() {
             </div>
             <div className="space-y-1">
               <p className="font-medium">{clinicName}</p>
-              <p className="text-sm text-muted-foreground">
-                Clique no ícone para alterar a foto
-              </p>
+              <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
             </div>
           </div>
 
@@ -314,11 +312,7 @@ export function SettingsClient() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="country">País</Label>
-                <Input
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                />
+                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
               </div>
             </div>
           </div>
@@ -404,10 +398,7 @@ export function SettingsClient() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              disabled={passwordForm.formState.isSubmitting}
-            >
+            <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
               {passwordForm.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -419,5 +410,5 @@ export function SettingsClient() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

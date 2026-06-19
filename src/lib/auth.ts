@@ -1,41 +1,41 @@
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { decodeJwt, isTokenExpired } from "@/lib/jwt"
-import { getMeApi } from "@/features/auth"
-import type { AuthUser } from "@/types/auth"
-import type { UserRole } from "@/types/common"
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { decodeJwt, isTokenExpired } from "@/lib/jwt";
+import { getMeApi } from "@/features/auth";
+import type { AuthUser } from "@/types/auth";
+import type { UserRole } from "@/types/common";
 
 async function getValidAccessToken(): Promise<string> {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get("ze_access")?.value
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("ze_access")?.value;
 
-  if (!accessToken) redirect("/login")
+  if (!accessToken) redirect("/login");
 
-  const payload = decodeJwt(accessToken)
-  if (!payload || isTokenExpired(payload)) redirect("/login")
+  const payload = decodeJwt(accessToken);
+  if (!payload || isTokenExpired(payload)) redirect("/login");
 
-  return accessToken
+  return accessToken;
 }
 
 export interface ClinicAdminContext {
-  user: AuthUser
+  user: AuthUser;
 }
 
 export async function requireClinicAdmin(): Promise<ClinicAdminContext> {
-  const accessToken = await getValidAccessToken()
+  const accessToken = await getValidAccessToken();
 
-  const payload = decodeJwt(accessToken)!
-  if (payload.role !== "clinic_admin") redirect("/login")
+  const payload = decodeJwt(accessToken)!;
+  if (payload.role !== "clinic_admin") redirect("/login");
 
-  let meData
+  let meData;
   try {
-    meData = await getMeApi(accessToken)
+    meData = await getMeApi(accessToken);
   } catch {
-    redirect("/login")
+    redirect("/login");
   }
 
-  const profile = meData.profile
-  if (!profile) redirect("/login")
+  const profile = meData.profile;
+  if (!profile) redirect("/login");
 
   const user: AuthUser = {
     id: String(meData.id),
@@ -44,7 +44,7 @@ export async function requireClinicAdmin(): Promise<ClinicAdminContext> {
     role: profile.role as UserRole,
     clinic_id: profile.clinic_id,
     avatar_url: null,
-  }
+  };
 
-  return { user }
+  return { user };
 }

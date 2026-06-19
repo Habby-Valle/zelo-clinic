@@ -1,29 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSearchParams, useRouter, usePathname } from "next/navigation"
-import Link from "next/link"
-import {
-  Plus,
-  Users,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  CheckCircle2,
-  XOctagon,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { Plus, Users, MoreHorizontal, Pencil, Trash2, CheckCircle2, XOctagon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -31,14 +23,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,24 +40,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { usePatients, useDeletePatient } from "../hooks"
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePatients, useDeletePatient } from "../hooks";
 
 const GENDER_LABELS: Record<string, string> = {
   M: "Masculino",
   F: "Feminino",
   O: "Outro",
-}
+};
 
 function calculateAge(birthDate: string): number {
-  const today = new Date()
-  const [year, month, day] = birthDate.split("-").map(Number)
-  const birth = new Date(year, month - 1, day)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
+  const today = new Date();
+  const [year, month, day] = birthDate.split("-").map(Number);
+  const birth = new Date(year, month - 1, day);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
 }
 
 function getInitials(name: string): string {
@@ -74,34 +66,34 @@ function getInitials(name: string): string {
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }
 
 export function PatientsClient() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const deletePatient = useDeletePatient()
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const deletePatient = useDeletePatient();
 
-  const search = searchParams.get("search") ?? ""
-  const isActive = searchParams.get("is_active") ?? ""
-  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10))
-  const pageSize = 20
+  const search = searchParams.get("search") ?? "";
+  const isActive = searchParams.get("is_active") ?? "";
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const pageSize = 20;
 
-  const { data, isLoading } = usePatients({ search, isActive, page, pageSize })
+  const { data, isLoading } = usePatients({ search, isActive, page, pageSize });
 
-  const patients = data?.patients ?? []
-  const total = data?.total ?? 0
-  const totalPages = Math.ceil(total / pageSize)
+  const patients = data?.patients ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / pageSize);
 
   function updateParams(updates: Record<string, string>) {
-    const current = new URLSearchParams(searchParams.toString())
+    const current = new URLSearchParams(searchParams.toString());
     for (const [k, v] of Object.entries(updates)) {
-      if (v) current.set(k, v)
-      else current.delete(k)
+      if (v) current.set(k, v);
+      else current.delete(k);
     }
-    router.push(`${pathname}?${current.toString()}`)
+    router.push(`${pathname}?${current.toString()}`);
   }
 
   return (
@@ -109,9 +101,7 @@ export function PatientsClient() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pacientes</h1>
-          <p className="mt-1 text-muted-foreground">
-            Gestão de pacientes da clínica.
-          </p>
+          <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
         </div>
         <Link href="/patients/new" className={cn(buttonVariants())}>
           <Plus className="mr-2 h-4 w-4" />
@@ -123,9 +113,7 @@ export function PatientsClient() {
         <Input
           placeholder="Buscar por nome..."
           value={search}
-          onChange={(e) =>
-            updateParams({ search: e.target.value, page: "" })
-          }
+          onChange={(e) => updateParams({ search: e.target.value, page: "" })}
           className="max-w-xs"
         />
         <Select
@@ -212,10 +200,7 @@ export function PatientsClient() {
                             {getInitials(patient.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <Link
-                          href={`/patients/${patient.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/patients/${patient.id}`} className="hover:underline">
                           {patient.name}
                         </Link>
                       </div>
@@ -228,9 +213,7 @@ export function PatientsClient() {
                     </TableCell>
                     <TableCell>
                       {patient.caregiver_count > 0 ? (
-                        <Badge variant="outline">
-                          {patient.caregiver_count}
-                        </Badge>
+                        <Badge variant="outline">{patient.caregiver_count}</Badge>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
@@ -259,11 +242,7 @@ export function PatientsClient() {
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/patients/${patient.id}`)
-                            }
-                          >
+                          <DropdownMenuItem onClick={() => router.push(`/patients/${patient.id}`)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Ver detalhes
                           </DropdownMenuItem>
@@ -288,8 +267,8 @@ export function PatientsClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a{" "}
-            {Math.min(page * pageSize, total)} de {total} pacientes
+            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
+            pacientes
           </p>
           <div className="flex gap-2">
             <Button
@@ -317,8 +296,7 @@ export function PatientsClient() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir paciente</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este paciente? Esta ação não pode
-              ser desfeita.
+              Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -338,5 +316,5 @@ export function PatientsClient() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

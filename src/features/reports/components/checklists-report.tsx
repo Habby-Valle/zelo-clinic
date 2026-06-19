@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { CheckSquare, Download } from "lucide-react"
+import { CheckSquare, Download } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -10,21 +10,21 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { ChecklistsReportData } from "../types"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ChecklistsReportData } from "../types";
 
 interface ChecklistsReportProps {
-  data: ChecklistsReportData[]
-  loading: boolean
-  onExport?: () => void
+  data: ChecklistsReportData[];
+  loading: boolean;
+  onExport?: () => void;
 }
 
 export function ChecklistsReport({ data, loading, onExport }: ChecklistsReportProps) {
-  const totalCompleted = data.reduce((sum, d) => sum + d.completed, 0)
-  const totalPending = data.reduce((sum, d) => sum + d.pending, 0)
+  const totalCompleted = data.reduce((sum, d) => sum + d.completed, 0);
+  const totalPending = data.reduce((sum, d) => sum + d.pending, 0);
 
   const chartData = data.map((d) => ({
     ...d,
@@ -32,7 +32,7 @@ export function ChecklistsReport({ data, loading, onExport }: ChecklistsReportPr
       day: "2-digit",
       month: "short",
     }),
-  }))
+  }));
 
   if (loading) {
     return (
@@ -44,7 +44,7 @@ export function ChecklistsReport({ data, loading, onExport }: ChecklistsReportPr
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -92,13 +92,27 @@ export function ChecklistsReport({ data, loading, onExport }: ChecklistsReportPr
                   }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="completed" name="Concluídos" stroke="#22c55e" strokeWidth={2} dot={{ fill: "#22c55e" }} />
-                <Line type="monotone" dataKey="pending" name="Pendentes" stroke="#f59e0b" strokeWidth={2} dot={{ fill: "#f59e0b" }} />
+                <Line
+                  type="monotone"
+                  dataKey="completed"
+                  name="Concluídos"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={{ fill: "#22c55e" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="pending"
+                  name="Pendentes"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  dot={{ fill: "#f59e0b" }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

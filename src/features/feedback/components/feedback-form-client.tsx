@@ -1,114 +1,97 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import {
-  Loader2,
-  Send,
-  Paperclip,
-  X,
-  Bug,
-  Lightbulb,
-  Heart,
-  MessageSquare,
-} from "lucide-react"
-import { toast } from "sonner"
-import { useAuthStore } from "@/store/authStore"
-import { useSendFeedback } from "../hooks"
+} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Send, Paperclip, X, Bug, Lightbulb, Heart, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
+import { useSendFeedback } from "../hooks";
 
 const typeIcons: Record<string, typeof Bug> = {
   bug: Bug,
   feature: Lightbulb,
   compliment: Heart,
   other: MessageSquare,
-}
+};
 
 const typeTitles: Record<string, string> = {
   bug: "Reportar Bug",
   feature: "Sugerir Melhoria",
   compliment: "Enviar Elogio",
   other: "Outro Assunto",
-}
+};
 
 const typeOptions: Record<string, { label: string; Icon: typeof Bug }> = {
   bug: { label: "Reportar Bug", Icon: Bug },
   feature: { label: "Sugestão de Melhoria", Icon: Lightbulb },
   compliment: { label: "Elogio", Icon: Heart },
   other: { label: "Outro", Icon: MessageSquare },
-}
+};
 
 export function FeedbackFormClient() {
-  const clinicId = useAuthStore((s) => s.user?.clinic_id ?? null)
+  const clinicId = useAuthStore((s) => s.user?.clinic_id ?? null);
 
-  const [type, setType] = useState("bug")
-  const [subject, setSubject] = useState("")
-  const [message, setMessage] = useState("")
-  const [files, setFiles] = useState<File[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [type, setType] = useState("bug");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const sendFeedback = useSendFeedback()
+  const sendFeedback = useSendFeedback();
 
-  const TypeIcon = typeIcons[type] ?? MessageSquare
+  const TypeIcon = typeIcons[type] ?? MessageSquare;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(e.target.files ?? [])
-    const valid = selected.filter((f) => f.size <= 10 * 1024 * 1024)
+    const selected = Array.from(e.target.files ?? []);
+    const valid = selected.filter((f) => f.size <= 10 * 1024 * 1024);
     if (valid.length !== selected.length) {
-      toast.error("Alguns arquivos excedem o limite de 10MB e foram ignorados.")
+      toast.error("Alguns arquivos excedem o limite de 10MB e foram ignorados.");
     }
-    setFiles((prev) => [...prev, ...valid].slice(0, 5))
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    setFiles((prev) => [...prev, ...valid].slice(0, 5));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmit() {
     if (!subject.trim()) {
-      toast.error("Preencha o assunto")
-      return
+      toast.error("Preencha o assunto");
+      return;
     }
     if (!message.trim()) {
-      toast.error("Preencha a mensagem")
-      return
+      toast.error("Preencha a mensagem");
+      return;
     }
 
     sendFeedback.mutate(
       { type, subject: subject.trim(), message: message.trim(), clinicId, files },
       {
         onSuccess: () => {
-          toast.success("Feedback enviado com sucesso! Obrigado.")
-          setType("bug")
-          setSubject("")
-          setMessage("")
-          setFiles([])
+          toast.success("Feedback enviado com sucesso! Obrigado.");
+          setType("bug");
+          setSubject("");
+          setMessage("");
+          setFiles([]);
         },
         onError: (err) => {
-          toast.error(
-            err instanceof Error ? err.message : "Erro ao enviar feedback"
-          )
+          toast.error(err instanceof Error ? err.message : "Erro ao enviar feedback");
         },
       }
-    )
+    );
   }
 
   return (
@@ -118,9 +101,7 @@ export function FeedbackFormClient() {
           <TypeIcon className="h-5 w-5" />
           {typeTitles[type] ?? "Feedback"}
         </CardTitle>
-        <CardDescription>
-          Seu feedback será enviado para a equipe Zelo.
-        </CardDescription>
+        <CardDescription>Seu feedback será enviado para a equipe Zelo.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -129,15 +110,15 @@ export function FeedbackFormClient() {
             <SelectTrigger id="type" className="w-full">
               <SelectValue>
                 {(v: string | null) => {
-                  const opt = typeOptions[v ?? ""]
-                  if (!opt) return "Selecionar tipo"
-                  const { label, Icon } = opt
+                  const opt = typeOptions[v ?? ""];
+                  if (!opt) return "Selecionar tipo";
+                  const { label, Icon } = opt;
                   return (
                     <span className="flex items-center gap-2">
                       <Icon className="h-4 w-4" />
                       {label}
                     </span>
-                  )
+                  );
                 }}
               </SelectValue>
             </SelectTrigger>
@@ -189,9 +170,7 @@ export function FeedbackFormClient() {
           <div className="flex flex-wrap gap-2">
             {files.map((file, i) => (
               <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                {file.name.length > 30
-                  ? file.name.slice(0, 27) + "..."
-                  : file.name}
+                {file.name.length > 30 ? file.name.slice(0, 27) + "..." : file.name}
                 <button
                   onClick={() => removeFile(i)}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
@@ -220,16 +199,10 @@ export function FeedbackFormClient() {
             className="hidden"
             onChange={handleFileChange}
           />
-          <p className="text-xs text-muted-foreground">
-            Formatos aceitos: PNG, JPG, WebP, GIF
-          </p>
+          <p className="text-xs text-muted-foreground">Formatos aceitos: PNG, JPG, WebP, GIF</p>
         </div>
 
-        <Button
-          onClick={handleSubmit}
-          disabled={sendFeedback.isPending}
-          className="gap-2"
-        >
+        <Button onClick={handleSubmit} disabled={sendFeedback.isPending} className="gap-2">
           {sendFeedback.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -239,5 +212,5 @@ export function FeedbackFormClient() {
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { AuditLogDetailClient } from "@/features/audit-logs"
+import { AuditLogDetailClient } from "@/features/audit-logs";
 
 export default function AuditLogDetailPage() {
-  return <AuditLogDetailClient />
+  return <AuditLogDetailClient />;
 }

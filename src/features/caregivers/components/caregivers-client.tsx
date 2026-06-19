@@ -1,20 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import {
-  Plus,
-  Mail,
-  XCircle,
-  Clock,
-  Users,
-  CheckCircle2,
-  XOctagon,
-  Loader2,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -22,16 +13,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,16 +32,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAuthStore } from "@/store/authStore"
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/store/authStore";
 import {
   useCaregivers,
   useCaregiverInvites,
   useInviteCaregiver,
   useCancelCaregiverInvite,
-} from "../hooks"
-import type { CaregiverInvite } from "../types"
+} from "../hooks";
+import type { CaregiverInvite } from "../types";
 
 const STATUS_VARIANTS: Record<
   CaregiverInvite["status"],
@@ -60,81 +51,79 @@ const STATUS_VARIANTS: Record<
   accepted: "secondary",
   expired: "outline",
   cancelled: "destructive",
-}
+};
 
 const STATUS_LABELS: Record<CaregiverInvite["status"], string> = {
   pending: "Pendente",
   accepted: "Aceito",
   expired: "Expirado",
   cancelled: "Cancelado",
-}
+};
 
 export function CaregiversClient() {
-  const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null)
+  const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
 
-  const [tab, setTab] = useState("caregivers")
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const pageSize = 20
+  const [tab, setTab] = useState("caregivers");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  const [inviteOpen, setInviteOpen] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
-  const [cancelId, setCancelId] = useState<number | null>(null)
+  const [cancelId, setCancelId] = useState<number | null>(null);
 
   const { data: caregiversData, isLoading: loadingCaregivers } = useCaregivers({
     search: tab === "caregivers" ? search : "",
     page: tab === "caregivers" ? page : 1,
     pageSize,
-  })
+  });
 
   const { data: invitesData, isLoading: loadingInvites } = useCaregiverInvites({
     search: tab === "invites" ? search : "",
     page: tab === "invites" ? page : 1,
     pageSize,
-  })
+  });
 
-  const inviteCaregiver = useInviteCaregiver()
-  const cancelInvite = useCancelCaregiverInvite()
+  const inviteCaregiver = useInviteCaregiver();
+  const cancelInvite = useCancelCaregiverInvite();
 
-  const caregivers = caregiversData?.caregivers ?? []
-  const caregiversTotal = caregiversData?.total ?? 0
-  const invites = invitesData?.invites ?? []
-  const invitesTotal = invitesData?.total ?? 0
+  const caregivers = caregiversData?.caregivers ?? [];
+  const caregiversTotal = caregiversData?.total ?? 0;
+  const invites = invitesData?.invites ?? [];
+  const invitesTotal = invitesData?.total ?? 0;
 
-  const currentTotal = tab === "caregivers" ? caregiversTotal : invitesTotal
-  const totalPages = Math.ceil(currentTotal / pageSize)
+  const currentTotal = tab === "caregivers" ? caregiversTotal : invitesTotal;
+  const totalPages = Math.ceil(currentTotal / pageSize);
 
   function onTabChange(value: string | null) {
-    if (!value) return
-    setTab(value)
-    setSearch("")
-    setPage(1)
+    if (!value) return;
+    setTab(value);
+    setSearch("");
+    setPage(1);
   }
 
   function handleInvite(e: React.FormEvent) {
-    e.preventDefault()
-    if (!inviteEmail.trim()) return
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
     if (!clinicId) {
-      setInviteError("Clínica não identificada. Faça login novamente.")
-      return
+      setInviteError("Clínica não identificada. Faça login novamente.");
+      return;
     }
-    setInviteError(null)
+    setInviteError(null);
     inviteCaregiver.mutate(
       { email: inviteEmail.trim(), clinicId },
       {
         onSuccess: () => {
-          setInviteOpen(false)
-          setInviteEmail("")
-          setTab("invites")
+          setInviteOpen(false);
+          setInviteEmail("");
+          setTab("invites");
         },
         onError: (err) =>
-          setInviteError(
-            err instanceof Error ? err.message : "Erro ao enviar convite"
-          ),
+          setInviteError(err instanceof Error ? err.message : "Erro ao enviar convite"),
       }
-    )
+    );
   }
 
   return (
@@ -142,9 +131,7 @@ export function CaregiversClient() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Cuidadores</h1>
-          <p className="mt-1 text-muted-foreground">
-            Gerencie cuidadores e convites da clínica.
-          </p>
+          <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
         </div>
         <Button onClick={() => setInviteOpen(true)} disabled={false}>
           <Plus className="mr-2 h-4 w-4" />
@@ -170,8 +157,8 @@ export function CaregiversClient() {
             placeholder="Buscar por nome ou email..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
             className="max-w-xs"
           />
@@ -222,16 +209,12 @@ export function CaregiversClient() {
                     caregivers.map((cg) => (
                       <TableRow key={cg.id}>
                         <TableCell className="font-medium">{cg.name}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {cg.email}
-                        </TableCell>
+                        <TableCell className="text-muted-foreground">{cg.email}</TableCell>
                         <TableCell>
                           {cg.patient_count > 0 ? (
                             <Badge variant="outline">{cg.patient_count}</Badge>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
-                              —
-                            </span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -261,9 +244,8 @@ export function CaregiversClient() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a{" "}
-                {Math.min(page * pageSize, caregiversTotal)} de{" "}
-                {caregiversTotal} cuidadores
+                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, caregiversTotal)}{" "}
+                de {caregiversTotal} cuidadores
               </p>
               <div className="flex gap-2">
                 <Button
@@ -293,8 +275,8 @@ export function CaregiversClient() {
             placeholder="Buscar por email..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
             className="max-w-xs"
           />
@@ -336,11 +318,7 @@ export function CaregiversClient() {
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <Mail className="h-8 w-8" />
                           <p>Nenhum convite encontrado</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setInviteOpen(true)}
-                                            >
+                          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
                             Enviar primeiro convite
                           </Button>
                         </div>
@@ -349,18 +327,14 @@ export function CaregiversClient() {
                   ) : (
                     invites.map((invite) => (
                       <TableRow key={invite.id}>
-                        <TableCell className="font-medium">
-                          {invite.email}
-                        </TableCell>
+                        <TableCell className="font-medium">{invite.email}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_VARIANTS[invite.status]}>
                             {STATUS_LABELS[invite.status]}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(invite.created_at).toLocaleDateString(
-                            "pt-BR"
-                          )}
+                          {new Date(invite.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
@@ -368,9 +342,7 @@ export function CaregiversClient() {
                               invite.status === "pending" && (
                                 <Clock className="h-3 w-3 text-destructive" />
                               )}
-                            {new Date(invite.expires_at).toLocaleDateString(
-                              "pt-BR"
-                            )}
+                            {new Date(invite.expires_at).toLocaleDateString("pt-BR")}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -396,9 +368,8 @@ export function CaregiversClient() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a{" "}
-                {Math.min(page * pageSize, invitesTotal)} de {invitesTotal}{" "}
-                convites
+                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, invitesTotal)} de{" "}
+                {invitesTotal} convites
               </p>
               <div className="flex gap-2">
                 <Button
@@ -429,14 +400,12 @@ export function CaregiversClient() {
           <DialogHeader>
             <DialogTitle>Convidar Cuidador</DialogTitle>
             <DialogDescription>
-              Envie um convite por email para um novo cuidador. Ele receberá um
-              link para criar a própria conta.
+              Envie um convite por email para um novo cuidador. Ele receberá um link para criar a
+              própria conta.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleInvite} className="space-y-4">
-            {inviteError && (
-              <p className="text-sm text-destructive">{inviteError}</p>
-            )}
+            {inviteError && <p className="text-sm text-destructive">{inviteError}</p>}
             <div className="space-y-1.5">
               <Label htmlFor="invite-email">Email do cuidador *</Label>
               <Input
@@ -454,17 +423,15 @@ export function CaregiversClient() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setInviteOpen(false)
-                  setInviteEmail("")
-                  setInviteError(null)
+                  setInviteOpen(false);
+                  setInviteEmail("");
+                  setInviteError(null);
                 }}
               >
                 Cancelar
               </Button>
               <Button type="submit" disabled={inviteCaregiver.isPending}>
-                {inviteCaregiver.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                {inviteCaregiver.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enviar Convite
               </Button>
             </div>
@@ -473,16 +440,13 @@ export function CaregiversClient() {
       </Dialog>
 
       {/* AlertDialog cancelar convite */}
-      <AlertDialog
-        open={cancelId !== null}
-        onOpenChange={() => setCancelId(null)}
-      >
+      <AlertDialog open={cancelId !== null} onOpenChange={() => setCancelId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar convite</AlertDialogTitle>
             <AlertDialogDescription>
-              O cuidador convidado não poderá mais usar este link para criar a
-              conta. Você poderá enviar um novo convite depois.
+              O cuidador convidado não poderá mais usar este link para criar a conta. Você poderá
+              enviar um novo convite depois.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -494,7 +458,7 @@ export function CaregiversClient() {
                 if (cancelId !== null) {
                   cancelInvite.mutate(cancelId, {
                     onSuccess: () => setCancelId(null),
-                  })
+                  });
                 }
               }}
             >
@@ -504,5 +468,5 @@ export function CaregiversClient() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

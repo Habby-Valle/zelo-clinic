@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useReportSummary,
   useShiftsReport,
@@ -10,38 +10,36 @@ import {
   usePatientsGrowthReport,
   useSosReport,
   useCaregiversReport,
-} from "../hooks/use-reports"
-import { ReportsFilters } from "./reports-filters"
-import { SummaryCards } from "./summary-cards"
-import { ShiftsReport } from "./shifts-report"
-import { ChecklistsReport } from "./checklists-report"
-import { PatientsGrowthReport } from "./patients-growth-report"
-import { SosReport } from "./sos-report"
-import { CaregiversReport } from "./caregivers-report"
-import type { DateRange } from "../types"
+} from "../hooks/use-reports";
+import { ReportsFilters } from "./reports-filters";
+import { SummaryCards } from "./summary-cards";
+import { ShiftsReport } from "./shifts-report";
+import { ChecklistsReport } from "./checklists-report";
+import { PatientsGrowthReport } from "./patients-growth-report";
+import { SosReport } from "./sos-report";
+import { CaregiversReport } from "./caregivers-report";
+import type { DateRange } from "../types";
 
 function getDefaultDateRange(): DateRange {
-  const now = new Date()
-  const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0]
-  const to = now.toISOString().split("T")[0]
-  return { from, to }
+  const now = new Date();
+  const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const to = now.toISOString().split("T")[0];
+  return { from, to };
 }
 
 function downloadCsv(csv: string, filename: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  const link = document.createElement("a")
-  link.href = URL.createObjectURL(blob)
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(link.href)
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function buildCsv(headers: string[], rows: string[][]): string {
   return [headers, ...rows]
     .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
-    .join("\n")
+    .join("\n");
 }
 
 function SummaryCardsSkeleton() {
@@ -56,30 +54,24 @@ function SummaryCardsSkeleton() {
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
 export function ReportsClient() {
-  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange)
+  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
 
-  const summaryQuery = useReportSummary()
-  const shiftsQuery = useShiftsReport(dateRange)
-  const checklistsQuery = useChecklistsReport(dateRange)
-  const patientsQuery = usePatientsGrowthReport(6)
-  const sosQuery = useSosReport(dateRange)
-  const caregiversQuery = useCaregiversReport(dateRange)
+  const summaryQuery = useReportSummary();
+  const shiftsQuery = useShiftsReport(dateRange);
+  const checklistsQuery = useChecklistsReport(dateRange);
+  const patientsQuery = usePatientsGrowthReport(6);
+  const sosQuery = useSosReport(dateRange);
+  const caregiversQuery = useCaregiversReport(dateRange);
 
-  const isPending =
-    shiftsQuery.isLoading ||
-    checklistsQuery.isLoading ||
-    patientsQuery.isLoading
+  const isPending = shiftsQuery.isLoading || checklistsQuery.isLoading || patientsQuery.isLoading;
 
-  const handleFilterChange = useCallback(
-    ({ dateRange: dr }: { dateRange: DateRange }) => {
-      setDateRange(dr)
-    },
-    []
-  )
+  const handleFilterChange = useCallback(({ dateRange: dr }: { dateRange: DateRange }) => {
+    setDateRange(dr);
+  }, []);
 
   function exportShiftsCsv() {
     const csv = buildCsv(
@@ -90,37 +82,29 @@ export function ReportsClient() {
         String(d.completed),
         String(d.cancelled),
       ])
-    )
-    downloadCsv(csv, "relatorio-turnos.csv")
+    );
+    downloadCsv(csv, "relatorio-turnos.csv");
   }
 
   function exportChecklistsCsv() {
     const csv = buildCsv(
       ["Data", "Concluídos", "Pendentes"],
-      (checklistsQuery.data ?? []).map((d) => [
-        d.date,
-        String(d.completed),
-        String(d.pending),
-      ])
-    )
-    downloadCsv(csv, "relatorio-checklists.csv")
+      (checklistsQuery.data ?? []).map((d) => [d.date, String(d.completed), String(d.pending)])
+    );
+    downloadCsv(csv, "relatorio-checklists.csv");
   }
 
   function exportPatientsCsv() {
     const csv = buildCsv(
       ["Mês", "Total", "Novos"],
-      (patientsQuery.data ?? []).map((d) => [
-        d.month,
-        String(d.total),
-        String(d.new),
-      ])
-    )
-    downloadCsv(csv, "relatorio-pacientes.csv")
+      (patientsQuery.data ?? []).map((d) => [d.month, String(d.total), String(d.new)])
+    );
+    downloadCsv(csv, "relatorio-pacientes.csv");
   }
 
   function exportSosCsv() {
-    const sosData = sosQuery.data
-    if (!sosData) return
+    const sosData = sosQuery.data;
+    if (!sosData) return;
     const csv = buildCsv(
       ["Data", "Total", "Confirmados", "Resolvidos"],
       sosData.byDate.map((d) => [
@@ -129,8 +113,8 @@ export function ReportsClient() {
         String(d.acknowledged),
         String(d.resolved),
       ])
-    )
-    downloadCsv(csv, "relatorio-sos.csv")
+    );
+    downloadCsv(csv, "relatorio-sos.csv");
   }
 
   function exportCaregiversCsv() {
@@ -143,8 +127,8 @@ export function ReportsClient() {
         String(d.cancelledShifts),
         String(d.completedChecklists),
       ])
-    )
-    downloadCsv(csv, "relatorio-cuidadores.csv")
+    );
+    downloadCsv(csv, "relatorio-cuidadores.csv");
   }
 
   return (
@@ -201,5 +185,5 @@ export function ReportsClient() {
         />
       </div>
     </div>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { Suspense } from "react"
-import { getMyClinicPlan, getAllPlans, arePlansEnabled } from "./actions"
-import { PlanManagementClient } from "./plan-client"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Suspense } from "react";
+import { getMyClinicPlan, getAllPlans, arePlansEnabled } from "./actions";
+import { PlanManagementClient } from "./plan-client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 function PlanSkeleton() {
   return (
@@ -29,7 +29,7 @@ function PlanSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 async function PlanContent() {
@@ -37,7 +37,7 @@ async function PlanContent() {
     getMyClinicPlan(),
     getAllPlans(),
     arePlansEnabled(),
-  ])
+  ]);
 
   return (
     <PlanManagementClient
@@ -49,7 +49,7 @@ async function PlanContent() {
       availablePlans={allPlans}
       plansEnabled={plansEnabled}
     />
-  )
+  );
 }
 
 export default function PlanPage() {
@@ -57,14 +57,12 @@ export default function PlanPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Plano</h1>
-        <p className="text-muted-foreground">
-          Gerencie o plano da sua clínica.
-        </p>
+        <p className="text-muted-foreground">Gerencie o plano da sua clínica.</p>
       </div>
 
       <Suspense fallback={<PlanSkeleton />}>
         <PlanContent />
       </Suspense>
     </div>
-  )
+  );
 }

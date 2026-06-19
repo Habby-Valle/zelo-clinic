@@ -1,48 +1,48 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { decodeJwt, isTokenExpired } from "@/lib/jwt"
-import { BriefcaseMedical, Heart, Shield, Users } from "lucide-react"
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { decodeJwt, isTokenExpired } from "@/lib/jwt";
+import { BriefcaseMedical, Heart, Shield, Users } from "lucide-react";
 
 const features = [
   { icon: Users, text: "Gestão completa de pacientes e cuidadores" },
   { icon: BriefcaseMedical, text: "Controle de turnos e checklists" },
   { icon: Shield, text: "Alertas SOS em tempo real" },
   { icon: Heart, text: "Relatórios e auditoria da clínica" },
-]
+];
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get("ze_access")?.value
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("ze_access")?.value;
 
   if (accessToken) {
-    const payload = decodeJwt(accessToken)
+    const payload = decodeJwt(accessToken);
     if (payload && !isTokenExpired(payload) && payload.role === "clinic_admin") {
-      redirect("/dashboard")
+      redirect("/dashboard");
     }
   }
 
   return (
     <div className="flex min-h-screen">
       {/* Painel esquerdo — branding */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-primary p-12 text-primary-foreground">
+      <div className="hidden flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex lg:w-1/2">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm">
             <BriefcaseMedical className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-semibold tracking-widest uppercase text-white/60">Zelo</p>
-            <p className="text-sm font-bold leading-none">Clinic</p>
+            <p className="text-xs font-semibold tracking-widest text-white/60 uppercase">Zelo</p>
+            <p className="text-sm leading-none font-bold">Clinic</p>
           </div>
         </div>
 
         <div className="space-y-8">
           <div className="space-y-3">
-            <h1 className="text-4xl font-bold leading-tight tracking-tight">
+            <h1 className="text-4xl leading-tight font-bold tracking-tight">
               Cuidado com
               <br />
               excelência.
             </h1>
-            <p className="text-lg text-white/70 leading-relaxed max-w-sm">
+            <p className="max-w-sm text-lg leading-relaxed text-white/70">
               Gerencie sua clínica, sua equipe e seus pacientes em um único lugar.
             </p>
           </div>
@@ -77,5 +77,5 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         <div className="w-full max-w-sm">{children}</div>
       </div>
     </div>
-  )
+  );
 }

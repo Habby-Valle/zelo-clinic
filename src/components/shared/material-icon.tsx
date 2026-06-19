@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const SIZE_CLASS = {
   sm: "text-base",
   md: "text-xl",
   lg: "text-2xl",
   xl: "text-3xl",
-} as const
+} as const;
 
 interface MaterialIconProps {
-  name: string
-  className?: string
-  size?: keyof typeof SIZE_CLASS
+  name: string;
+  className?: string;
+  size?: keyof typeof SIZE_CLASS;
 }
 
 export function MaterialIcon({ name, className, size = "md" }: MaterialIconProps) {
@@ -23,5 +23,5 @@ export function MaterialIcon({ name, className, size = "md" }: MaterialIconProps
     >
       {name.replace(/-/g, "_")}
     </span>
-  )
+  );
 }

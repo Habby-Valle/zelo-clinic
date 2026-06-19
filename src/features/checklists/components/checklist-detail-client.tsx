@@ -1,21 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Calendar, CheckSquare, ListChecks, Pencil, Trash2, Loader2, Settings, Copy } from "lucide-react"
-import { toast } from "sonner"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Calendar,
+  CheckSquare,
+  ListChecks,
+  Pencil,
+  Trash2,
+  Loader2,
+  Settings,
+  Copy,
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { useChecklist, useUpdateChecklist, useDeleteChecklist, useDuplicateChecklist } from "@/features/checklists/hooks"
-import type { ChecklistDetail } from "@/features/checklists/types"
-import { MaterialIcon } from "@/components/shared/material-icon"
-import { MaterialIconPicker } from "@/components/shared/material-icon-picker"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  useChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useDuplicateChecklist,
+} from "@/features/checklists/hooks";
+import type { ChecklistDetail } from "@/features/checklists/types";
+import { MaterialIcon } from "@/components/shared/material-icon";
+import { MaterialIconPicker } from "@/components/shared/material-icon-picker";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -23,7 +38,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,35 +48,30 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ITEM_TYPE_LABELS: Record<string, string> = {
   boolean: "Sim/Não",
   text: "Texto",
   number: "Número",
   select: "Seleção",
-}
+};
 
 interface Props {
-  id: number
+  id: number;
 }
 
 export function ChecklistDetailClient({ id }: Props) {
-  const router = useRouter()
-  const { data: checklist, isLoading } = useChecklist(id)
-  const deleteChecklist = useDeleteChecklist()
-  const duplicateChecklist = useDuplicateChecklist()
+  const router = useRouter();
+  const { data: checklist, isLoading } = useChecklist(id);
+  const deleteChecklist = useDeleteChecklist();
+  const duplicateChecklist = useDuplicateChecklist();
 
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
-  if (isLoading) return <ChecklistDetailSkeleton />
+  if (isLoading) return <ChecklistDetailSkeleton />;
 
   if (!checklist) {
     return (
@@ -72,12 +82,12 @@ export function ChecklistDetailClient({ id }: Props) {
           Voltar
         </Button>
       </div>
-    )
+    );
   }
 
-  const items = checklist.items ?? []
-  const isGlobal = checklist.clinic_id === null
-  const isMine = !isGlobal
+  const items = checklist.items ?? [];
+  const isGlobal = checklist.clinic_id === null;
+  const isMine = !isGlobal;
 
   return (
     <div className="space-y-6">
@@ -126,8 +136,8 @@ export function ChecklistDetailClient({ id }: Props) {
             onClick={() =>
               duplicateChecklist.mutate(id, {
                 onSuccess: () => {
-                  toast.success("Checklist duplicado para a clínica")
-                  router.push("/checklists")
+                  toast.success("Checklist duplicado para a clínica");
+                  router.push("/checklists");
                 },
                 onError: () => toast.error("Erro ao duplicar checklist"),
               })
@@ -147,15 +157,11 @@ export function ChecklistDetailClient({ id }: Props) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Origem
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Origem</CardTitle>
             <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium">
-              {isGlobal ? "Global" : "Da clínica"}
-            </p>
+            <p className="text-sm font-medium">{isGlobal ? "Global" : "Da clínica"}</p>
             {checklist.clinic_name && (
               <p className="text-xs text-muted-foreground">{checklist.clinic_name}</p>
             )}
@@ -174,9 +180,7 @@ export function ChecklistDetailClient({ id }: Props) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Criado em
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Criado em</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -201,9 +205,7 @@ export function ChecklistDetailClient({ id }: Props) {
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum item cadastrado neste checklist.
-            </p>
+            <p className="text-sm text-muted-foreground">Nenhum item cadastrado neste checklist.</p>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -222,9 +224,7 @@ export function ChecklistDetailClient({ id }: Props) {
                     .sort((a, b) => a.order - b.order)
                     .map((item, idx) => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {idx + 1}
-                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{idx + 1}</TableCell>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>
                           <Badge variant="outline">
@@ -287,9 +287,7 @@ export function ChecklistDetailClient({ id }: Props) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir checklist?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -297,14 +295,14 @@ export function ChecklistDetailClient({ id }: Props) {
               disabled={deleteChecklist.isPending}
               onClick={async () => {
                 try {
-                  await deleteChecklist.mutateAsync(id)
-                  toast.success("Checklist excluído")
-                  router.push("/checklists")
+                  await deleteChecklist.mutateAsync(id);
+                  toast.success("Checklist excluído");
+                  router.push("/checklists");
                 } catch {
-                  toast.error("Erro ao excluir checklist")
+                  toast.error("Erro ao excluir checklist");
                 }
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               {deleteChecklist.isPending ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
@@ -312,34 +310,28 @@ export function ChecklistDetailClient({ id }: Props) {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
 
-function EditForm({
-  checklist,
-  onSuccess,
-}: {
-  checklist: ChecklistDetail
-  onSuccess: () => void
-}) {
-  const updateChecklist = useUpdateChecklist(checklist.id)
-  const [name, setName] = useState(checklist.name)
-  const [icon, setIcon] = useState(checklist.icon ?? "")
-  const [isActive, setIsActive] = useState(checklist.is_active)
+function EditForm({ checklist, onSuccess }: { checklist: ChecklistDetail; onSuccess: () => void }) {
+  const updateChecklist = useUpdateChecklist(checklist.id);
+  const [name, setName] = useState(checklist.name);
+  const [icon, setIcon] = useState(checklist.icon ?? "");
+  const [isActive, setIsActive] = useState(checklist.is_active);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
     try {
       await updateChecklist.mutateAsync({
         name: name.trim(),
         icon: icon || undefined,
         is_active: isActive,
-      })
-      toast.success("Checklist atualizado")
-      onSuccess()
+      });
+      toast.success("Checklist atualizado");
+      onSuccess();
     } catch {
-      toast.error("Erro ao atualizar")
+      toast.error("Erro ao atualizar");
     }
   }
 
@@ -375,7 +367,7 @@ function EditForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }
 
 function ChecklistDetailSkeleton() {
@@ -401,5 +393,5 @@ function ChecklistDetailSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }

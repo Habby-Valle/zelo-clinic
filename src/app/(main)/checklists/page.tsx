@@ -1,5 +1,5 @@
-import { ChecklistsPageClient } from "@/features/checklists/components"
+import { ChecklistsPageClient } from "@/features/checklists/components";
 
 export default function ChecklistsPage() {
-  return <ChecklistsPageClient />
+  return <ChecklistsPageClient />;
 }

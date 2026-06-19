@@ -1,1 +1,1 @@
-export * from "./use-sos"
+export * from "./use-sos";

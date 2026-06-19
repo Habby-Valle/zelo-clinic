@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { BarChart3, Download } from "lucide-react"
+import { BarChart3, Download } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -10,22 +10,22 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { ShiftsReportData } from "../types"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ShiftsReportData } from "../types";
 
 interface ShiftsReportProps {
-  data: ShiftsReportData[]
-  loading: boolean
-  onExport?: () => void
+  data: ShiftsReportData[];
+  loading: boolean;
+  onExport?: () => void;
 }
 
 export function ShiftsReport({ data, loading, onExport }: ShiftsReportProps) {
-  const totalShifts = data.reduce((sum, d) => sum + d.total, 0)
-  const completedShifts = data.reduce((sum, d) => sum + d.completed, 0)
-  const cancelledShifts = data.reduce((sum, d) => sum + d.cancelled, 0)
+  const totalShifts = data.reduce((sum, d) => sum + d.total, 0);
+  const completedShifts = data.reduce((sum, d) => sum + d.completed, 0);
+  const cancelledShifts = data.reduce((sum, d) => sum + d.cancelled, 0);
 
   const chartData = data.map((d) => ({
     ...d,
@@ -33,7 +33,7 @@ export function ShiftsReport({ data, loading, onExport }: ShiftsReportProps) {
       day: "2-digit",
       month: "short",
     }),
-  }))
+  }));
 
   if (loading) {
     return (
@@ -45,7 +45,7 @@ export function ShiftsReport({ data, loading, onExport }: ShiftsReportProps) {
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -105,5 +105,5 @@ export function ShiftsReport({ data, loading, onExport }: ShiftsReportProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

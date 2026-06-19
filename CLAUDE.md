@@ -12,15 +12,15 @@ O **Zelo** é uma plataforma de gestão de cuidados com pacientes (principalment
 
 ## Tech Stack (obrigatório seguir)
 
-| Camada | Tecnologia |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19 + TypeScript strict |
-| Estilo | Tailwind CSS v4 + shadcn/ui + lucide-react |
-| Backend | API REST Django |
-| Estado | Zustand + TanStack Query |
-| Formulários | React Hook Form + Zod |
-| Deploy | Vercel |
-| Lint | ESLint + Prettier |
+| Camada      | Tecnologia                                             |
+| ----------- | ------------------------------------------------------ |
+| Framework   | Next.js 16 (App Router) + React 19 + TypeScript strict |
+| Estilo      | Tailwind CSS v4 + shadcn/ui + lucide-react             |
+| Backend     | API REST Django                                        |
+| Estado      | Zustand + TanStack Query                               |
+| Formulários | React Hook Form + Zod                                  |
+| Deploy      | Vercel                                                 |
+| Lint        | ESLint + Prettier                                      |
 
 > Não introduzir dependências fora desta stack sem alinhamento explícito.
 
@@ -104,49 +104,55 @@ zelo-clinic/
 
 ## Responsabilidades por camada
 
-| Camada | Responsabilidade |
-|---|---|
-| `app/` | Rotas e páginas — sem lógica de negócio |
-| `features/*/services/` | Única camada que chama a API Django |
-| `features/*/hooks/` | `useQuery` / `useMutation` — alimenta a UI |
-| `lib/api.ts` | Cliente HTTP com base URL e token JWT |
-| `store/` | Estado global que não vem da API (auth, preferências) |
-| `components/ui/` | Primitivos shadcn/ui — não modificar |
+| Camada                 | Responsabilidade                                      |
+| ---------------------- | ----------------------------------------------------- |
+| `app/`                 | Rotas e páginas — sem lógica de negócio               |
+| `features/*/services/` | Única camada que chama a API Django                   |
+| `features/*/hooks/`    | `useQuery` / `useMutation` — alimenta a UI            |
+| `lib/api.ts`           | Cliente HTTP com base URL e token JWT                 |
+| `store/`               | Estado global que não vem da API (auth, preferências) |
+| `components/ui/`       | Primitivos shadcn/ui — não modificar                  |
 
 ---
 
 ## Padrões obrigatórios
 
 ### `lib/api.ts`
+
 - Cliente HTTP base com `fetch`
 - Injeta `Authorization: Bearer <token>` via cookie `ze_access` (Server) ou store (Client)
 - Lança erro se `res.ok === false`
 - Base URL via `NEXT_PUBLIC_API_URL`
 
 ### Services
+
 - Vivem em `features/[domínio]/services/`
 - Só importam de `@/lib/api`
 - Sem lógica de UI, sem hooks do React
 - Funções assíncronas puras com tipos explícitos
 
 ### Hooks
+
 - Vivem em `features/[domínio]/hooks/`
 - `useQuery` para leitura, `useMutation` para escrita
 - `useMutation` sempre chama `invalidateQueries` no `onSuccess`
 - Nunca usar `useState` + `useEffect` para buscar dados
 
 ### Formulários
+
 - React Hook Form + Zod
 - Validação: `.issues[0].message`
 - Mutações retornam `{ success: boolean; error?: string }`
 - Use `startTransition` para async state updates
 
 ### Store (Zustand)
+
 - Apenas estado que não vem da API
 - Sem chamadas de API dentro da store
 - Ações nomeadas com verbos: `set`, `reset`, `clear`
 
 ### Componentes
+
 - Named exports — sem default export (exceto arquivos de rota)
 - Props tipadas com `interface` explícita
 - Nunca `any` — use `unknown` ou tipo explícito

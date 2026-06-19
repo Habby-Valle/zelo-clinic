@@ -1,25 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
-import {
-  Check,
-  CreditCard,
-  AlertCircle,
-  Crown,
-  CheckCircle,
-  XCircle,
-  Loader2,
-} from "lucide-react"
-import { toast } from "sonner"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { Check, CreditCard, AlertCircle, Crown, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,31 +15,27 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import {
-  requestPlanChange,
-  syncStripeSubscription,
-  cancelSubscription,
-} from "./actions"
-import type { Plan, ClinicPlan } from "@/features/plan/types"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { requestPlanChange, syncStripeSubscription, cancelSubscription } from "./actions";
+import type { Plan, ClinicPlan } from "@/features/plan/types";
 
 interface PlanCardProps {
-  plan: Plan
-  isCurrentPlan: boolean
-  onSubscribe: (planId: string) => void
-  loadingPlanId: string | null
-  disabled?: boolean
-  disabledReason?: string
+  plan: Plan;
+  isCurrentPlan: boolean;
+  onSubscribe: (planId: string) => void;
+  loadingPlanId: string | null;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(price)
+  }).format(price);
 }
 
 function PlanCard({
@@ -64,7 +46,7 @@ function PlanCard({
   disabled,
   disabledReason,
 }: PlanCardProps) {
-  const isLoading = loadingPlanId === plan.id
+  const isLoading = loadingPlanId === plan.id;
 
   return (
     <Card
@@ -85,24 +67,18 @@ function PlanCard({
           <span>{plan.name}</span>
           {isCurrentPlan && <Crown className="h-5 w-5 text-primary" />}
         </CardTitle>
-        <CardDescription className="line-clamp-2">
-          {plan.description}
-        </CardDescription>
+        <CardDescription className="line-clamp-2">{plan.description}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div>
-          <span className="text-3xl font-bold">
-            {formatPrice(plan.monthly_price)}
-          </span>
+          <span className="text-3xl font-bold">{formatPrice(plan.monthly_price)}</span>
           <span className="text-muted-foreground">/mês</span>
         </div>
 
         {plan.benefits && plan.benefits.length > 0 && (
           <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">
-              Recursos:
-            </p>
+            <p className="text-xs font-medium text-muted-foreground">Recursos:</p>
             <ul className="space-y-1">
               {plan.benefits.slice(0, 5).map((benefit, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
@@ -145,39 +121,32 @@ function PlanCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 interface CurrentPlanInfoProps {
-  plan: Plan
+  plan: Plan;
   clinicPlan: {
-    status: string
-    started_at: string
-    expires_at: string | null
-  }
-  onCancel?: () => void
-  cancelLoading?: boolean
+    status: string;
+    started_at: string;
+    expires_at: string | null;
+  };
+  onCancel?: () => void;
+  cancelLoading?: boolean;
 }
 
-function CurrentPlanInfo({
-  plan,
-  clinicPlan,
-  onCancel,
-  cancelLoading,
-}: CurrentPlanInfoProps) {
-  const isFree = clinicPlan.status === "free" || plan.monthly_price === 0
-  const isTrial = clinicPlan.status === "trial"
-  const startedDate = new Date(clinicPlan.started_at)
-  const expiresDate = clinicPlan.expires_at
-    ? new Date(clinicPlan.expires_at)
-    : null
-  const now = new Date()
+function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentPlanInfoProps) {
+  const isFree = clinicPlan.status === "free" || plan.monthly_price === 0;
+  const isTrial = clinicPlan.status === "trial";
+  const startedDate = new Date(clinicPlan.started_at);
+  const expiresDate = clinicPlan.expires_at ? new Date(clinicPlan.expires_at) : null;
+  const now = new Date();
   const daysLeft = expiresDate
     ? Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    : null
+    : null;
 
-  const isExpired = daysLeft !== null && daysLeft <= 0
-  const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 7
+  const isExpired = daysLeft !== null && daysLeft <= 0;
+  const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 7;
 
   const statusLabel =
     clinicPlan.status === "free"
@@ -190,7 +159,7 @@ function CurrentPlanInfo({
             ? "Expirado"
             : clinicPlan.status === "cancelled"
               ? "Cancelado"
-              : clinicPlan.status
+              : clinicPlan.status;
 
   return (
     <Card className={isExpired ? "border-destructive" : ""}>
@@ -225,15 +194,11 @@ function CurrentPlanInfo({
           <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4">
             <div>
               <p className="text-xs text-muted-foreground">Início</p>
-              <p className="font-medium">
-                {startedDate.toLocaleDateString("pt-BR")}
-              </p>
+              <p className="font-medium">{startedDate.toLocaleDateString("pt-BR")}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Vencimento</p>
-              <p className="font-medium">
-                {expiresDate?.toLocaleDateString("pt-BR") ?? "—"}
-              </p>
+              <p className="font-medium">{expiresDate?.toLocaleDateString("pt-BR") ?? "—"}</p>
             </div>
           </div>
         )}
@@ -286,9 +251,7 @@ function CurrentPlanInfo({
                 onClick={onCancel}
                 disabled={cancelLoading}
               >
-                {cancelLoading ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : null}
+                {cancelLoading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
                 Cancelar assinatura
               </Button>
             )}
@@ -296,17 +259,17 @@ function CurrentPlanInfo({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 interface PlanManagementClientProps {
   currentPlan: {
-    plan: Plan | null
-    clinicPlan: ClinicPlan | null
-    hasUsedTrial?: boolean
-  }
-  availablePlans: Plan[]
-  plansEnabled?: boolean
+    plan: Plan | null;
+    clinicPlan: ClinicPlan | null;
+    hasUsedTrial?: boolean;
+  };
+  availablePlans: Plan[];
+  plansEnabled?: boolean;
 }
 
 export function PlanManagementClient({
@@ -314,102 +277,102 @@ export function PlanManagementClient({
   availablePlans,
   plansEnabled = false,
 }: PlanManagementClientProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const queryClient = useQueryClient()
-  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showCancelDialog, setShowCancelDialog] = useState(false)
-  const [cancelLoading, setCancelLoading] = useState(false)
-  const hasUsedTrial = currentPlan.hasUsedTrial
-  const currentStatus = currentPlan.clinicPlan?.status
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const hasUsedTrial = currentPlan.hasUsedTrial;
+  const currentStatus = currentPlan.clinicPlan?.status;
 
   const canCancel =
     currentStatus !== undefined &&
     currentStatus !== "free" &&
     currentStatus !== "trial" &&
-    currentPlan.plan !== null
+    currentPlan.plan !== null;
 
   useEffect(() => {
-    const success = searchParams.get("success")
-    const canceled = searchParams.get("canceled")
-    const portalReturn = searchParams.get("portal_return")
+    const success = searchParams.get("success");
+    const canceled = searchParams.get("canceled");
+    const portalReturn = searchParams.get("portal_return");
 
     if (success === "true") {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] })
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Assinatura realizada com sucesso!", {
         description: "Bem-vindo ao seu novo plano.",
         icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-      })
-      router.replace("/plan")
+      });
+      router.replace("/plan");
     } else if (canceled === "true") {
       toast.info("Checkout cancelado", {
         description: "Sua assinatura não foi alterada.",
         icon: <XCircle className="h-5 w-5 text-muted-foreground" />,
-      })
-      router.replace("/plan")
+      });
+      router.replace("/plan");
     } else if (portalReturn === "true") {
-      router.replace("/plan")
+      router.replace("/plan");
       syncStripeSubscription().then(({ synced }) => {
-        queryClient.invalidateQueries({ queryKey: ["subscription"] })
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
         if (synced) {
           toast.success("Assinatura cancelada com sucesso!", {
             description: "Seu plano foi atualizado para Gratuito.",
             icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          })
+          });
         } else {
           toast.info("Retorno do portal de pagamentos", {
             description: "Suas alterações serão aplicadas em breve.",
-          })
+          });
         }
-        router.refresh()
-      })
+        router.refresh();
+      });
     }
-  }, [searchParams, router, queryClient])
+  }, [searchParams, router, queryClient]);
 
   async function handleSubscribe(planId: string) {
-    setLoadingPlanId(planId)
-    setError(null)
+    setLoadingPlanId(planId);
+    setError(null);
 
-    const result = await requestPlanChange(planId, "monthly")
+    const result = await requestPlanChange(planId, "monthly");
 
     if (result.success) {
       if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl
+        window.location.href = result.checkoutUrl;
       } else {
-        queryClient.invalidateQueries({ queryKey: ["subscription"] })
-        toast.success("Plano ativado com sucesso!")
-        router.refresh()
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        toast.success("Plano ativado com sucesso!");
+        router.refresh();
       }
     } else {
-      setError(result.error ?? "Erro ao processar assinatura")
-      toast.error(result.error ?? "Erro ao processar assinatura")
+      setError(result.error ?? "Erro ao processar assinatura");
+      toast.error(result.error ?? "Erro ao processar assinatura");
     }
 
-    setLoadingPlanId(null)
+    setLoadingPlanId(null);
   }
 
   async function handleCancelConfirm() {
-    setCancelLoading(true)
-    setShowCancelDialog(false)
+    setCancelLoading(true);
+    setShowCancelDialog(false);
 
-    const result = await cancelSubscription()
+    const result = await cancelSubscription();
 
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] })
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Assinatura cancelada com sucesso!", {
         description: "Seu plano foi atualizado para Gratuito.",
         icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-      })
-      router.refresh()
+      });
+      router.refresh();
     } else {
-      toast.error(result.error ?? "Erro ao cancelar assinatura")
+      toast.error(result.error ?? "Erro ao cancelar assinatura");
     }
 
-    setCancelLoading(false)
+    setCancelLoading(false);
   }
 
-  const currentPlanId = currentPlan.plan?.id
+  const currentPlanId = currentPlan.plan?.id;
 
   return (
     <div className="space-y-8">
@@ -427,16 +390,16 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? Sua assinatura Stripe será
-              encerrada imediatamente e o plano será rebaixado para{" "}
-              <strong>Gratuito</strong>. Esta ação não pode ser desfeita.
+              Tem certeza que deseja cancelar? Sua assinatura Stripe será encerrada imediatamente e
+              o plano será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser
+              desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               Cancelar assinatura
             </AlertDialogAction>
@@ -447,9 +410,7 @@ export function PlanManagementClient({
       <div className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold">Planos Disponíveis</h2>
-          <p className="text-sm text-muted-foreground">
-            Escolha o plano ideal para sua clínica.
-          </p>
+          <p className="text-sm text-muted-foreground">Escolha o plano ideal para sua clínica.</p>
         </div>
 
         {error && (
@@ -461,16 +422,16 @@ export function PlanManagementClient({
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {availablePlans.map((plan) => {
-            const isFree = plan.monthly_price === 0
-            const isTrial = plan.name === "Trial"
-            const trialDisabled = isTrial && !!hasUsedTrial
-            const paidDisabled = !plansEnabled && !isFree
-            const disabled = trialDisabled || paidDisabled
+            const isFree = plan.monthly_price === 0;
+            const isTrial = plan.name === "Trial";
+            const trialDisabled = isTrial && !!hasUsedTrial;
+            const paidDisabled = !plansEnabled && !isFree;
+            const disabled = trialDisabled || paidDisabled;
             const disabledReason = trialDisabled
               ? "Você já utilizou o Trial anteriormente"
               : paidDisabled
                 ? "Planos pagos indisponíveis no momento"
-                : undefined
+                : undefined;
             return (
               <PlanCard
                 key={plan.id}
@@ -481,10 +442,10 @@ export function PlanManagementClient({
                 disabled={disabled}
                 disabledReason={disabledReason}
               />
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }

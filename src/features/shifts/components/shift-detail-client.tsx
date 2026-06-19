@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useTransition } from "react"
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import {
   ArrowLeft,
   User,
@@ -13,28 +13,28 @@ import {
   XCircle,
   Trash2,
   Loader2,
-} from "lucide-react"
+} from "lucide-react";
 
-import { useShift } from "@/features/shifts/hooks"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { finishShift, cancelShift, deleteShift } from "@/app/(main)/shifts/actions"
+import { useShift } from "@/features/shifts/hooks";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { finishShift, cancelShift, deleteShift } from "@/app/(main)/shifts/actions";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
-}
+};
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: "Agendado",
   in_progress: "Em andamento",
   completed: "Concluído",
   cancelled: "Cancelado",
-}
+};
 
 function formatDateTime(dateStr: string) {
   return new Date(dateStr).toLocaleString("pt-BR", {
@@ -43,35 +43,35 @@ function formatDateTime(dateStr: string) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 function formatDuration(start: string, end: string) {
-  const diffMs = new Date(end).getTime() - new Date(start).getTime()
-  if (diffMs < 0) return "—"
-  const totalMinutes = Math.floor(diffMs / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (hours === 0) return `${minutes}min`
-  return `${hours}h ${minutes}min`
+  const diffMs = new Date(end).getTime() - new Date(start).getTime();
+  if (diffMs < 0) return "—";
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}min`;
+  return `${hours}h ${minutes}min`;
 }
 
 interface Props {
-  id: number
+  id: number;
 }
 
 export function ShiftDetailClient({ id }: Props) {
-  const router = useRouter()
-  const { data: shift, isLoading } = useShift(id)
-  const [isPending, startTransition] = useTransition()
+  const router = useRouter();
+  const { data: shift, isLoading } = useShift(id);
+  const [isPending, startTransition] = useTransition();
 
   function handleAction(action: () => Promise<{ success: boolean; error?: string }>) {
     startTransition(async () => {
-      const result = await action()
+      const result = await action();
       if (result.success) {
-        router.refresh()
+        router.refresh();
       }
-    })
+    });
   }
 
   if (isLoading) {
@@ -83,7 +83,7 @@ export function ShiftDetailClient({ id }: Props) {
           <Skeleton className="h-40 rounded-xl" />
         </div>
       </div>
-    )
+    );
   }
 
   if (!shift) {
@@ -94,12 +94,12 @@ export function ShiftDetailClient({ id }: Props) {
           Voltar para turnos
         </Button>
       </div>
-    )
+    );
   }
 
-  const canFinish = shift.status === "in_progress"
-  const canCancel = shift.status === "scheduled" || shift.status === "in_progress"
-  const canDelete = shift.status === "scheduled"
+  const canFinish = shift.status === "in_progress";
+  const canCancel = shift.status === "scheduled" || shift.status === "in_progress";
+  const canDelete = shift.status === "scheduled";
 
   return (
     <div className="space-y-6">
@@ -236,10 +236,10 @@ export function ShiftDetailClient({ id }: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{shift.notes}</p>
+            <p className="text-sm whitespace-pre-wrap text-muted-foreground">{shift.notes}</p>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

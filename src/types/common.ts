@@ -4,4 +4,4 @@ export type UserRole =
   | "guardian"
   | "caregiver"
   | "family"
-  | "emergency_contact"
+  | "emergency_contact";

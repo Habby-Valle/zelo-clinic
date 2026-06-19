@@ -1,1 +1,1 @@
-export { SettingsClient } from "./settings-client"
+export { SettingsClient } from "./settings-client";

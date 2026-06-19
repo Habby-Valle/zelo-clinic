@@ -1,54 +1,52 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, CheckCircle2 } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
-import { forgotPasswordSchema, type ForgotPasswordSchema } from "@/lib/validations/auth"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { forgotPasswordSchema, type ForgotPasswordSchema } from "@/lib/validations/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function ForgotPasswordForm() {
-  const router = useRouter()
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [sent, setSent] = useState(false)
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<ForgotPasswordSchema>({ resolver: zodResolver(forgotPasswordSchema) })
+  } = useForm<ForgotPasswordSchema>({ resolver: zodResolver(forgotPasswordSchema) });
 
   async function onSubmit(data: ForgotPasswordSchema) {
-    setServerError(null)
+    setServerError(null);
     try {
       const res = await fetch("/api/auth/password-reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.email }),
-      })
+      });
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error ?? "Erro ao enviar e-mail")
+        const err = await res.json();
+        throw new Error(err.error ?? "Erro ao enviar e-mail");
       }
-      setSent(true)
-      router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`)
+      setSent(true);
+      router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : "Ocorreu um erro ao enviar o e-mail.")
+      setServerError(err instanceof Error ? err.message : "Ocorreu um erro ao enviar o e-mail.");
     }
   }
 
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Recuperar senha
-        </h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Recuperar senha</h2>
         <p className="text-sm text-muted-foreground">
           Informe seu e-mail e enviaremos um código de verificação.
         </p>
@@ -79,16 +77,10 @@ export function ForgotPasswordForm() {
             aria-invalid={!!errors.email}
             {...register("email")}
           />
-          {errors.email && (
-            <p className="text-xs text-destructive">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting || sent}
-        >
+        <Button type="submit" className="w-full" disabled={isSubmitting || sent}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -101,11 +93,11 @@ export function ForgotPasswordForm() {
 
         <p className="text-center text-sm text-muted-foreground">
           Lembrou a senha?{" "}
-          <Link href="/login" className="text-primary hover:underline underline-offset-4">
+          <Link href="/login" className="text-primary underline-offset-4 hover:underline">
             Voltar ao login
           </Link>
         </p>
       </form>
     </div>
-  )
+  );
 }

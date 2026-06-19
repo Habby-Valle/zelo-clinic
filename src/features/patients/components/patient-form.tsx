@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
-import { patientSchema, type PatientFormValues } from "@/lib/validations/patient"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { patientSchema, type PatientFormValues } from "@/lib/validations/patient";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export type { PatientFormValues }
+export type { PatientFormValues };
 
 interface PatientFormProps {
-  defaultValues?: Partial<PatientFormValues>
-  onSubmit: (values: PatientFormValues) => void
-  isPending?: boolean
-  error?: string | null
-  submitLabel?: string
+  defaultValues?: Partial<PatientFormValues>;
+  onSubmit: (values: PatientFormValues) => void;
+  isPending?: boolean;
+  error?: string | null;
+  submitLabel?: string;
 }
 
-const GENDER_LABELS = { M: "Masculino", F: "Feminino", O: "Outro" }
-const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+const GENDER_LABELS = { M: "Masculino", F: "Feminino", O: "Outro" };
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export function PatientForm({
   defaultValues,
@@ -60,7 +60,7 @@ export function PatientForm({
       observations: "",
       ...defaultValues,
     },
-  })
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -84,23 +84,14 @@ export function PatientForm({
               disabled={isPending}
               {...register("name")}
             />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="birth_date">Data de nascimento *</Label>
-            <Input
-              id="birth_date"
-              type="date"
-              disabled={isPending}
-              {...register("birth_date")}
-            />
+            <Input id="birth_date" type="date" disabled={isPending} {...register("birth_date")} />
             {errors.birth_date && (
-              <p className="text-xs text-destructive">
-                {errors.birth_date.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.birth_date.message}</p>
             )}
           </div>
 
@@ -110,10 +101,7 @@ export function PatientForm({
               name="gender"
               control={control}
               render={({ field }) => (
-                <Select
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v ?? "")}
-                >
+                <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v ?? "")}>
                   <SelectTrigger disabled={isPending}>
                     <SelectValue placeholder="Selecionar..." />
                   </SelectTrigger>
@@ -127,9 +115,7 @@ export function PatientForm({
                 </Select>
               )}
             />
-            {errors.gender && (
-              <p className="text-xs text-destructive">{errors.gender.message}</p>
-            )}
+            {errors.gender && <p className="text-xs text-destructive">{errors.gender.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -140,9 +126,7 @@ export function PatientForm({
               disabled={isPending}
               {...register("cpf")}
             />
-            {errors.cpf && (
-              <p className="text-xs text-destructive">{errors.cpf.message}</p>
-            )}
+            {errors.cpf && <p className="text-xs text-destructive">{errors.cpf.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -153,9 +137,7 @@ export function PatientForm({
               disabled={isPending}
               {...register("phone")}
             />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
-            )}
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -167,9 +149,7 @@ export function PatientForm({
               disabled={isPending}
               {...register("email")}
             />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -180,9 +160,7 @@ export function PatientForm({
               render={({ field }) => (
                 <Select
                   value={field.value ?? "none"}
-                  onValueChange={(v) =>
-                    field.onChange((v ?? "none") === "none" ? null : v)
-                  }
+                  onValueChange={(v) => field.onChange((v ?? "none") === "none" ? null : v)}
                 >
                   <SelectTrigger disabled={isPending}>
                     <SelectValue placeholder="Selecionar..." />
@@ -261,5 +239,5 @@ export function PatientForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }

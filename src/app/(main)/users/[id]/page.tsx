@@ -1,9 +1,9 @@
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function UserDetailPage({ params }: Props) {
-  const { id } = await params
+  const { id } = await params;
 
   return (
     <div className="space-y-6">
@@ -15,5 +15,5 @@ export default async function UserDetailPage({ params }: Props) {
         <p className="text-center text-sm text-zinc-400">[ Detalhes do usuário — placeholder ]</p>
       </div>
     </div>
-  )
+  );
 }

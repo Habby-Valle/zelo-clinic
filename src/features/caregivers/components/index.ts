@@ -1,1 +1,1 @@
-export * from "./caregivers-client"
+export * from "./caregivers-client";

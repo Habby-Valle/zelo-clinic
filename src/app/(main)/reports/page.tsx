@@ -1,5 +1,5 @@
-import { Suspense } from "react"
-import { ReportsClient } from "@/features/reports"
+import { Suspense } from "react";
+import { ReportsClient } from "@/features/reports";
 
 export default function ReportsPage() {
   return (
@@ -12,5 +12,5 @@ export default function ReportsPage() {
         <ReportsClient />
       </Suspense>
     </div>
-  )
+  );
 }

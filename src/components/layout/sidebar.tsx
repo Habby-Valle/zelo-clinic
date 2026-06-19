@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -18,13 +18,13 @@ import {
   Bug,
   TestTube,
   CheckCircle,
-} from "lucide-react"
+} from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { useClinic } from "@/features/clinic/hooks"
-import { useSystemConfig } from "@/features/system-config"
+import { cn } from "@/lib/utils";
+import { useClinic } from "@/features/clinic/hooks";
+import { useSystemConfig } from "@/features/system-config";
 
-type Environment = "development" | "homologation" | "production"
+type Environment = "development" | "homologation" | "production";
 
 const envConfig: Record<
   Environment,
@@ -48,12 +48,12 @@ const envConfig: Record<
     color: "text-green-700",
     bgColor: "bg-green-100",
   },
-}
+};
 
 function EnvironmentBadge() {
-  const env = (process.env.NEXT_PUBLIC_APP_ENV ?? "development") as Environment
-  const config = envConfig[env] ?? envConfig.development
-  const EnvIcon = config.icon
+  const env = (process.env.NEXT_PUBLIC_APP_ENV ?? "development") as Environment;
+  const config = envConfig[env] ?? envConfig.development;
+  const EnvIcon = config.icon;
 
   return (
     <div
@@ -66,7 +66,7 @@ function EnvironmentBadge() {
       <EnvIcon className="h-3 w-3" />
       <span>{config.label}</span>
     </div>
-  )
+  );
 }
 
 const allNavItems = [
@@ -81,17 +81,17 @@ const allNavItems = [
   { href: "/plan", label: "Plano", icon: CreditCard },
   { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
-] as const
+] as const;
 
 export function Sidebar() {
-  const pathname = usePathname()
-  const { data: clinic } = useClinic()
-  const { data: systemConfig } = useSystemConfig()
+  const pathname = usePathname();
+  const { data: clinic } = useClinic();
+  const { data: systemConfig } = useSystemConfig();
   const navItems = allNavItems.filter(
     (item) => item.href !== "/feedback" || systemConfig?.feedback_visible !== false
-  )
-  const clinicLogo = clinic?.media_url
-  const clinicName = clinic?.name ?? "Clínica"
+  );
+  const clinicLogo = clinic?.media_url;
+  const clinicName = clinic?.name ?? "Clínica";
 
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-card">
@@ -116,9 +116,8 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {navItems.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/")
-          const Icon = item.icon
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
 
           return (
             <Link
@@ -134,7 +133,7 @@ export function Sidebar() {
               <Icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -145,5 +144,5 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
-  )
+  );
 }

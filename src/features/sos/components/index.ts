@@ -1,1 +1,1 @@
-export * from "./sos-client"
+export * from "./sos-client";

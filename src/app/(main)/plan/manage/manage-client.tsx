@@ -1,23 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { ExternalLink, CreditCard, AlertCircle, Loader2 } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ExternalLink, CreditCard, AlertCircle, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface ManageSubscriptionClientProps {
-  clinicName: string
-  hasStripeCustomer: boolean
-  currentStatus: string | null
+  clinicName: string;
+  hasStripeCustomer: boolean;
+  currentStatus: string | null;
 }
 
 export function ManageSubscriptionClient({
@@ -25,45 +19,40 @@ export function ManageSubscriptionClient({
   hasStripeCustomer,
   currentStatus,
 }: ManageSubscriptionClientProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleOpenPortal() {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await fetch("/api/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error ?? "Erro ao abrir portal")
+        throw new Error(data.error ?? "Erro ao abrir portal");
       }
       if (data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro desconhecido"
-      toast.error("Erro", { description: message })
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error("Erro", { description: message });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-  const isActive = currentStatus === "active"
-  const isTrial = currentStatus === "trial"
+  const isActive = currentStatus === "active";
+  const isTrial = currentStatus === "trial";
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Gerenciar Assinatura
-        </h1>
-        <p className="text-muted-foreground">
-          Gerencie sua assinatura e métodos de pagamento.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">Gerenciar Assinatura</h1>
+        <p className="text-muted-foreground">Gerencie sua assinatura e métodos de pagamento.</p>
       </div>
 
       <Card>
@@ -73,8 +62,7 @@ export function ManageSubscriptionClient({
             Stripe Customer Portal
           </CardTitle>
           <CardDescription>
-            Acesse o portal de pagamentos da Stripe para gerenciar sua
-            assinatura.
+            Acesse o portal de pagamentos da Stripe para gerenciar sua assinatura.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -95,25 +83,15 @@ export function ManageSubscriptionClient({
                   <p className="font-medium">{clinicName}</p>
                   <p className="text-sm text-muted-foreground">
                     Status atual:{" "}
-                    <Badge
-                      variant={
-                        isActive ? "default" : isTrial ? "secondary" : "outline"
-                      }
-                    >
-                      {isActive
-                        ? "Ativo"
-                        : isTrial
-                          ? "Trial"
-                          : (currentStatus ?? "Desconhecido")}
+                    <Badge variant={isActive ? "default" : isTrial ? "secondary" : "outline"}>
+                      {isActive ? "Ativo" : isTrial ? "Trial" : (currentStatus ?? "Desconhecido")}
                     </Badge>
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  No portal você pode:
-                </p>
+                <p className="text-sm text-muted-foreground">No portal você pode:</p>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   <li>Visualizar histórico de pagamentos</li>
                   <li>Atualizar método de pagamento</li>
@@ -122,11 +100,7 @@ export function ManageSubscriptionClient({
                 </ul>
               </div>
 
-              <Button
-                onClick={handleOpenPortal}
-                disabled={isLoading}
-                className="w-full"
-              >
+              <Button onClick={handleOpenPortal} disabled={isLoading} className="w-full">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -154,5 +128,5 @@ export function ManageSubscriptionClient({
         </Button>
       </div>
     </div>
-  )
+  );
 }

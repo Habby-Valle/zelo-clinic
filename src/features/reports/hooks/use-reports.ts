@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchReportSummaryApi,
   fetchShiftsReportApi,
@@ -8,14 +8,14 @@ import {
   fetchPatientsGrowthApi,
   fetchSosReportApi,
   fetchCaregiversReportApi,
-} from "../services"
-import type { DateRange } from "../types"
+} from "../services";
+import type { DateRange } from "../types";
 
 export function useReportSummary() {
   return useQuery({
     queryKey: ["reports", "summary"],
     queryFn: () => fetchReportSummaryApi(),
-  })
+  });
 }
 
 export function useShiftsReport(dateRange: DateRange) {
@@ -23,7 +23,7 @@ export function useShiftsReport(dateRange: DateRange) {
     queryKey: ["reports", "shifts", dateRange],
     queryFn: () => fetchShiftsReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
-  })
+  });
 }
 
 export function useChecklistsReport(dateRange: DateRange) {
@@ -31,14 +31,14 @@ export function useChecklistsReport(dateRange: DateRange) {
     queryKey: ["reports", "checklists", dateRange],
     queryFn: () => fetchChecklistsReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
-  })
+  });
 }
 
 export function usePatientsGrowthReport(months: number = 6) {
   return useQuery({
     queryKey: ["reports", "patients-growth", months],
     queryFn: () => fetchPatientsGrowthApi(months),
-  })
+  });
 }
 
 export function useSosReport(dateRange: DateRange) {
@@ -46,7 +46,7 @@ export function useSosReport(dateRange: DateRange) {
     queryKey: ["reports", "sos", dateRange],
     queryFn: () => fetchSosReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
-  })
+  });
 }
 
 export function useCaregiversReport(dateRange: DateRange) {
@@ -54,5 +54,5 @@ export function useCaregiversReport(dateRange: DateRange) {
     queryKey: ["reports", "caregivers", dateRange],
     queryFn: () => fetchCaregiversReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
-  })
+  });
 }

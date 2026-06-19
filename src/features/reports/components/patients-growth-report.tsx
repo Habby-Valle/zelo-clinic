@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Users, TrendingUp, Download } from "lucide-react"
+import { Users, TrendingUp, Download } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -10,21 +10,21 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { PatientsGrowthData } from "../types"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { PatientsGrowthData } from "../types";
 
 interface PatientsGrowthReportProps {
-  data: PatientsGrowthData[]
-  loading: boolean
-  onExport?: () => void
+  data: PatientsGrowthData[];
+  loading: boolean;
+  onExport?: () => void;
 }
 
 export function PatientsGrowthReport({ data, loading, onExport }: PatientsGrowthReportProps) {
-  const totalPatients = data.length > 0 ? data[data.length - 1].total : 0
-  const newPatients = data.reduce((sum, d) => sum + d.new, 0)
+  const totalPatients = data.length > 0 ? data[data.length - 1].total : 0;
+  const newPatients = data.reduce((sum, d) => sum + d.new, 0);
 
   if (loading) {
     return (
@@ -36,7 +36,7 @@ export function PatientsGrowthReport({ data, loading, onExport }: PatientsGrowth
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -87,13 +87,27 @@ export function PatientsGrowthReport({ data, loading, onExport }: PatientsGrowth
                   }}
                 />
                 <Legend />
-                <Area type="monotone" dataKey="total" name="Total" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.15} />
-                <Area type="monotone" dataKey="new" name="Novos" stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  name="Total"
+                  stroke="#7c3aed"
+                  fill="#7c3aed"
+                  fillOpacity={0.15}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="new"
+                  name="Novos"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.15}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

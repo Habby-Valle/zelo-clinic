@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchShiftsApi,
   fetchShiftApi,
@@ -8,14 +8,14 @@ import {
   fetchClinicPatientsApi,
   fetchClinicCaregiversApi,
   fetchChecklistOptionsApi,
-} from "../services"
-import type { ShiftFilters } from "../types"
+} from "../services";
+import type { ShiftFilters } from "../types";
 
 export function useShifts(params: ShiftFilters) {
   return useQuery({
     queryKey: ["shifts", params],
     queryFn: () => fetchShiftsApi(params),
-  })
+  });
 }
 
 export function useShift(id: number) {
@@ -23,14 +23,14 @@ export function useShift(id: number) {
     queryKey: ["shift", id],
     queryFn: () => fetchShiftApi(id),
     enabled: !!id,
-  })
+  });
 }
 
 export function useShiftTemplates() {
   return useQuery({
     queryKey: ["shift-templates"],
     queryFn: fetchShiftTemplatesApi,
-  })
+  });
 }
 
 export function useClinicPatients() {
@@ -38,7 +38,7 @@ export function useClinicPatients() {
     queryKey: ["shift-patients-options"],
     queryFn: fetchClinicPatientsApi,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }
 
 export function useClinicCaregivers() {
@@ -46,7 +46,7 @@ export function useClinicCaregivers() {
     queryKey: ["shift-caregivers-options"],
     queryFn: fetchClinicCaregiversApi,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }
 
 export function useChecklistOptions() {
@@ -54,5 +54,5 @@ export function useChecklistOptions() {
     queryKey: ["shift-checklist-options"],
     queryFn: fetchChecklistOptionsApi,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }

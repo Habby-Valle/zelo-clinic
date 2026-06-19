@@ -1,15 +1,12 @@
-import { redirect } from "next/navigation"
-import { getMyClinicPlan, manageGetClinic } from "../actions"
-import { ManageSubscriptionClient } from "./manage-client"
+import { redirect } from "next/navigation";
+import { getMyClinicPlan, manageGetClinic } from "../actions";
+import { ManageSubscriptionClient } from "./manage-client";
 
 export default async function ManageSubscriptionPage() {
-  const [clinicPlanInfo, clinic] = await Promise.all([
-    getMyClinicPlan(),
-    manageGetClinic(),
-  ])
+  const [clinicPlanInfo, clinic] = await Promise.all([getMyClinicPlan(), manageGetClinic()]);
 
   if (!clinic) {
-    redirect("/plan")
+    redirect("/plan");
   }
 
   return (
@@ -18,5 +15,5 @@ export default async function ManageSubscriptionPage() {
       hasStripeCustomer={!!clinic.stripe_customer_id}
       currentStatus={clinicPlanInfo?.clinicPlan?.status ?? null}
     />
-  )
+  );
 }

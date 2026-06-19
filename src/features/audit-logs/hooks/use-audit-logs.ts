@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useQuery } from "@tanstack/react-query"
-import { fetchAuditLogsApi, fetchAuditLogApi } from "../services"
-import type { AuditLogFilters } from "../types"
+import { useQuery } from "@tanstack/react-query";
+import { fetchAuditLogsApi, fetchAuditLogApi } from "../services";
+import type { AuditLogFilters } from "../types";
 
 export function useAuditLogs(params: AuditLogFilters) {
   return useQuery({
     queryKey: ["audit-logs", params],
     queryFn: () => fetchAuditLogsApi(params),
-  })
+  });
 }
 
 export function useAuditLog(id: string) {
@@ -16,5 +16,5 @@ export function useAuditLog(id: string) {
     queryKey: ["audit-logs", id],
     queryFn: () => fetchAuditLogApi(id),
     enabled: !!id,
-  })
+  });
 }
