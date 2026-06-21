@@ -43,6 +43,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePatients, useDeletePatient } from "../hooks";
+import { usePlanLimits } from "@/features/plan";
+import { PlanUsageBadge } from "@/components/plan-usage-badge";
 
 const GENDER_LABELS: Record<string, string> = {
   M: "Masculino",
@@ -75,6 +77,10 @@ export function PatientsClient() {
   const searchParams = useSearchParams();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deletePatient = useDeletePatient();
+  const { data: planLimits } = usePlanLimits();
+
+  const patientsUsage = planLimits?.usage?.patients ?? 0;
+  const maxPatients = planLimits?.limits?.max_patients ?? 0;
 
   const search = searchParams.get("search") ?? "";
   const isActive = searchParams.get("is_active") ?? "";
@@ -99,10 +105,13 @@ export function PatientsClient() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pacientes</h1>
-          <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
-        </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              Pacientes
+              <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
+            </h1>
+            <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
+          </div>
         <Link href="/patients/new" className={cn(buttonVariants())}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Paciente

@@ -41,6 +41,8 @@ import {
   useInviteCaregiver,
   useCancelCaregiverInvite,
 } from "../hooks";
+import { usePlanLimits } from "@/features/plan";
+import { PlanUsageBadge } from "@/components/plan-usage-badge";
 import type { CaregiverInvite } from "../types";
 
 const STATUS_VARIANTS: Record<
@@ -73,6 +75,9 @@ export function CaregiversClient() {
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   const [cancelId, setCancelId] = useState<number | null>(null);
+  const { data: planLimits } = usePlanLimits();
+  const caregiversUsage = planLimits?.usage?.caregivers ?? 0;
+  const maxCaregivers = planLimits?.limits?.max_caregivers ?? 0;
 
   const { data: caregiversData, isLoading: loadingCaregivers } = useCaregivers({
     search: tab === "caregivers" ? search : "",
@@ -130,7 +135,10 @@ export function CaregiversClient() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Cuidadores</h1>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            Cuidadores
+            <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
+          </h1>
           <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
         </div>
         <Button onClick={() => setInviteOpen(true)} disabled={false}>
