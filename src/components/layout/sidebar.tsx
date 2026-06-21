@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useClinic } from "@/features/clinic/hooks";
 import { useSystemConfig } from "@/features/system-config";
+import { usePlanLimits } from "@/features/plan";
 
 type Environment = "development" | "homologation" | "production";
 
@@ -87,9 +88,17 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: clinic } = useClinic();
   const { data: systemConfig } = useSystemConfig();
-  const navItems = allNavItems.filter(
-    (item) => item.href !== "/feedback" || systemConfig?.feedback_visible !== false
-  );
+  const { data: planLimits } = usePlanLimits();
+
+  const canAccessReports = planLimits?.limits?.reports_level !== "none";
+  const canAccessAuditLogs = (planLimits?.limits?.audit_log_days ?? 0) > 0;
+
+  const navItems = allNavItems.filter((item) => {
+    if (item.href === "/feedback" && systemConfig?.feedback_visible === false) return false;
+    if (item.href === "/reports" && !canAccessReports) return false;
+    if (item.href === "/audit-logs" && !canAccessAuditLogs) return false;
+    return true;
+  });
   const clinicLogo = clinic?.media_url;
   const clinicName = clinic?.name ?? "Clínica";
 

@@ -18,6 +18,8 @@ import { ChecklistsReport } from "./checklists-report";
 import { PatientsGrowthReport } from "./patients-growth-report";
 import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
+import { usePlanLimits } from "@/features/plan";
+import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
 
 function getDefaultDateRange(): DateRange {
@@ -58,6 +60,9 @@ function SummaryCardsSkeleton() {
 }
 
 export function ReportsClient() {
+  const { data: planLimits } = usePlanLimits();
+  const canAccessReports = planLimits?.limits?.reports_level !== "none";
+
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
 
   const summaryQuery = useReportSummary();
@@ -133,7 +138,11 @@ export function ReportsClient() {
 
   return (
     <div className="space-y-6">
-      {summaryQuery.isLoading ? (
+      {!canAccessReports && <FeatureUpgradePrompt featureName="Relatórios" />}
+
+      {canAccessReports && (
+        <>
+          {summaryQuery.isLoading ? (
         <SummaryCardsSkeleton />
       ) : (
         summaryQuery.data && <SummaryCards summary={summaryQuery.data} />
@@ -184,6 +193,8 @@ export function ReportsClient() {
           onExport={exportCaregiversCsv}
         />
       </div>
+        </>
+      )}
     </div>
   );
 }

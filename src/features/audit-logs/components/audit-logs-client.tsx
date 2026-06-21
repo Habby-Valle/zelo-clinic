@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { useAuditLogs } from "../hooks";
 import { fetchAuditLogsApi } from "../services";
+import { usePlanLimits } from "@/features/plan";
+import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,9 @@ function formatDate(dateString: string): string {
 }
 
 export function AuditLogsClient() {
+  const { data: planLimits } = usePlanLimits();
+  const canAccessAuditLogs = (planLimits?.limits?.audit_log_days ?? 0) > 0;
+
   const [action, setAction] = useState("");
   const [contentType, setContentType] = useState("");
   const [search, setSearch] = useState("");
@@ -122,6 +127,10 @@ export function AuditLogsClient() {
 
   return (
     <div className="space-y-6">
+      {!canAccessAuditLogs && <FeatureUpgradePrompt featureName="Logs de Auditoria" />}
+
+      {canAccessAuditLogs && (
+        <>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Logs de Auditoria</h1>
@@ -308,6 +317,8 @@ export function AuditLogsClient() {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   );
 }
