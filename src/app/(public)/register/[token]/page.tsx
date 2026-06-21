@@ -14,7 +14,7 @@ import {
   type RegisterClinicAdminStep2Values,
   type RegisterClinicAdminStep3Values,
 } from "@/lib/validations/invite";
-import { formatCep } from "@/lib/format";
+import { formatCep, formatPhone, formatCnpj } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -207,7 +207,16 @@ export default function RegisterPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="phone">Telefone *</Label>
-            <Input id="phone" placeholder="(11) 99999-9999" {...form1.register("phone")} />
+            <Input
+              id="phone"
+              placeholder="(11) 99999-9999"
+              value={formatPhone(form1.watch("phone"))}
+              onChange={(e) =>
+                form1.setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                  shouldValidate: true,
+                })
+              }
+            />
             {form1.formState.errors.phone && (
               <p className="text-xs text-destructive">{form1.formState.errors.phone.message}</p>
             )}
@@ -262,7 +271,12 @@ export default function RegisterPage() {
             <Input
               id="clinic_document"
               placeholder="00.000.000/0001-00"
-              {...form2.register("clinic_document")}
+              value={formatCnpj(form2.watch("clinic_document"))}
+              onChange={(e) =>
+                form2.setValue("clinic_document", e.target.value.replace(/\D/g, "").slice(0, 14), {
+                  shouldValidate: true,
+                })
+              }
             />
             {form2.formState.errors.clinic_document && (
               <p className="text-xs text-destructive">{form2.formState.errors.clinic_document.message}</p>
@@ -271,7 +285,16 @@ export default function RegisterPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="clinic_phone">Telefone da clínica *</Label>
-            <Input id="clinic_phone" placeholder="(11) 3333-3333" {...form2.register("clinic_phone")} />
+            <Input
+              id="clinic_phone"
+              placeholder="(11) 3333-3333"
+              value={formatPhone(form2.watch("clinic_phone"))}
+              onChange={(e) =>
+                form2.setValue("clinic_phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                  shouldValidate: true,
+                })
+              }
+            />
             {form2.formState.errors.clinic_phone && (
               <p className="text-xs text-destructive">{form2.formState.errors.clinic_phone.message}</p>
             )}
