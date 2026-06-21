@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { patientSchema, type PatientFormValues } from "@/lib/validations/patient";
+import { formatPhone } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,8 @@ export function PatientForm({
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<PatientFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,7 +140,12 @@ export function PatientForm({
               id="phone"
               placeholder="(11) 99999-9999"
               disabled={isPending}
-              {...register("phone")}
+              value={formatPhone(watch("phone"))}
+              onChange={(e) =>
+                setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                  shouldValidate: true,
+                })
+              }
             />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
           </div>
