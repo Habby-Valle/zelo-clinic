@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { BriefcaseMedical, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { forgotPasswordSchema, type ForgotPasswordSchema } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
@@ -44,60 +45,79 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Recuperar senha</h2>
-        <p className="text-sm text-muted-foreground">
-          Informe seu e-mail e enviaremos um código de verificação.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-        {serverError && (
-          <Alert variant="destructive">
-            <AlertDescription>{serverError}</AlertDescription>
-          </Alert>
-        )}
-
-        {sent && (
-          <Alert className="border-primary/20 bg-primary/5 text-primary">
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-            <AlertDescription>Código enviado! Redirecionando…</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="email">E-mail</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="seu@email.com"
-            autoComplete="email"
-            disabled={isSubmitting || sent}
-            aria-invalid={!!errors.email}
-            {...register("email")}
-          />
-          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+    <Card className="w-full max-w-md shadow-lg">
+      <CardHeader className="space-y-4 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+            <BriefcaseMedical className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+              Zelo
+            </p>
+            <p className="text-sm leading-none font-semibold">Clinic</p>
+          </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || sent}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enviando…
-            </>
-          ) : (
-            "Enviar código"
-          )}
-        </Button>
+        <div>
+          <CardTitle className="text-2xl">Esqueceu a senha?</CardTitle>
+          <CardDescription className="mt-1">
+            Informe seu e-mail para receber um código de recuperação.
+          </CardDescription>
+        </div>
+      </CardHeader>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Lembrou a senha?{" "}
-          <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-            Voltar ao login
-          </Link>
-        </p>
-      </form>
-    </div>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {serverError && (
+            <Alert variant="destructive">
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          )}
+
+          {sent && (
+            <Alert className="border-primary/20 bg-primary/5 text-primary">
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              <AlertDescription>Código enviado! Redirecionando…</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              autoComplete="email"
+              disabled={isSubmitting || sent}
+              aria-invalid={!!errors.email}
+              {...register("email")}
+            />
+            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isSubmitting || sent}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando…
+              </>
+            ) : (
+              "Enviar código"
+            )}
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Lembrou a senha?{" "}
+            <Link
+              href="/login"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Voltar ao login
+            </Link>
+          </p>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
