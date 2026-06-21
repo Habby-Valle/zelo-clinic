@@ -243,7 +243,12 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue>
+                            {(v: string | null) => {
+                              const t = ITEM_TYPES.find((t) => t.value === v);
+                              return t?.label ?? v;
+                            }}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {ITEM_TYPES.map((t) => (

@@ -28,7 +28,7 @@ interface PatientFormProps {
   submitLabel?: string;
 }
 
-const GENDER_LABELS = { M: "Masculino", F: "Feminino", O: "Outro" };
+const GENDER_LABELS: Record<string, string> = { M: "Masculino", F: "Feminino", O: "Outro" };
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export function PatientForm({
@@ -103,7 +103,9 @@ export function PatientForm({
               render={({ field }) => (
                 <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v ?? "")}>
                   <SelectTrigger disabled={isPending}>
-                    <SelectValue placeholder="Selecionar..." />
+                    <SelectValue>
+                      {(v: string | null) => GENDER_LABELS[v ?? ""] ?? v ?? "Selecionar..."}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(GENDER_LABELS).map(([v, l]) => (
@@ -163,7 +165,11 @@ export function PatientForm({
                   onValueChange={(v) => field.onChange((v ?? "none") === "none" ? null : v)}
                 >
                   <SelectTrigger disabled={isPending}>
-                    <SelectValue placeholder="Selecionar..." />
+                    <SelectValue>
+                      {(v: string | null) =>
+                        v && v !== "none" ? (BLOOD_TYPES.includes(v) ? v : "Não informado") : "Não informado"
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Não informado</SelectItem>

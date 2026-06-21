@@ -132,7 +132,12 @@ export function PatientsClient() {
           }
         >
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
+            <SelectValue>
+              {(v: string | null) => {
+                const labels: Record<string, string> = { all: "Todos", true: "Ativo", false: "Inativo" };
+                return labels[v ?? ""] ?? v ?? "Status";
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>

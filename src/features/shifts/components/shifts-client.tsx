@@ -366,7 +366,18 @@ export function ShiftsClient() {
               }}
             >
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Status" />
+                <SelectValue>
+                  {(v: string | null) => {
+                    const labels: Record<string, string> = {
+                      all: "Todos",
+                      scheduled: "Agendado",
+                      in_progress: "Em andamento",
+                      completed: "Concluído",
+                      cancelled: "Cancelado",
+                    };
+                    return labels[v ?? ""] ?? v ?? "Status";
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -636,7 +647,13 @@ export function ShiftsClient() {
               <Label>Template (opcional)</Label>
               <Select value={formTemplate} onValueChange={handleTemplateSelect}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um template" />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (!v || v === "_empty") return "Selecione um template";
+                      const t = templates.find((t) => String(t.id) === v);
+                      return t?.name ?? v;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {templates.filter((t) => t.is_active).length === 0 ? (
@@ -677,7 +694,13 @@ export function ShiftsClient() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o cuidador" />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (!v || v === "_empty") return "Selecione o cuidador";
+                      const c = caregivers.find((c) => String(c.id) === v);
+                      return c?.name ?? v;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {caregivers.length === 0 ? (
@@ -699,11 +722,15 @@ export function ShiftsClient() {
               <Label>Paciente</Label>
               <Select value={formPatient} onValueChange={(v) => setFormPatient(v ?? "")}>
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      formCaregiver ? "Selecione o paciente" : "Selecione um cuidador primeiro"
-                    }
-                  />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (!v || v === "_empty") {
+                        return formCaregiver ? "Selecione o paciente" : "Selecione um cuidador primeiro";
+                      }
+                      const p = patients.find((p) => String(p.id) === v);
+                      return p?.name ?? v;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {!formCaregiver ? (

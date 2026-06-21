@@ -137,7 +137,12 @@ export function ChecklistsPageClient() {
           }}
         >
           <SelectTrigger className="w-40">
-            <SelectValue />
+            <SelectValue>
+              {(v: string | null) => {
+                const labels: Record<string, string> = { all: "Todos", true: "Ativos", false: "Inativos" };
+                return labels[v ?? ""] ?? v;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
