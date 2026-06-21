@@ -18,5 +18,16 @@ export const registerClinicAdminStep2Schema = z.object({
   clinic_phone: z.string().min(10, "Telefone da clínica inválido"),
 });
 
+export const registerClinicAdminStep3Schema = z.object({
+  zip_code: z.string().min(8, "CEP inválido"),
+  street: z.string().min(2, "Logradouro obrigatório"),
+  number: z.string().min(1, "Número obrigatório"),
+  complement: z.string().optional(),
+  neighborhood: z.string().min(2, "Bairro obrigatório"),
+  city: z.string().min(2, "Cidade obrigatória"),
+  state: z.string().length(2, "UF deve ter 2 caracteres"),
+});
+
 export type RegisterClinicAdminStep1Values = z.infer<typeof registerClinicAdminStep1Schema>;
 export type RegisterClinicAdminStep2Values = z.infer<typeof registerClinicAdminStep2Schema>;
+export type RegisterClinicAdminStep3Values = z.infer<typeof registerClinicAdminStep3Schema>;

@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Search } from "lucide-react";
 
 import {
   registerClinicAdminStep1Schema,
   registerClinicAdminStep2Schema,
+  registerClinicAdminStep3Schema,
   type RegisterClinicAdminStep1Values,
   type RegisterClinicAdminStep2Values,
+  type RegisterClinicAdminStep3Values,
 } from "@/lib/validations/invite";
+import { formatCep } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,8 +34,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [step1Data, setStep1Data] = useState<RegisterClinicAdminStep1Values | null>(null);
+  const [step2Data, setStep2Data] = useState<RegisterClinicAdminStep2Values | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
 
   const form1 = useForm<RegisterClinicAdminStep1Values>({
     resolver: zodResolver(registerClinicAdminStep1Schema),
@@ -41,6 +46,21 @@ export default function RegisterPage() {
   const form2 = useForm<RegisterClinicAdminStep2Values>({
     resolver: zodResolver(registerClinicAdminStep2Schema),
   });
+
+  const form3 = useForm<RegisterClinicAdminStep3Values>({
+    resolver: zodResolver(registerClinicAdminStep3Schema),
+    defaultValues: {
+      zip_code: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+    },
+  });
+
+  const cepValue = form3.watch("zip_code") ?? "";
 
   useEffect(() => {
     fetch(`/api/register/${params.token}`)
@@ -58,12 +78,30 @@ export default function RegisterPage() {
     setStep(2);
   }
 
-  async function onStep2Submit(values: RegisterClinicAdminStep2Values) {
-    if (!step1Data) return;
+  function onStep2Submit(values: RegisterClinicAdminStep2Values) {
+    setStep2Data(values);
+    setStep(3);
+  }
+
+  async function onStep3Submit(values: RegisterClinicAdminStep3Values) {
+    if (!step1Data || !step2Data) return;
     setSubmitError(null);
 
     const { confirm_password, ...personal } = step1Data;
-    const payload = { ...personal, ...values };
+    const payload = {
+      ...personal,
+      ...step2Data,
+      address: {
+        zip_code: values.zip_code,
+        street: values.street,
+        number: values.number,
+        complement: values.complement || "",
+        neighborhood: values.neighborhood,
+        city: values.city,
+        state: values.state,
+        country: "Brasil",
+      },
+    };
     void confirm_password;
 
     const res = await fetch(`/api/register/${params.token}`, {
@@ -80,6 +118,24 @@ export default function RegisterPage() {
 
     setSuccess(true);
     setTimeout(() => router.push("/login"), 3000);
+  }
+
+  async function handleCepSearch() {
+    const digits = cepValue.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.erro) return;
+      form3.setValue("street", data.logradouro, { shouldValidate: true });
+      form3.setValue("neighborhood", data.bairro, { shouldValidate: true });
+      form3.setValue("city", data.localidade, { shouldValidate: true });
+      form3.setValue("state", data.uf, { shouldValidate: true });
+    } finally {
+      setCepLoading(false);
+    }
   }
 
   if (loading) {
@@ -114,6 +170,9 @@ export default function RegisterPage() {
     );
   }
 
+  const stepTitle =
+    step === 1 ? "Criar sua conta" : step === 2 ? "Cadastrar sua clínica" : "Endereço da clínica";
+
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
@@ -121,10 +180,10 @@ export default function RegisterPage() {
           <span className={step === 1 ? "font-semibold text-foreground" : ""}>1. Seus dados</span>
           <span>→</span>
           <span className={step === 2 ? "font-semibold text-foreground" : ""}>2. Dados da clínica</span>
+          <span>→</span>
+          <span className={step === 3 ? "font-semibold text-foreground" : ""}>3. Endereço</span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {step === 1 ? "Criar sua conta" : "Cadastrar sua clínica"}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight">{stepTitle}</h1>
         {step === 1 && inviteInfo?.email && (
           <p className="mt-1 text-sm text-muted-foreground">
             Email: <strong>{inviteInfo.email}</strong>
@@ -219,17 +278,108 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => setStep(1)}
-              disabled={form2.formState.isSubmitting}
-            >
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
               Voltar
             </Button>
-            <Button type="submit" className="flex-1" disabled={form2.formState.isSubmitting}>
-              {form2.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="flex-1">
+              Próximo
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {step === 3 && (
+        <form onSubmit={form3.handleSubmit(onStep3Submit)} className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="zip_code">CEP *</Label>
+              <div className="flex gap-1">
+                <Input
+                  id="zip_code"
+                  placeholder="00000-000"
+                  value={formatCep(cepValue)}
+                  onChange={(e) => form3.setValue("zip_code", e.target.value, { shouldValidate: true })}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleCepSearch}
+                  disabled={cepValue.replace(/\D/g, "").length !== 8 || cepLoading}
+                  title="Buscar CEP"
+                >
+                  {cepLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {form3.formState.errors.zip_code && (
+                <p className="text-xs text-destructive">{form3.formState.errors.zip_code.message}</p>
+              )}
+            </div>
+            <div className="w-24 space-y-1.5">
+              <Label htmlFor="number">Nº *</Label>
+              <Input id="number" placeholder="123" {...form3.register("number")} />
+              {form3.formState.errors.number && (
+                <p className="text-xs text-destructive">{form3.formState.errors.number.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="street">Logradouro *</Label>
+            <Input id="street" placeholder="Rua das Flores" {...form3.register("street")} />
+            {form3.formState.errors.street && (
+              <p className="text-xs text-destructive">{form3.formState.errors.street.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="neighborhood">Bairro *</Label>
+              <Input id="neighborhood" placeholder="Centro" {...form3.register("neighborhood")} />
+              {form3.formState.errors.neighborhood && (
+                <p className="text-xs text-destructive">{form3.formState.errors.neighborhood.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="city">Cidade *</Label>
+              <Input id="city" placeholder="São Paulo" {...form3.register("city")} />
+              {form3.formState.errors.city && (
+                <p className="text-xs text-destructive">{form3.formState.errors.city.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="state">UF *</Label>
+              <Input
+                id="state"
+                placeholder="SP"
+                maxLength={2}
+                {...form3.register("state")}
+                onChange={(e) =>
+                  form3.setValue("state", e.target.value.toUpperCase(), { shouldValidate: true })
+                }
+              />
+              {form3.formState.errors.state && (
+                <p className="text-xs text-destructive">{form3.formState.errors.state.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="complement">Complemento</Label>
+            <Input id="complement" placeholder="Sala 5 (opcional)" {...form3.register("complement")} />
+          </div>
+
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(2)}>
+              Voltar
+            </Button>
+            <Button type="submit" className="flex-1">
               Criar conta
             </Button>
           </div>
