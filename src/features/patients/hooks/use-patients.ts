@@ -54,7 +54,19 @@ export function usePendingInvites(patientId: string) {
 export function useCreatePatient() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) => createPatientApi(body),
+    mutationFn: (data: {
+      name: string;
+      birth_date: string;
+      gender: string;
+      cpf?: string | null;
+      phone: string;
+      email?: string | null;
+      blood_type?: string | null;
+      health_conditions?: string;
+      allergies?: string;
+      medications?: string;
+      observations?: string;
+    }) => createPatientApi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
     },

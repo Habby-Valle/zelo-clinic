@@ -109,7 +109,19 @@ export async function fetchPendingInvites(patientId: string): Promise<PendingInv
   }
 }
 
-export async function createPatientApi(data: Record<string, unknown>): Promise<ClinicPatient> {
+export async function createPatientApi(data: {
+  name: string;
+  birth_date: string;
+  gender: string;
+  cpf?: string | null;
+  phone: string;
+  email?: string | null;
+  blood_type?: string | null;
+  health_conditions?: string;
+  allergies?: string;
+  medications?: string;
+  observations?: string;
+}): Promise<ClinicPatient> {
   const r = await apiFetchClient<Record<string, unknown>>("/patients/", {
     method: "POST",
     body: JSON.stringify(data),
