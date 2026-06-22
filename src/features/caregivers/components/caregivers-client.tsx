@@ -74,7 +74,7 @@ export function CaregiversClient() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
 
-  const [cancelId, setCancelId] = useState<number | null>(null);
+  const [cancelId, setCancelId] = useState<string | null>(null);
   const { data: planLimits } = usePlanLimits();
   const caregiversUsage = planLimits?.usage?.caregivers ?? 0;
   const maxCaregivers = planLimits?.limits?.max_caregivers ?? 0;

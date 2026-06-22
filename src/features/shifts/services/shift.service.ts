@@ -24,7 +24,7 @@ export async function fetchShiftsApi(
   return { shifts: data.results, total: data.count };
 }
 
-export async function fetchShiftApi(id: number): Promise<ShiftItem> {
+export async function fetchShiftApi(id: string): Promise<ShiftItem> {
   return apiFetchClient<ShiftItem>(`/shifts/${id}/`);
 }
 
@@ -40,11 +40,11 @@ export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
     "/patients/?page_size=100"
   );
   return data.results.map((p) => ({
-    id: p.id as number,
+    id: p.id as string,
     name: p.name as string,
     caregiver_ids:
       (p.caregiver_assignments as Array<Record<string, unknown>>)?.map(
-        (a) => a.caregiver_id as number
+        (a) => a.caregiver_id as string
       ) ?? [],
   }));
 }
@@ -56,8 +56,8 @@ export async function fetchClinicCaregiversApi(): Promise<CaregiverOption[]> {
   return data.results;
 }
 
-export async function fetchChecklistOptionsApi(): Promise<{ id: number; name: string }[]> {
-  const data = await apiFetchClient<ListResult<{ id: number; name: string }>>(
+export async function fetchChecklistOptionsApi(): Promise<{ id: string; name: string }[]> {
+  const data = await apiFetchClient<ListResult<{ id: string; name: string }>>(
     "/checklists/?page_size=100"
   );
   return data.results;

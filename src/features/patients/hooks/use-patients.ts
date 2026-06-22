@@ -125,7 +125,7 @@ export function useInviteFamily(patientId: string) {
 export function useCancelInvite(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (inviteId: number) => cancelInviteApi(inviteId),
+    mutationFn: (inviteId: string) => cancelInviteApi(inviteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-invites", patientId] });
     },
@@ -135,7 +135,7 @@ export function useCancelInvite(patientId: string) {
 export function useRemoveEmergencyContact(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (contactId: number) => removeEmergencyContactApi(patientId, contactId),
+    mutationFn: (contactId: string) => removeEmergencyContactApi(patientId, contactId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients", patientId] });
     },

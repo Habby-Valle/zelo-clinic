@@ -17,12 +17,12 @@ export interface ChecklistItem {
 }
 
 export interface Checklist {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   order: number;
   is_active: boolean;
-  clinic_id: number | null;
+  clinic_id: string | null;
   clinic_name: string | null;
   created_by_name: string | null;
   items_count: number;
@@ -30,12 +30,12 @@ export interface Checklist {
 }
 
 export interface ChecklistDetail {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   order: number;
   is_active: boolean;
-  clinic_id: number | null;
+  clinic_id: string | null;
   clinic_name: string | null;
   created_by_name: string | null;
   items: ChecklistItem[];

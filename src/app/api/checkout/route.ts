@@ -18,7 +18,7 @@ interface CheckoutRequest {
 interface DjangoPlanList {
   count: number;
   results: {
-    id: number;
+    id: string;
     name: string;
     description: string;
     monthly_price: number;

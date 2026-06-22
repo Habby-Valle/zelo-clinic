@@ -5,12 +5,12 @@ import { requireClinicAdmin } from "@/lib/auth";
 import { apiFetchServer } from "@/lib/api";
 
 export async function createShift(data: {
-  caregiver_id: number;
+  caregiver_id: string;
   start: string;
   end: string;
   notes?: string;
-  patient_id?: number;
-  checklist_ids?: number[];
+  patient_id?: string;
+  checklist_ids?: string[];
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const { user } = await requireClinicAdmin();
@@ -31,7 +31,7 @@ export async function createShift(data: {
       body.shift_patients = [{ patient_id: data.patient_id }];
     }
 
-    const shift = await apiFetchServer<{ id: number }>("/shifts/", {
+    const shift = await apiFetchServer<{ id: string }>("/shifts/", {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -60,7 +60,7 @@ export async function createShift(data: {
   }
 }
 
-export async function finishShift(id: number): Promise<{ success: boolean; error?: string }> {
+export async function finishShift(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();
     await apiFetchServer<unknown>(`/shifts/${id}/status/`, {
@@ -77,7 +77,7 @@ export async function finishShift(id: number): Promise<{ success: boolean; error
   }
 }
 
-export async function cancelShift(id: number): Promise<{ success: boolean; error?: string }> {
+export async function cancelShift(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();
     await apiFetchServer<unknown>(`/shifts/${id}/status/`, {
@@ -94,7 +94,7 @@ export async function cancelShift(id: number): Promise<{ success: boolean; error
   }
 }
 
-export async function deleteShift(id: number): Promise<{ success: boolean; error?: string }> {
+export async function deleteShift(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();
     await apiFetchServer<unknown>(`/shifts/${id}/`, { method: "DELETE" });
@@ -143,7 +143,7 @@ export async function createShiftTemplate(data: {
 }
 
 export async function updateShiftTemplate(data: {
-  id: number;
+  id: string;
   name: string;
   start_time: string;
   end_time: string;
@@ -175,7 +175,7 @@ export async function updateShiftTemplate(data: {
 }
 
 export async function deleteShiftTemplate(
-  id: number
+  id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();

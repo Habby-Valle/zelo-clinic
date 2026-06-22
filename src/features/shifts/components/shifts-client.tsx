@@ -131,7 +131,7 @@ export function ShiftsClient() {
   // Create shift dialog
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [selectedChecklists, setSelectedChecklists] = useState<number[]>([]);
+  const [selectedChecklists, setSelectedChecklists] = useState<string[]>([]);
   const [formPatient, setFormPatient] = useState("");
   const [formCaregiver, setFormCaregiver] = useState("");
   const [formTemplate, setFormTemplate] = useState("");
@@ -140,7 +140,7 @@ export function ShiftsClient() {
   const [formNotes, setFormNotes] = useState("");
 
   const filteredPatients = formCaregiver
-    ? patients.filter((p) => p.caregiver_ids.includes(parseInt(formCaregiver)))
+    ? patients.filter((p) => p.caregiver_ids.includes(formCaregiver))
     : [];
 
   // Template CRUD dialog
@@ -155,7 +155,7 @@ export function ShiftsClient() {
   // Confirm actions
   const [confirmAction, setConfirmAction] = useState<{
     type: "finish" | "cancel" | "delete";
-    shiftId: number;
+    shiftId: string;
   } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -214,11 +214,11 @@ export function ShiftsClient() {
     if (!formCaregiver || !formStart || !formEnd) return;
     setCreateLoading(true);
     const result = await createShift({
-      caregiver_id: parseInt(formCaregiver),
+      caregiver_id: formCaregiver,
       start: new Date(formStart).toISOString(),
       end: new Date(formEnd).toISOString(),
       notes: formNotes || undefined,
-      patient_id: formPatient ? parseInt(formPatient) : undefined,
+      patient_id: formPatient || undefined,
       checklist_ids: selectedChecklists.length > 0 ? selectedChecklists : undefined,
     });
     if (result.success) {
@@ -306,7 +306,7 @@ export function ShiftsClient() {
     invalidateTemplates();
   }
 
-  async function handleDeleteTemplate(id: number) {
+  async function handleDeleteTemplate(id: string) {
     await deleteShiftTemplate(id);
     invalidateTemplates();
   }
@@ -686,8 +686,8 @@ export function ShiftsClient() {
                   if (
                     formPatient &&
                     !patients
-                      .find((p) => p.id === parseInt(formPatient))
-                      ?.caregiver_ids.includes(parseInt(val))
+                      .find((p) => p.id === formPatient)
+                      ?.caregiver_ids.includes(val)
                   ) {
                     setFormPatient("");
                   }

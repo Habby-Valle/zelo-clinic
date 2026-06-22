@@ -55,7 +55,7 @@ function EditChecklistDialog({
   open,
   onOpenChange,
 }: {
-  id: number;
+  id: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -90,7 +90,7 @@ export function ChecklistsPageClient() {
   const totalPages = Math.ceil(total / pageSize);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Checklist | null>(null);
 
   function openCreate() {

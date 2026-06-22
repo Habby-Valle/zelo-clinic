@@ -10,12 +10,12 @@ export interface Address {
 }
 
 export interface Clinic {
-  id: number;
+  id: string;
   name: string;
   document: string;
   phone: string;
   address: Address | null;
-  media_id: number | null;
+  media_id: string | null;
   media_url: string | null;
   theme_color: string | null;
 }

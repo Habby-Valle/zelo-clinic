@@ -26,7 +26,7 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     medications: String(r.medications ?? ""),
     blood_type: r.blood_type != null ? String(r.blood_type) : null,
     observations: String(r.observations ?? ""),
-    media_id: r.media_id != null ? Number(r.media_id) : null,
+    media_id: r.media_id != null ? String(r.media_id) : null,
     media: r.media_url ? { id: String(r.media_id ?? ""), url: String(r.media_url) } : null,
     clinic_name: r.clinic_name != null ? String(r.clinic_name) : null,
     is_active: r.is_active !== false,
@@ -76,7 +76,7 @@ export async function fetchPatientById(id: string): Promise<ClinicPatient | null
 export async function fetchClinicCaregivers(): Promise<PatientCaregiver[]> {
   try {
     const data = await apiFetchClient<{
-      results: Array<{ id: number; name: string; email: string }>;
+      results: Array<{ id: string; name: string; email: string }>;
     }>("/users/?role=caregiver&page_size=200");
     return (data.results ?? []).map((u) => ({
       id: String(u.id),
@@ -92,14 +92,14 @@ export async function fetchPendingInvites(patientId: string): Promise<PendingInv
   try {
     const data = await apiFetchClient<{
       results: Array<{
-        id: number;
+        id: string;
         email: string;
         status: string;
         created_at: string;
       }>;
     }>(`/invites/?role=family&status=pending&patient_id=${patientId}`);
     return (data.results ?? []).map((i) => ({
-      id: i.id,
+      id: String(i.id),
       email: i.email,
       status: i.status,
       created_at: i.created_at,
@@ -148,11 +148,11 @@ export async function assignCaregiversApi(
   caregiverIds: string[],
   currentAssignments: CaregiverAssignment[]
 ): Promise<void> {
-  const currentIds = currentAssignments.map((a) => String(a.caregiver_id));
+  const currentIds = currentAssignments.map((a) => a.caregiver_id);
   const newSet = new Set(caregiverIds);
 
   for (const assignment of currentAssignments) {
-    if (!newSet.has(String(assignment.caregiver_id))) {
+    if (!newSet.has(assignment.caregiver_id)) {
       await apiFetchClient(`/patients/${patientId}/caregivers/${assignment.id}/`, {
         method: "DELETE",
       }).catch(() => {});
@@ -163,7 +163,7 @@ export async function assignCaregiversApi(
     if (!currentIds.includes(caregiverId)) {
       await apiFetchClient(`/patients/${patientId}/caregivers/`, {
         method: "POST",
-        body: JSON.stringify({ caregiver_id: Number(caregiverId) }),
+        body: JSON.stringify({ caregiver_id: caregiverId }),
       }).catch(() => {});
     }
   }
@@ -179,19 +179,19 @@ export async function inviteFamilyApi(
     body: JSON.stringify({
       email,
       role: "family",
-      clinic_id: Number(clinicId),
-      patient_id: Number(patientId),
+      clinic_id: clinicId,
+      patient_id: patientId,
     }),
   });
 }
 
-export async function cancelInviteApi(inviteId: number): Promise<void> {
+export async function cancelInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }
 
 export async function removeEmergencyContactApi(
   patientId: string,
-  contactId: number
+  contactId: string
 ): Promise<void> {
   await apiFetchClient(`/patients/${patientId}/emergency-contacts/${contactId}/`, {
     method: "DELETE",

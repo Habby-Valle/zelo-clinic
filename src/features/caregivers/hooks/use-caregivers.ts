@@ -36,7 +36,7 @@ export function useInviteCaregiver() {
 export function useCancelCaregiverInvite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (inviteId: number) => cancelCaregiverInviteApi(inviteId),
+    mutationFn: (inviteId: string) => cancelCaregiverInviteApi(inviteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
     },

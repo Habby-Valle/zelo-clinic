@@ -9,5 +9,5 @@ interface Props {
 
 export default function ShiftDetailPage({ params }: Props) {
   const { id } = use(params);
-  return <ShiftDetailClient id={Number(id)} />;
+  return <ShiftDetailClient id={id} />;
 }

@@ -59,7 +59,7 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
 };
 
 interface Props {
-  id: number;
+  id: string;
 }
 
 export function ChecklistDetailClient({ id }: Props) {

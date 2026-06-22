@@ -14,10 +14,10 @@ export async function fetchMyFeedbacks(
   return { feedbacks: data.results ?? [], total: data.count ?? 0 };
 }
 
-export async function uploadMediaApi(file: File): Promise<number> {
+export async function uploadMediaApi(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
-  const data = await apiFetchClient<{ id: number }>("/media/", {
+  const data = await apiFetchClient<{ id: string }>("/media/", {
     method: "POST",
     body: formData,
   });
@@ -30,7 +30,7 @@ export async function sendFeedbackApi(body: {
   message: string;
   clinic_id?: string | null;
   page_url?: string;
-  media_ids?: number[];
+  media_ids?: string[];
 }): Promise<void> {
   await apiFetchClient("/feedback/", {
     method: "POST",

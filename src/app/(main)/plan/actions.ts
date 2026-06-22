@@ -8,15 +8,15 @@ import type { Plan, ClinicPlan } from "@/features/plan/types";
 // ─── Django API Types ─────────────────────────────────────────────────────────
 
 interface DjangoPlan {
-  id: number;
+  id: string;
   name: string;
   description: string;
   monthly_price: number;
   yearly_price: number | null;
   is_active: boolean;
   benefits: {
-    id: number;
-    benefit_id: number;
+    id: string;
+    benefit_id: string;
     benefit_key: string;
     benefit_label: string;
     value: string;
@@ -29,14 +29,14 @@ interface DjangoPlanList {
 }
 
 interface DjangoSubscriptionMe {
-  id: number;
+  id: string;
   status: string;
   start_date: string;
   end_date: string | null;
   trial_ends_at: string | null;
   payment_failed_at: string | null;
   plan: {
-    id: number;
+    id: string;
     name: string;
     description: string;
     monthly_price: number;
@@ -49,15 +49,15 @@ interface DjangoSubscriptionMe {
 
 function normalizePlan(d: DjangoPlan): Plan {
   return {
-    id: String(d.id),
+    id: d.id,
     name: d.name,
     description: d.description,
     monthly_price: d.monthly_price,
     yearly_price: d.yearly_price,
     is_active: d.is_active,
     benefits: d.benefits.map((b) => ({
-      id: String(b.id),
-      benefit_id: String(b.benefit_id),
+      id: b.id,
+      benefit_id: b.benefit_id,
       benefit_key: b.benefit_key,
       benefit_label: b.benefit_label,
       value: b.value,
@@ -67,8 +67,8 @@ function normalizePlan(d: DjangoPlan): Plan {
 
 function normalizeClinicPlan(d: DjangoSubscriptionMe): ClinicPlan {
   return {
-    id: String(d.id),
-    plan_id: String(d.plan.id),
+    id: d.id,
+    plan_id: d.plan.id,
     status: d.status as ClinicPlan["status"],
     started_at: d.start_date,
     expires_at: d.end_date ?? null,
@@ -197,11 +197,11 @@ export async function manageGetClinic(): Promise<{
 } | null> {
   try {
     const [clinicData, customerData] = await Promise.all([
-      apiFetchServer<{ id: number; name: string }>("/clinics/me/"),
+      apiFetchServer<{ id: string; name: string }>("/clinics/me/"),
       apiFetchServer<{ stripe_customer_id: string | null }>("/payments/customer/me/"),
     ]);
     return {
-      id: String(clinicData.id),
+      id: clinicData.id,
       name: clinicData.name,
       stripe_customer_id: customerData.stripe_customer_id ?? null,
     };

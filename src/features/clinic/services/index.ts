@@ -8,7 +8,7 @@ export async function getClinic(): Promise<Clinic> {
 export interface UpdateClinicData {
   phone?: string;
   document?: string;
-  media_id?: number | null;
+  media_id?: string | null;
   theme_color?: string | null;
   address?: {
     zip_code?: string;

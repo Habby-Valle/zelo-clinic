@@ -9,5 +9,5 @@ interface Props {
 
 export default function ChecklistDetailPage({ params }: Props) {
   const { id } = use(params);
-  return <ChecklistDetailClient id={Number(id)} />;
+  return <ChecklistDetailClient id={id} />;
 }

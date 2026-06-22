@@ -3,10 +3,10 @@ export type FeedbackType = "bug" | "feature" | "compliment" | "other";
 export type FeedbackStatus = "received" | "in_review" | "resolved" | "closed";
 
 export interface Feedback {
-  id: number;
+  id: string;
   user_name: string | null;
   user_email: string | null;
-  clinic_id: number | null;
+  clinic_id: string | null;
   type: FeedbackType;
   type_display: string;
   subject: string;
@@ -14,7 +14,7 @@ export interface Feedback {
   page_url: string;
   status: FeedbackStatus;
   status_display: string;
-  media: { id: number; url: string; original_filename: string }[];
+  media: { id: string; url: string; original_filename: string }[];
   created_at: string;
   updated_at: string;
 }

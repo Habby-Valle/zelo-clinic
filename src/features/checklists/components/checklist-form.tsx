@@ -45,7 +45,7 @@ interface Props {
 
 export function ChecklistForm({ checklist, onSuccess }: Props) {
   const createChecklist = useCreateChecklist();
-  const updateChecklist = useUpdateChecklist(checklist?.id ?? 0);
+  const updateChecklist = useUpdateChecklist(checklist?.id ?? "");
   const isPending = createChecklist.isPending || updateChecklist.isPending;
 
   const [name, setName] = useState(checklist?.name ?? "");

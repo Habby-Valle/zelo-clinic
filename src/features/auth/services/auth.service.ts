@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api";
 
 export interface ApiProfile {
-  id: number;
+  id: string;
   name: string;
   phone: string;
   role: string;
@@ -9,7 +9,7 @@ export interface ApiProfile {
 }
 
 export interface ApiUser {
-  id: number;
+  id: string;
   email: string;
   is_active: boolean;
   profile: ApiProfile | null;

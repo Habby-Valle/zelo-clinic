@@ -18,7 +18,7 @@ export function useShifts(params: ShiftFilters) {
   });
 }
 
-export function useShift(id: number) {
+export function useShift(id: string) {
   return useQuery({
     queryKey: ["shift", id],
     queryFn: () => fetchShiftApi(id),

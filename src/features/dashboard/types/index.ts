@@ -19,22 +19,22 @@ export interface DashboardResponse {
 }
 
 export interface RecentShift {
-  id: number;
-  caregiver: { id: number; name: string } | null;
+  id: string;
+  caregiver: { id: string; name: string } | null;
   started_at: string | null;
   ended_at: string | null;
   status: string;
-  patients: Array<{ id: number; name: string }>;
+  patients: Array<{ id: string; name: string }>;
 }
 
 export interface ShiftsListResponse {
   results: Array<{
-    id: number;
-    caregiver: { id: number; name: string } | null;
+    id: string;
+    caregiver: { id: string; name: string } | null;
     start: string | null;
     end: string | null;
     status: string;
-    shift_patients: Array<{ patient: { id: number; name: string } }>;
+    shift_patients: Array<{ patient: { id: string; name: string } }>;
   }>;
   count: number;
 }

@@ -21,7 +21,7 @@ export function useSendFeedback() {
       clinicId: string | null;
       files: File[];
     }) => {
-      const mediaIds: number[] = [];
+      const mediaIds: string[] = [];
       for (const file of input.files) {
         const id = await uploadMediaApi(file);
         mediaIds.push(id);

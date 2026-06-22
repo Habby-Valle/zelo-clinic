@@ -57,7 +57,7 @@ function formatDuration(start: string, end: string) {
 }
 
 interface Props {
-  id: number;
+  id: string;
 }
 
 export function ShiftDetailClient({ id }: Props) {

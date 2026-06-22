@@ -31,7 +31,7 @@ export interface SosReportData {
     avgResponseTimeMinutes: number | null;
   };
   byPatient: {
-    patientId: number;
+    patientId: string;
     patientName: string;
     total: number;
     resolved: number;
@@ -45,7 +45,7 @@ export interface SosReportData {
 }
 
 export interface CaregiverReportData {
-  caregiverId: number;
+  caregiverId: string;
   caregiverName: string;
   totalShifts: number;
   completedShifts: number;

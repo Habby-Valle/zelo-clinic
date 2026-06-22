@@ -18,7 +18,7 @@ export function useChecklists(params?: ChecklistFilters) {
   });
 }
 
-export function useChecklist(id: number) {
+export function useChecklist(id: string) {
   return useQuery({
     queryKey: ["checklists", "detail", id],
     queryFn: () => fetchChecklist(id),
@@ -36,7 +36,7 @@ export function useCreateChecklist() {
   });
 }
 
-export function useUpdateChecklist(id: number) {
+export function useUpdateChecklist(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) => updateChecklistFetch(id, data),
@@ -50,7 +50,7 @@ export function useUpdateChecklist(id: number) {
 export function useDeleteChecklist() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => deleteChecklistFetch(id),
+    mutationFn: (id: string) => deleteChecklistFetch(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["checklists", "list"] });
     },
@@ -60,7 +60,7 @@ export function useDeleteChecklist() {
 export function useDuplicateChecklist() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => duplicateChecklistFetch(id),
+    mutationFn: (id: string) => duplicateChecklistFetch(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["checklists", "list"] });
     },

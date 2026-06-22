@@ -1,13 +1,13 @@
 export interface ShiftPatient {
-  id: number;
-  patient_id: number;
+  id: string;
+  patient_id: string;
   patient_name: string;
 }
 
 export interface ShiftItem {
-  id: number;
-  caregiver_id: number;
-  clinic_id: number | null;
+  id: string;
+  caregiver_id: string;
+  clinic_id: string | null;
   start: string;
   end: string;
   status: "scheduled" | "in_progress" | "completed" | "cancelled";
@@ -21,8 +21,8 @@ export interface ShiftItem {
 }
 
 export interface ShiftTemplateItem {
-  id: number;
-  clinic_id: number;
+  id: string;
+  clinic_id: string;
   name: string;
   start_time: string;
   end_time: string;
@@ -32,13 +32,13 @@ export interface ShiftTemplateItem {
 }
 
 export interface PatientOption {
-  id: number;
+  id: string;
   name: string;
-  caregiver_ids: number[];
+  caregiver_ids: string[];
 }
 
 export interface CaregiverOption {
-  id: number;
+  id: string;
   name: string;
 }
 

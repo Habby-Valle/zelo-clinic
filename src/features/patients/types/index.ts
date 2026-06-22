@@ -1,13 +1,13 @@
 export interface CaregiverAssignment {
-  id: number;
-  caregiver_id: number;
+  id: string;
+  caregiver_id: string;
   caregiver_name: string;
   caregiver_email: string | null;
 }
 
 export interface EmergencyContactInfo {
-  id: number;
-  profile_family_id: number;
+  id: string;
+  profile_family_id: string;
   profile_family_name: string;
   profile_family_phone: string;
   priority: number;
@@ -28,7 +28,7 @@ export interface ClinicPatient {
   medications: string;
   blood_type: string | null;
   observations: string;
-  media_id: number | null;
+  media_id: string | null;
   media: { id: string; url: string } | null;
   clinic_name: string | null;
   is_active: boolean;
@@ -47,7 +47,7 @@ export interface PatientCaregiver {
 }
 
 export interface PendingInvite {
-  id: number;
+  id: string;
   email: string;
   status: string;
   created_at: string;
