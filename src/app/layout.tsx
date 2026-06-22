@@ -9,9 +9,59 @@ import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.zelo.com.br";
+
 export const metadata: Metadata = {
-  title: "Zelo Clinic",
-  description: "Painel de Gestão da Clínica",
+  title: {
+    default: "Zelo Clinic",
+    template: "%s | Zelo Clinic",
+  },
+  description: "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
+  metadataBase: new URL(appUrl),
+  applicationName: "Zelo Clinic",
+  authors: [{ name: "Zelo" }],
+  generator: "Next.js",
+  keywords: ["clínica", "gestão", "cuidados", "pacientes", "saúde"],
+  referrer: "origin-when-cross-origin",
+  creator: "Zelo",
+  publisher: "Zelo",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Zelo Clinic",
+    title: "Zelo Clinic",
+    description: "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Zelo Clinic",
+    description: "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
+  },
+  icons: {
+    icon: "/logo.ico",
+    shortcut: "/logo.ico",
+    apple: "/logo.ico",
+  },
+  manifest: "/site.webmanifest",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+  colorScheme: "light dark",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  formatDetection: {
+    telephone: true,
+    email: true,
+    address: true,
+  },
 };
 
 export default function RootLayout({
