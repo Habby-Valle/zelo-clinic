@@ -23,7 +23,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useClinic } from "@/features/clinic/hooks";
 import { useSystemConfig } from "@/features/system-config";
-import { usePlanLimits } from "@/features/plan";
 
 type Environment = "development" | "homologation" | "production";
 
