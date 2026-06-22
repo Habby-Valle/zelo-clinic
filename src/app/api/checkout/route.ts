@@ -3,9 +3,11 @@ import Stripe from "stripe";
 import { apiFetch } from "@/lib/api";
 import { cookies } from "next/headers";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2026-05-27.dahlia",
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
+    apiVersion: "2026-05-27.dahlia",
+  });
+}
 
 interface CheckoutRequest {
   planId: string;
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
     const description = plan.description || `Plano ${plan.name} - cobrança ${billingCycle}`;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
