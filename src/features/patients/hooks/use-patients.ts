@@ -13,6 +13,7 @@ import {
   inviteFamilyApi,
   cancelInviteApi,
   removeEmergencyContactApi,
+  generateFamilyLinkCodeApi,
 } from "../services";
 import type { CaregiverAssignment } from "../types";
 
@@ -139,6 +140,12 @@ export function useRemoveEmergencyContact(patientId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients", patientId] });
     },
+  });
+}
+
+export function useGenerateFamilyLinkCode() {
+  return useMutation({
+    mutationFn: (email: string) => generateFamilyLinkCodeApi(email),
   });
 }
 

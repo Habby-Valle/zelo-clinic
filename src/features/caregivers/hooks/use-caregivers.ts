@@ -6,6 +6,7 @@ import {
   fetchCaregiverInvites,
   inviteCaregiverApi,
   cancelCaregiverInviteApi,
+  generateLinkCodeApi,
 } from "../services";
 
 export function useCaregivers(params: { search: string; page: number; pageSize: number }) {
@@ -40,5 +41,11 @@ export function useCancelCaregiverInvite() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
     },
+  });
+}
+
+export function useGenerateLinkCode() {
+  return useMutation({
+    mutationFn: (email: string) => generateLinkCodeApi(email),
   });
 }

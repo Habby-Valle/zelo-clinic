@@ -185,6 +185,15 @@ export async function inviteFamilyApi(
   });
 }
 
+export async function generateFamilyLinkCodeApi(
+  email: string
+): Promise<{ id: string; email: string; role: string; code: string }> {
+  return apiFetchClient("/invites/link-codes/", {
+    method: "POST",
+    body: JSON.stringify({ email, role: "family" }),
+  });
+}
+
 export async function cancelInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }

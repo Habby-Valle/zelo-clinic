@@ -40,6 +40,7 @@ import {
   useCaregiverInvites,
   useInviteCaregiver,
   useCancelCaregiverInvite,
+  useGenerateLinkCode,
 } from "../hooks";
 import { usePlanLimits } from "@/features/plan";
 import { PlanUsageBadge } from "@/components/plan-usage-badge";
@@ -75,6 +76,12 @@ export function CaregiversClient() {
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   const [cancelId, setCancelId] = useState<string | null>(null);
+
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [codeEmail, setCodeEmail] = useState("");
+  const [codeResult, setCodeResult] = useState<{ code: string; email: string } | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const generateLinkCode = useGenerateLinkCode();
   const { data: planLimits } = usePlanLimits();
   const caregiversUsage = planLimits?.usage?.caregivers ?? 0;
   const maxCaregivers = planLimits?.limits?.max_caregivers ?? 0;
@@ -131,6 +138,20 @@ export function CaregiversClient() {
     );
   }
 
+  function handleGenerateCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!codeEmail.trim()) return;
+    setCodeError(null);
+    setCodeResult(null);
+    generateLinkCode.mutate(codeEmail.trim(), {
+      onSuccess: (data) => {
+        setCodeResult({ code: data.code, email: data.email });
+      },
+      onError: (err) =>
+        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -141,10 +162,16 @@ export function CaregiversClient() {
           </h1>
           <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
         </div>
-        <Button onClick={() => setInviteOpen(true)} disabled={false}>
-          <Plus className="mr-2 h-4 w-4" />
-          Convidar Cuidador
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Gerar Código
+          </Button>
+          <Button onClick={() => setInviteOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Convidar Cuidador
+          </Button>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={onTabChange}>
@@ -444,6 +471,69 @@ export function CaregiversClient() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog gerar código */}
+      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Gerar Código de Vínculo</DialogTitle>
+            <DialogDescription>
+              Gere um código para um cuidador que já possui conta no Zelo. Um email com o código será enviado automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {codeResult ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
+                <p className="font-medium mb-4">{codeResult.email}</p>
+                <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
+                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
+                    {codeResult.code}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Um email com este código foi enviado para o cuidador.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleGenerateCode} className="space-y-4">
+              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
+              <div className="space-y-1.5">
+                <Label htmlFor="code-email">Email do cuidador *</Label>
+                <Input
+                  id="code-email"
+                  type="email"
+                  placeholder="cuidador@exemplo.com"
+                  value={codeEmail}
+                  onChange={(e) => setCodeEmail(e.target.value)}
+                  disabled={generateLinkCode.isPending}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={generateLinkCode.isPending}>
+                  {generateLinkCode.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Gerar Código
+                </Button>
+              </div>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 

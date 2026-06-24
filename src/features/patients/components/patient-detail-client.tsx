@@ -2,7 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Check, X, Users, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Check, X, Users, Send, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,15 @@ import {
   useCancelInvite,
   useRemoveEmergencyContact,
   useTogglePatientStatus,
+  useGenerateFamilyLinkCode,
 } from "../hooks";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -77,6 +85,12 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteMsg, setInviteMsg] = useState<string | null>(null);
 
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [codeEmail, setCodeEmail] = useState("");
+  const [codeResult, setCodeResult] = useState<{ code: string; email: string } | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const generateFamilyCode = useGenerateFamilyLinkCode();
+
   useEffect(() => {
     if (patient?.caregiver_assignments) {
       startTransition(() => {
@@ -121,6 +135,20 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           setInviteMsg(err instanceof Error ? err.message : "Erro ao enviar convite"),
       }
     );
+  }
+
+  function handleGenerateFamilyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!codeEmail.trim()) return;
+    setCodeError(null);
+    setCodeResult(null);
+    generateFamilyCode.mutate(codeEmail.trim(), {
+      onSuccess: (data) => {
+        setCodeResult({ code: data.code, email: data.email });
+      },
+      onError: (err) =>
+        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
+    });
   }
 
   if (patientLoading) {
@@ -336,6 +364,14 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
               )}
               Convidar
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Gerar Código
+            </Button>
           </form>
           {inviteMsg && (
             <p
@@ -418,6 +454,69 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog gerar código familiar */}
+      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Gerar Código de Vínculo</DialogTitle>
+            <DialogDescription>
+              Gere um código para um familiar que já possui conta no Zelo. Um email com o código será enviado automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {codeResult ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
+                <p className="font-medium mb-4">{codeResult.email}</p>
+                <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
+                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
+                    {codeResult.code}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Um email com este código foi enviado para o familiar.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleGenerateFamilyCode} className="space-y-4">
+              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
+              <div className="space-y-1.5">
+                <Label htmlFor="family-code-email">Email do familiar *</Label>
+                <Input
+                  id="family-code-email"
+                  type="email"
+                  placeholder="familiar@exemplo.com"
+                  value={codeEmail}
+                  onChange={(e) => setCodeEmail(e.target.value)}
+                  disabled={generateFamilyCode.isPending}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={generateFamilyCode.isPending}>
+                  {generateFamilyCode.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Gerar Código
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
