@@ -26,9 +26,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="rounded-full bg-muted p-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h1 className="mt-2 text-xl font-semibold text-foreground">
-          Algo deu errado
-        </h1>
+        <h1 className="mt-2 text-xl font-semibold text-foreground">Algo deu errado</h1>
         <p className="max-w-sm text-sm text-muted-foreground">
           Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte.
         </p>

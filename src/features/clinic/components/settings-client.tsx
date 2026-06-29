@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, startTransition } from "react";
-import { Camera, Loader2, Save, Lock, FileText } from "lucide-react";
+import { Camera, Loader2, Save, Lock, FileText, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,11 +104,18 @@ export function SettingsClient() {
   async function handleToggleDailyReport(checked: boolean) {
     try {
       await updateClinic.mutateAsync({ daily_report_enabled: checked });
-      toast.success(
-        checked ? "Relatório diário ativado" : "Relatório diário desativado"
-      );
+      toast.success(checked ? "Relatório diário ativado" : "Relatório diário desativado");
     } catch {
       toast.error("Erro ao atualizar o relatório diário");
+    }
+  }
+
+  async function handleToggleVisitNotification(checked: boolean) {
+    try {
+      await updateClinic.mutateAsync({ visit_notification_enabled: checked });
+      toast.success(checked ? "Notificação de visita ativada" : "Notificação de visita desativada");
+    } catch {
+      toast.error("Erro ao atualizar a notificação de visita");
     }
   }
 
@@ -357,15 +364,43 @@ export function SettingsClient() {
                 Enviar resumo diário automático
               </Label>
               <p className="text-sm text-muted-foreground">
-                Todas as noites, familiares e responsáveis recebem por push e
-                e-mail um resumo do dia de cada paciente — cuidados realizados e
-                ocorrências registradas.
+                Todas as noites, familiares e responsáveis recebem por push e e-mail um resumo do
+                dia de cada paciente — cuidados realizados e ocorrências registradas.
               </p>
             </div>
             <Switch
               id="daily-report"
               checked={clinic?.daily_report_enabled ?? true}
               onCheckedChange={handleToggleDailyReport}
+              disabled={updateClinic.isPending}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Visit Notification */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4" />
+            Notificação de visita agendada
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="visit-notification" className="text-sm font-medium">
+                Avisar familiares ao agendar uma visita
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Quando um turno é agendado, familiares e responsáveis recebem por push e e-mail a
+                confirmação da visita (data, horário e cuidador).
+              </p>
+            </div>
+            <Switch
+              id="visit-notification"
+              checked={clinic?.visit_notification_enabled ?? true}
+              onCheckedChange={handleToggleVisitNotification}
               disabled={updateClinic.isPending}
             />
           </div>

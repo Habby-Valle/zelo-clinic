@@ -143,56 +143,56 @@ export function ReportsClient() {
       {canAccessReports && (
         <>
           {summaryQuery.isLoading ? (
-        <SummaryCardsSkeleton />
-      ) : (
-        summaryQuery.data && <SummaryCards summary={summaryQuery.data} />
-      )}
+            <SummaryCardsSkeleton />
+          ) : (
+            summaryQuery.data && <SummaryCards summary={summaryQuery.data} />
+          )}
 
-      <ReportsFilters onFilterChange={handleFilterChange} />
+          <ReportsFilters onFilterChange={handleFilterChange} />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <ShiftsReport
-          data={shiftsQuery.data ?? []}
-          loading={isPending}
-          onExport={exportShiftsCsv}
-        />
-        <ChecklistsReport
-          data={checklistsQuery.data ?? []}
-          loading={isPending}
-          onExport={exportChecklistsCsv}
-        />
-      </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <ShiftsReport
+              data={shiftsQuery.data ?? []}
+              loading={isPending}
+              onExport={exportShiftsCsv}
+            />
+            <ChecklistsReport
+              data={checklistsQuery.data ?? []}
+              loading={isPending}
+              onExport={exportChecklistsCsv}
+            />
+          </div>
 
-      <PatientsGrowthReport
-        data={patientsQuery.data ?? []}
-        loading={isPending}
-        onExport={exportPatientsCsv}
-      />
+          <PatientsGrowthReport
+            data={patientsQuery.data ?? []}
+            loading={isPending}
+            onExport={exportPatientsCsv}
+          />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <SosReport
-          data={
-            sosQuery.data ?? {
-              summary: {
-                total: 0,
-                active: 0,
-                acknowledged: 0,
-                resolved: 0,
-                avgResponseTimeMinutes: null,
-              },
-              byPatient: [],
-              byDate: [],
-            }
-          }
-          loading={sosQuery.isLoading}
-          onExport={exportSosCsv}
-        />
-        <CaregiversReport
-          data={caregiversQuery.data ?? []}
-          loading={caregiversQuery.isLoading}
-          onExport={exportCaregiversCsv}
-        />
-      </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <SosReport
+              data={
+                sosQuery.data ?? {
+                  summary: {
+                    total: 0,
+                    active: 0,
+                    acknowledged: 0,
+                    resolved: 0,
+                    avgResponseTimeMinutes: null,
+                  },
+                  byPatient: [],
+                  byDate: [],
+                }
+              }
+              loading={sosQuery.isLoading}
+              onExport={exportSosCsv}
+            />
+            <CaregiversReport
+              data={caregiversQuery.data ?? []}
+              loading={caregiversQuery.isLoading}
+              onExport={exportCaregiversCsv}
+            />
+          </div>
         </>
       )}
     </div>

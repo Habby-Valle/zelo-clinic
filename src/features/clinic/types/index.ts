@@ -19,4 +19,5 @@ export interface Clinic {
   media_url: string | null;
   theme_color: string | null;
   daily_report_enabled: boolean;
+  visit_notification_enabled: boolean;
 }

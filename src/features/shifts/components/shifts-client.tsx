@@ -685,9 +685,7 @@ export function ShiftsClient() {
                   setFormCaregiver(val);
                   if (
                     formPatient &&
-                    !patients
-                      .find((p) => p.id === formPatient)
-                      ?.caregiver_ids.includes(val)
+                    !patients.find((p) => p.id === formPatient)?.caregiver_ids.includes(val)
                   ) {
                     setFormPatient("");
                   }
@@ -725,7 +723,9 @@ export function ShiftsClient() {
                   <SelectValue>
                     {(v: string | null) => {
                       if (!v || v === "_empty") {
-                        return formCaregiver ? "Selecione o paciente" : "Selecione um cuidador primeiro";
+                        return formCaregiver
+                          ? "Selecione o paciente"
+                          : "Selecione um cuidador primeiro";
                       }
                       const p = patients.find((p) => String(p.id) === v);
                       return p?.name ?? v;

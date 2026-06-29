@@ -105,13 +105,13 @@ export function PatientsClient() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              Pacientes
-              <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
-            </h1>
-            <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
-          </div>
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            Pacientes
+            <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
+          </h1>
+          <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
+        </div>
         <Link href="/patients/new" className={cn(buttonVariants())}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Paciente
@@ -134,7 +134,11 @@ export function PatientsClient() {
           <SelectTrigger className="w-36">
             <SelectValue>
               {(v: string | null) => {
-                const labels: Record<string, string> = { all: "Todos", true: "Ativo", false: "Inativo" };
+                const labels: Record<string, string> = {
+                  all: "Todos",
+                  true: "Ativo",
+                  false: "Inativo",
+                };
                 return labels[v ?? ""] ?? v ?? "Status";
               }}
             </SelectValue>

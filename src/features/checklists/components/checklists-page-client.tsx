@@ -139,7 +139,11 @@ export function ChecklistsPageClient() {
           <SelectTrigger className="w-40">
             <SelectValue>
               {(v: string | null) => {
-                const labels: Record<string, string> = { all: "Todos", true: "Ativos", false: "Inativos" };
+                const labels: Record<string, string> = {
+                  all: "Todos",
+                  true: "Ativos",
+                  false: "Inativos",
+                };
                 return labels[v ?? ""] ?? v;
               }}
             </SelectValue>

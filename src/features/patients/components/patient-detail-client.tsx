@@ -146,8 +146,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
       onSuccess: (data) => {
         setCodeResult({ code: data.code, email: data.email });
       },
-      onError: (err) =>
-        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
+      onError: (err) => setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
     });
   }
 
@@ -367,7 +366,12 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+              onClick={() => {
+                setCodeOpen(true);
+                setCodeResult(null);
+                setCodeError(null);
+                setCodeEmail("");
+              }}
             >
               <Plus className="mr-2 h-4 w-4" />
               Gerar Código
@@ -456,31 +460,48 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
       </Card>
 
       {/* Dialog gerar código familiar */}
-      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
+      <Dialog
+        open={codeOpen}
+        onOpenChange={(v) => {
+          setCodeOpen(v);
+          if (!v) {
+            setCodeResult(null);
+            setCodeError(null);
+            setCodeEmail("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Gerar Código de Vínculo</DialogTitle>
             <DialogDescription>
-              Gere um código para um familiar que já possui conta no Zelo. Um email com o código será enviado automaticamente.
+              Gere um código para um familiar que já possui conta no Zelo. Um email com o código
+              será enviado automaticamente.
             </DialogDescription>
           </DialogHeader>
 
           {codeResult ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
-                <p className="font-medium mb-4">{codeResult.email}</p>
+                <p className="mb-2 text-sm text-muted-foreground">Código gerado para</p>
+                <p className="mb-4 font-medium">{codeResult.email}</p>
                 <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
-                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
+                  <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">
                     {codeResult.code}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="mt-4 text-xs text-muted-foreground">
                   Um email com este código foi enviado para o familiar.
                 </p>
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
+                <Button
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeEmail("");
+                  }}
+                >
                   Fechar
                 </Button>
               </div>
@@ -504,12 +525,19 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeError(null);
+                    setCodeEmail("");
+                  }}
                 >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={generateFamilyCode.isPending}>
-                  {generateFamilyCode.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {generateFamilyCode.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Gerar Código
                 </Button>
               </div>

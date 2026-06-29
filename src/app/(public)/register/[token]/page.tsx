@@ -152,7 +152,8 @@ export default function RegisterPage() {
         <h1 className="text-xl font-bold">Convite inválido</h1>
         <p className="text-muted-foreground">{loadError}</p>
         <p className="text-sm text-muted-foreground">
-          Este link pode ter expirado ou já ter sido utilizado. Entre em contato com o administrador.
+          Este link pode ter expirado ou já ter sido utilizado. Entre em contato com o
+          administrador.
         </p>
       </div>
     );
@@ -179,7 +180,9 @@ export default function RegisterPage() {
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <span className={step === 1 ? "font-semibold text-foreground" : ""}>1. Seus dados</span>
           <span>→</span>
-          <span className={step === 2 ? "font-semibold text-foreground" : ""}>2. Dados da clínica</span>
+          <span className={step === 2 ? "font-semibold text-foreground" : ""}>
+            2. Dados da clínica
+          </span>
           <span>→</span>
           <span className={step === 3 ? "font-semibold text-foreground" : ""}>3. Endereço</span>
         </div>
@@ -192,7 +195,9 @@ export default function RegisterPage() {
       </div>
 
       {submitError && (
-        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">{submitError}</div>
+        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+          {submitError}
+        </div>
       )}
 
       {step === 1 && (
@@ -260,9 +265,15 @@ export default function RegisterPage() {
         <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="clinic_name">Nome da clínica *</Label>
-            <Input id="clinic_name" placeholder="Ex: Clínica Bem Cuidar" {...form2.register("clinic_name")} />
+            <Input
+              id="clinic_name"
+              placeholder="Ex: Clínica Bem Cuidar"
+              {...form2.register("clinic_name")}
+            />
             {form2.formState.errors.clinic_name && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_name.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_name.message}
+              </p>
             )}
           </div>
 
@@ -279,7 +290,9 @@ export default function RegisterPage() {
               }
             />
             {form2.formState.errors.clinic_document && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_document.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_document.message}
+              </p>
             )}
           </div>
 
@@ -296,7 +309,9 @@ export default function RegisterPage() {
               }
             />
             {form2.formState.errors.clinic_phone && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_phone.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_phone.message}
+              </p>
             )}
           </div>
 
@@ -321,7 +336,9 @@ export default function RegisterPage() {
                   id="zip_code"
                   placeholder="00000-000"
                   value={formatCep(cepValue)}
-                  onChange={(e) => form3.setValue("zip_code", e.target.value, { shouldValidate: true })}
+                  onChange={(e) =>
+                    form3.setValue("zip_code", e.target.value, { shouldValidate: true })
+                  }
                   className="flex-1"
                 />
                 <Button
@@ -341,7 +358,9 @@ export default function RegisterPage() {
                 </Button>
               </div>
               {form3.formState.errors.zip_code && (
-                <p className="text-xs text-destructive">{form3.formState.errors.zip_code.message}</p>
+                <p className="text-xs text-destructive">
+                  {form3.formState.errors.zip_code.message}
+                </p>
               )}
             </div>
             <div className="w-24 space-y-1.5">
@@ -366,7 +385,9 @@ export default function RegisterPage() {
               <Label htmlFor="neighborhood">Bairro *</Label>
               <Input id="neighborhood" placeholder="Centro" {...form3.register("neighborhood")} />
               {form3.formState.errors.neighborhood && (
-                <p className="text-xs text-destructive">{form3.formState.errors.neighborhood.message}</p>
+                <p className="text-xs text-destructive">
+                  {form3.formState.errors.neighborhood.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -395,7 +416,11 @@ export default function RegisterPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="complement">Complemento</Label>
-            <Input id="complement" placeholder="Sala 5 (opcional)" {...form3.register("complement")} />
+            <Input
+              id="complement"
+              placeholder="Sala 5 (opcional)"
+              {...form3.register("complement")}
+            />
           </div>
 
           <div className="flex gap-2">

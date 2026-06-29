@@ -175,7 +175,11 @@ export function PatientForm({
                   <SelectTrigger disabled={isPending}>
                     <SelectValue>
                       {(v: string | null) =>
-                        v && v !== "none" ? (BLOOD_TYPES.includes(v) ? v : "Não informado") : "Não informado"
+                        v && v !== "none"
+                          ? BLOOD_TYPES.includes(v)
+                            ? v
+                            : "Não informado"
+                          : "Não informado"
                       }
                     </SelectValue>
                   </SelectTrigger>

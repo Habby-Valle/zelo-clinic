@@ -11,6 +11,7 @@ export interface UpdateClinicData {
   media_id?: string | null;
   theme_color?: string | null;
   daily_report_enabled?: boolean;
+  visit_notification_enabled?: boolean;
   address?: {
     zip_code?: string;
     street?: string;

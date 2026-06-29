@@ -147,8 +147,7 @@ export function CaregiversClient() {
       onSuccess: (data) => {
         setCodeResult({ code: data.code, email: data.email });
       },
-      onError: (err) =>
-        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
+      onError: (err) => setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
     });
   }
 
@@ -156,14 +155,21 @@ export function CaregiversClient() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             Cuidadores
             <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
           </h1>
           <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCodeOpen(true);
+              setCodeResult(null);
+              setCodeError(null);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Gerar Código
           </Button>
@@ -475,31 +481,48 @@ export function CaregiversClient() {
       </Dialog>
 
       {/* Dialog gerar código */}
-      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
+      <Dialog
+        open={codeOpen}
+        onOpenChange={(v) => {
+          setCodeOpen(v);
+          if (!v) {
+            setCodeResult(null);
+            setCodeError(null);
+            setCodeEmail("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Gerar Código de Vínculo</DialogTitle>
             <DialogDescription>
-              Gere um código para um cuidador que já possui conta no Zelo. Um email com o código será enviado automaticamente.
+              Gere um código para um cuidador que já possui conta no Zelo. Um email com o código
+              será enviado automaticamente.
             </DialogDescription>
           </DialogHeader>
 
           {codeResult ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
-                <p className="font-medium mb-4">{codeResult.email}</p>
+                <p className="mb-2 text-sm text-muted-foreground">Código gerado para</p>
+                <p className="mb-4 font-medium">{codeResult.email}</p>
                 <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
-                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
+                  <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">
                     {codeResult.code}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="mt-4 text-xs text-muted-foreground">
                   Um email com este código foi enviado para o cuidador.
                 </p>
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
+                <Button
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeEmail("");
+                  }}
+                >
                   Fechar
                 </Button>
               </div>
@@ -523,7 +546,12 @@ export function CaregiversClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeError(null);
+                    setCodeEmail("");
+                  }}
                 >
                   Cancelar
                 </Button>
