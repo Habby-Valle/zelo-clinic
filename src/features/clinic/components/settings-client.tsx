@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, startTransition } from "react";
-import { Camera, Loader2, Save, Lock } from "lucide-react";
+import { Camera, Loader2, Save, Lock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 import { getInitials, formatCnpj, formatPhone, formatCep, unformat } from "@/lib/format";
 
 const passwordSchema = z
@@ -98,6 +99,17 @@ export function SettingsClient() {
       toast.error("Erro ao salvar dados da clínica");
     }
     setSaving(false);
+  }
+
+  async function handleToggleDailyReport(checked: boolean) {
+    try {
+      await updateClinic.mutateAsync({ daily_report_enabled: checked });
+      toast.success(
+        checked ? "Relatório diário ativado" : "Relatório diário desativado"
+      );
+    } catch {
+      toast.error("Erro ao atualizar o relatório diário");
+    }
   }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -326,6 +338,36 @@ export function SettingsClient() {
               )}
               Salvar alterações
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Daily Report */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Relatório diário para familiares
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="daily-report" className="text-sm font-medium">
+                Enviar resumo diário automático
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Todas as noites, familiares e responsáveis recebem por push e
+                e-mail um resumo do dia de cada paciente — cuidados realizados e
+                ocorrências registradas.
+              </p>
+            </div>
+            <Switch
+              id="daily-report"
+              checked={clinic?.daily_report_enabled ?? true}
+              onCheckedChange={handleToggleDailyReport}
+              disabled={updateClinic.isPending}
+            />
           </div>
         </CardContent>
       </Card>

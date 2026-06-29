@@ -10,6 +10,7 @@ export interface UpdateClinicData {
   document?: string;
   media_id?: string | null;
   theme_color?: string | null;
+  daily_report_enabled?: boolean;
   address?: {
     zip_code?: string;
     street?: string;
