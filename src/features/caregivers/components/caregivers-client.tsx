@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ const STATUS_LABELS: Record<CaregiverInvite["status"], string> = {
 };
 
 export function CaregiversClient() {
+  const router = useRouter();
   const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
 
   const [tab, setTab] = useState("caregivers");
@@ -248,7 +250,11 @@ export function CaregiversClient() {
                     </TableRow>
                   ) : (
                     caregivers.map((cg) => (
-                      <TableRow key={cg.id}>
+                      <TableRow
+                        key={cg.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/users/${cg.id}`)}
+                      >
                         <TableCell className="font-medium">{cg.name}</TableCell>
                         <TableCell className="text-muted-foreground">{cg.email}</TableCell>
                         <TableCell>
