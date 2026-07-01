@@ -10,6 +10,7 @@ import {
   usePatientsGrowthReport,
   useSosReport,
   useCaregiversReport,
+  useSatisfactionReport,
 } from "../hooks/use-reports";
 import { ReportsFilters } from "./reports-filters";
 import { SummaryCards } from "./summary-cards";
@@ -18,6 +19,7 @@ import { ChecklistsReport } from "./checklists-report";
 import { PatientsGrowthReport } from "./patients-growth-report";
 import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
+import { SatisfactionReport } from "./satisfaction-report";
 import { usePlanLimits } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
@@ -71,6 +73,7 @@ export function ReportsClient() {
   const patientsQuery = usePatientsGrowthReport(6);
   const sosQuery = useSosReport(dateRange);
   const caregiversQuery = useCaregiversReport(dateRange);
+  const satisfactionQuery = useSatisfactionReport(dateRange);
 
   const isPending = shiftsQuery.isLoading || checklistsQuery.isLoading || patientsQuery.isLoading;
 
@@ -136,6 +139,19 @@ export function ReportsClient() {
     downloadCsv(csv, "relatorio-cuidadores.csv");
   }
 
+  function exportSatisfactionCsv() {
+    const csv = buildCsv(
+      ["Cuidador", "Avaliações", "Média", "NPS"],
+      (satisfactionQuery.data?.byCaregiver ?? []).map((d) => [
+        d.caregiverName,
+        String(d.total),
+        d.avgSatisfaction != null ? String(d.avgSatisfaction) : "",
+        d.nps != null ? String(d.nps) : "",
+      ])
+    );
+    downloadCsv(csv, "relatorio-satisfacao.csv");
+  }
+
   return (
     <div className="space-y-6">
       {!canAccessReports && <FeatureUpgradePrompt featureName="Relatórios" />}
@@ -193,6 +209,18 @@ export function ReportsClient() {
               onExport={exportCaregiversCsv}
             />
           </div>
+
+          <SatisfactionReport
+            data={
+              satisfactionQuery.data ?? {
+                summary: { avgSatisfaction: null, nps: null, totalRatings: 0 },
+                byCaregiver: [],
+                byDate: [],
+              }
+            }
+            loading={satisfactionQuery.isLoading}
+            onExport={exportSatisfactionCsv}
+          />
         </>
       )}
     </div>

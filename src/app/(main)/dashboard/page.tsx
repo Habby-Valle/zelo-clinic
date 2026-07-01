@@ -9,6 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
   TrendingUp,
+  Star,
 } from "lucide-react";
 import { requireClinicAdmin } from "@/lib/auth";
 import { fetchDashboard, fetchRecentShifts } from "@/features/dashboard";
@@ -229,9 +230,9 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* KPI secundário — 3 cards */}
+      {/* KPI secundário — 4 cards */}
       {kpis && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Em Andamento"
             value={kpis.activeShifts}
@@ -252,6 +253,17 @@ export default async function DashboardPage() {
             sub="ainda em aberto"
             icon={TrendingUp}
             highlight={kpis.pendingToday > 0 ? "blue" : "default"}
+          />
+          <KpiCard
+            label="Satisfação"
+            value={kpis.avgSatisfaction != null ? `${kpis.avgSatisfaction.toFixed(1)}★` : "—"}
+            sub={
+              kpis.totalRatings > 0
+                ? `NPS ${kpis.nps} · ${kpis.totalRatings} avaliação${kpis.totalRatings > 1 ? "ões" : ""}`
+                : "sem avaliações"
+            }
+            icon={Star}
+            highlight={kpis.avgSatisfaction != null ? "green" : "default"}
           />
         </div>
       )}

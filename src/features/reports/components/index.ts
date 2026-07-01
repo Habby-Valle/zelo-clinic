@@ -6,3 +6,4 @@ export { ChecklistsReport } from "./checklists-report";
 export { PatientsGrowthReport } from "./patients-growth-report";
 export { SosReport } from "./sos-report";
 export { CaregiversReport } from "./caregivers-report";
+export { SatisfactionReport } from "./satisfaction-report";

@@ -60,4 +60,29 @@ export interface ClinicReportSummary {
   totalChecklistsCompleted: number;
   totalPatients: number;
   totalCaregivers: number;
+  avgSatisfaction: number | null;
+  nps: number | null;
+  totalRatings: number;
+}
+
+export interface SatisfactionSummary {
+  avgSatisfaction: number | null;
+  nps: number | null;
+  totalRatings: number;
+}
+
+export interface SatisfactionReportData {
+  summary: SatisfactionSummary;
+  byCaregiver: {
+    caregiverId: string;
+    caregiverName: string;
+    total: number;
+    avgSatisfaction: number | null;
+    nps: number | null;
+  }[];
+  byDate: {
+    date: string;
+    total: number;
+    avgSatisfaction: number;
+  }[];
 }

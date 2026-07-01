@@ -6,6 +6,7 @@ import type {
   PatientsGrowthData,
   SosReportData,
   CaregiverReportData,
+  SatisfactionReportData,
   DateRange,
 } from "../types";
 
@@ -49,4 +50,13 @@ export async function fetchCaregiversReportApi(
   qs.set("date_from", dateRange.from);
   qs.set("date_to", dateRange.to);
   return apiFetchClient<CaregiverReportData[]>(`/reports/caregivers/?${qs}`);
+}
+
+export async function fetchSatisfactionReportApi(
+  dateRange: DateRange
+): Promise<SatisfactionReportData> {
+  const qs = new URLSearchParams();
+  qs.set("date_from", dateRange.from);
+  qs.set("date_to", dateRange.to);
+  return apiFetchClient<SatisfactionReportData>(`/reports/satisfaction/?${qs}`);
 }

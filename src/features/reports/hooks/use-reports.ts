@@ -8,6 +8,7 @@ import {
   fetchPatientsGrowthApi,
   fetchSosReportApi,
   fetchCaregiversReportApi,
+  fetchSatisfactionReportApi,
 } from "../services";
 import type { DateRange } from "../types";
 
@@ -53,6 +54,14 @@ export function useCaregiversReport(dateRange: DateRange) {
   return useQuery({
     queryKey: ["reports", "caregivers", dateRange],
     queryFn: () => fetchCaregiversReportApi(dateRange),
+    enabled: !!dateRange.from && !!dateRange.to,
+  });
+}
+
+export function useSatisfactionReport(dateRange: DateRange) {
+  return useQuery({
+    queryKey: ["reports", "satisfaction", dateRange],
+    queryFn: () => fetchSatisfactionReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
   });
 }
