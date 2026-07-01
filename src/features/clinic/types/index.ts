@@ -20,4 +20,5 @@ export interface Clinic {
   theme_color: string | null;
   daily_report_enabled: boolean;
   visit_notification_enabled: boolean;
+  satisfaction_survey_enabled: boolean;
 }

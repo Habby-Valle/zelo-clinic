@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, startTransition } from "react";
-import { Camera, Loader2, Save, Lock, FileText, CalendarCheck } from "lucide-react";
+import { Camera, Loader2, Save, Lock, FileText, CalendarCheck, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,6 +116,17 @@ export function SettingsClient() {
       toast.success(checked ? "Notificação de visita ativada" : "Notificação de visita desativada");
     } catch {
       toast.error("Erro ao atualizar a notificação de visita");
+    }
+  }
+
+  async function handleToggleSatisfactionSurvey(checked: boolean) {
+    try {
+      await updateClinic.mutateAsync({ satisfaction_survey_enabled: checked });
+      toast.success(
+        checked ? "Pesquisa de satisfação ativada" : "Pesquisa de satisfação desativada"
+      );
+    } catch {
+      toast.error("Erro ao atualizar a pesquisa de satisfação");
     }
   }
 
@@ -401,6 +412,35 @@ export function SettingsClient() {
               id="visit-notification"
               checked={clinic?.visit_notification_enabled ?? true}
               onCheckedChange={handleToggleVisitNotification}
+              disabled={updateClinic.isPending}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Satisfaction Survey */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-4 w-4" />
+            Pesquisa de satisfação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="satisfaction-survey" className="text-sm font-medium">
+                Pedir avaliação após cada turno
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Quando um turno é concluído, os familiares recebem por push e e-mail um convite
+                para avaliar o atendimento (nota de 1 a 5 e comentário).
+              </p>
+            </div>
+            <Switch
+              id="satisfaction-survey"
+              checked={clinic?.satisfaction_survey_enabled ?? true}
+              onCheckedChange={handleToggleSatisfactionSurvey}
               disabled={updateClinic.isPending}
             />
           </div>

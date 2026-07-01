@@ -12,6 +12,7 @@ export interface UpdateClinicData {
   theme_color?: string | null;
   daily_report_enabled?: boolean;
   visit_notification_enabled?: boolean;
+  satisfaction_survey_enabled?: boolean;
   address?: {
     zip_code?: string;
     street?: string;
