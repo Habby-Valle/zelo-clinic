@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatPhone } from "@/lib/format";
 import { useFamilyMember } from "../hooks";
 
 function getInitials(name: string): string {
@@ -82,7 +83,7 @@ export function FamilyMemberDetailClient({ id }: FamilyMemberDetailClientProps) 
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{member.phone}</span>
+              <span>{formatPhone(member.phone)}</span>
             </div>
             <div className="flex items-center gap-3">
               <Heart className="h-4 w-4 text-muted-foreground" />

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatPhone } from "@/lib/format";
 import { useFamilyMembers } from "../hooks";
 
 export function FamilyMembersListClient() {
@@ -95,7 +96,7 @@ export function FamilyMembersListClient() {
                   >
                     <TableCell className="font-medium">{fm.name}</TableCell>
                     <TableCell className="text-muted-foreground">{fm.email}</TableCell>
-                    <TableCell>{fm.phone}</TableCell>
+                    <TableCell>{formatPhone(fm.phone)}</TableCell>
                     <TableCell>{fm.relationship_to_patient}</TableCell>
                     <TableCell>
                       {fm.patient_count > 0 ? (
