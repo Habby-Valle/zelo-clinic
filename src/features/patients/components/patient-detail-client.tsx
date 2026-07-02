@@ -2,11 +2,9 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Check, X, Users, Send, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Check, X, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,21 +15,9 @@ import { useAuthStore } from "@/store/authStore";
 import {
   usePatient,
   useClinicCaregivers,
-  usePendingInvites,
   useAssignCaregivers,
-  useInviteFamily,
-  useCancelInvite,
-  useRemoveEmergencyContact,
   useTogglePatientStatus,
-  useGenerateFamilyLinkCode,
 } from "../hooks";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -72,24 +58,12 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
   const { data: patient, isLoading: patientLoading } = usePatient(id);
   const { data: allCaregivers = [] } = useClinicCaregivers();
-  const { data: pendingInvites = [] } = usePendingInvites(id);
 
   const assignCaregivers = useAssignCaregivers(id);
-  const inviteFamily = useInviteFamily(id);
-  const cancelInvite = useCancelInvite(id);
-  const removeContact = useRemoveEmergencyContact(id);
   const toggleStatus = useTogglePatientStatus(id);
 
   const [selectedCaregivers, setSelectedCaregivers] = useState<string[]>([]);
   const [caregiverMsg, setCaregiverMsg] = useState<string | null>(null);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
-
-  const [codeOpen, setCodeOpen] = useState(false);
-  const [codeEmail, setCodeEmail] = useState("");
-  const [codeResult, setCodeResult] = useState<{ code: string; email: string } | null>(null);
-  const [codeError, setCodeError] = useState<string | null>(null);
-  const generateFamilyCode = useGenerateFamilyLinkCode();
 
   useEffect(() => {
     if (patient?.caregiver_assignments) {
@@ -118,36 +92,6 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         onError: (err) => setCaregiverMsg(err instanceof Error ? err.message : "Erro ao salvar"),
       }
     );
-  }
-
-  function handleInviteFamily(e: React.FormEvent) {
-    e.preventDefault();
-    if (!inviteEmail.trim() || !clinicId) return;
-    setInviteMsg(null);
-    inviteFamily.mutate(
-      { clinicId, email: inviteEmail.trim() },
-      {
-        onSuccess: () => {
-          setInviteMsg("Convite enviado com sucesso!");
-          setInviteEmail("");
-        },
-        onError: (err) =>
-          setInviteMsg(err instanceof Error ? err.message : "Erro ao enviar convite"),
-      }
-    );
-  }
-
-  function handleGenerateFamilyCode(e: React.FormEvent) {
-    e.preventDefault();
-    if (!codeEmail.trim()) return;
-    setCodeError(null);
-    setCodeResult(null);
-    generateFamilyCode.mutate(codeEmail.trim(), {
-      onSuccess: (data) => {
-        setCodeResult({ code: data.code, email: data.email });
-      },
-      onError: (err) => setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
-    });
   }
 
   if (patientLoading) {
@@ -181,7 +125,6 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
   }
 
   const isActive = patient.is_active;
-  const emergencyContacts = patient.emergency_contacts ?? [];
 
   return (
     <div className="space-y-6">
@@ -330,221 +273,6 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Familiares / Contatos de Emergência */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Contatos de Emergência (Familiares)</CardTitle>
-          <CardDescription>
-            Convide familiares para receber alertas sobre o paciente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleInviteFamily} className="flex items-end gap-3">
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor="invite-email">Convidar familiar por email</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                disabled={inviteFamily.isPending}
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={inviteFamily.isPending || !inviteEmail.trim() || !clinicId}
-            >
-              {inviteFamily.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              Convidar
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setCodeOpen(true);
-                setCodeResult(null);
-                setCodeError(null);
-                setCodeEmail("");
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Gerar Código
-            </Button>
-          </form>
-          {inviteMsg && (
-            <p
-              className={`text-sm ${
-                inviteMsg.includes("sucesso") ? "text-green-600" : "text-destructive"
-              }`}
-            >
-              {inviteMsg}
-            </p>
-          )}
-
-          {pendingInvites.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Convites Pendentes</p>
-              <div className="space-y-2">
-                {pendingInvites.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      <span className="text-sm">{inv.email}</span>
-                      <Badge variant="outline" className="text-xs">
-                        Pendente
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelInvite.mutate(inv.id)}
-                      disabled={cancelInvite.isPending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {emergencyContacts.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Familiares Vinculados</p>
-              <div className="space-y-2">
-                {emergencyContacts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Users className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{c.profile_family_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {c.profile_family_phone} · Prioridade {c.priority}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeContact.mutate(c.id)}
-                      disabled={removeContact.isPending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {emergencyContacts.length === 0 && pendingInvites.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum familiar vinculado. Use o campo acima para enviar um convite.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialog gerar código familiar */}
-      <Dialog
-        open={codeOpen}
-        onOpenChange={(v) => {
-          setCodeOpen(v);
-          if (!v) {
-            setCodeResult(null);
-            setCodeError(null);
-            setCodeEmail("");
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>Gerar Código de Vínculo</DialogTitle>
-            <DialogDescription>
-              Gere um código para um familiar que já possui conta no Zelo. Um email com o código
-              será enviado automaticamente.
-            </DialogDescription>
-          </DialogHeader>
-
-          {codeResult ? (
-            <div className="space-y-4">
-              <div className="rounded-lg border bg-muted/30 p-6 text-center">
-                <p className="mb-2 text-sm text-muted-foreground">Código gerado para</p>
-                <p className="mb-4 font-medium">{codeResult.email}</p>
-                <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
-                  <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">
-                    {codeResult.code}
-                  </span>
-                </div>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  Um email com este código foi enviado para o familiar.
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => {
-                    setCodeOpen(false);
-                    setCodeResult(null);
-                    setCodeEmail("");
-                  }}
-                >
-                  Fechar
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleGenerateFamilyCode} className="space-y-4">
-              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
-              <div className="space-y-1.5">
-                <Label htmlFor="family-code-email">Email do familiar *</Label>
-                <Input
-                  id="family-code-email"
-                  type="email"
-                  placeholder="familiar@exemplo.com"
-                  value={codeEmail}
-                  onChange={(e) => setCodeEmail(e.target.value)}
-                  disabled={generateFamilyCode.isPending}
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setCodeOpen(false);
-                    setCodeResult(null);
-                    setCodeError(null);
-                    setCodeEmail("");
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={generateFamilyCode.isPending}>
-                  {generateFamilyCode.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Gerar Código
-                </Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
