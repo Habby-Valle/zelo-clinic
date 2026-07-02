@@ -1,6 +1,1 @@
-export {
-  useInvoices,
-  useInvoice,
-  useUpdateInvoiceStatus,
-  useInvoiceStats,
-} from "./use-billing";
+export { useInvoices, useInvoice, useUpdateInvoiceStatus, useInvoiceStats } from "./use-billing";

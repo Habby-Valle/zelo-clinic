@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, User, Users, Mail, Phone, Heart } from "lucide-react";
+import { ArrowLeft, User, Users, Mail, Phone, Heart, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatPhone } from "@/lib/format";
+import { formatPhone, formatCep } from "@/lib/format";
 import { useFamilyMember } from "../hooks";
 
 function getInitials(name: string): string {
@@ -38,7 +38,7 @@ export function FamilyMemberDetailClient({ id }: FamilyMemberDetailClientProps) 
   if (!member) {
     return (
       <div className="space-y-6">
-        <Link href="/family-members">
+        <Link href="/clients">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
@@ -54,7 +54,7 @@ export function FamilyMemberDetailClient({ id }: FamilyMemberDetailClientProps) 
 
   return (
     <div className="space-y-6">
-      <Link href="/family-members">
+      <Link href="/clients">
         <Button variant="ghost" size="sm">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
@@ -117,6 +117,45 @@ export function FamilyMemberDetailClient({ id }: FamilyMemberDetailClientProps) 
                   </li>
                 ))}
               </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="h-4 w-4" />
+              Endereço
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {member.address ? (
+              <div className="space-y-2 text-sm">
+                <p>
+                  <span className="text-muted-foreground">CEP: </span>
+                  {formatCep(member.address.zip_code)}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Rua: </span>
+                  {member.address.street}, {member.address.number}
+                </p>
+                {member.address.complement && (
+                  <p>
+                    <span className="text-muted-foreground">Complemento: </span>
+                    {member.address.complement}
+                  </p>
+                )}
+                <p>
+                  <span className="text-muted-foreground">Bairro: </span>
+                  {member.address.neighborhood}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Cidade: </span>
+                  {member.address.city} / {member.address.state}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Endereço não informado</p>
             )}
           </CardContent>
         </Card>

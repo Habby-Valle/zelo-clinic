@@ -31,14 +31,12 @@ import { useInvoice, useUpdateInvoiceStatus } from "../hooks";
 import type { InvoiceStatus } from "../types";
 import { INVOICE_STATUS_LABELS } from "../types";
 
-const STATUS_VARIANTS: Record<
-  InvoiceStatus,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  pending: "secondary",
-  paid: "default",
-  cancelled: "destructive",
-};
+const STATUS_VARIANTS: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> =
+  {
+    pending: "secondary",
+    paid: "default",
+    cancelled: "destructive",
+  };
 
 function formatCurrency(value: string): string {
   if (!value || value === "0") return "—";
@@ -118,12 +116,8 @@ export function BillingDetailClient() {
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">
-              {invoice.invoice_number}
-            </h1>
-            <Badge variant={STATUS_VARIANTS[statusKey]}>
-              {INVOICE_STATUS_LABELS[statusKey]}
-            </Badge>
+            <h1 className="text-2xl font-bold tracking-tight">{invoice.invoice_number}</h1>
+            <Badge variant={STATUS_VARIANTS[statusKey]}>{INVOICE_STATUS_LABELS[statusKey]}</Badge>
           </div>
           <p className="mt-1 text-muted-foreground">
             {invoice.patient_name} — {invoice.clinic_name}
@@ -134,14 +128,9 @@ export function BillingDetailClient() {
       {invoice.status === "pending" && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center justify-between p-4">
-            <p className="text-sm font-medium">
-              Fatura aguardando pagamento.
-            </p>
+            <p className="text-sm font-medium">Fatura aguardando pagamento.</p>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setCancelOpen(true)}
-              >
+              <Button variant="outline" onClick={() => setCancelOpen(true)}>
                 <XCircle className="mr-2 h-4 w-4" />
                 Cancelar
               </Button>
@@ -168,9 +157,7 @@ export function BillingDetailClient() {
             />
             <Row label="Paciente" value={invoice.patient_name} />
             <Row label="Contratante" value={invoice.payer_name} />
-            {invoice.paid_at && (
-              <Row label="Pago em" value={formatDate(invoice.paid_at)} />
-            )}
+            {invoice.paid_at && <Row label="Pago em" value={formatDate(invoice.paid_at)} />}
           </CardContent>
         </Card>
 
@@ -179,10 +166,7 @@ export function BillingDetailClient() {
             <CardTitle className="text-base">Valor</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <Row
-              label="Total"
-              value={formatCurrency(invoice.total_amount)}
-            />
+            <Row label="Total" value={formatCurrency(invoice.total_amount)} />
           </CardContent>
         </Card>
       </div>
@@ -239,13 +223,8 @@ export function BillingDetailClient() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={updateStatus.isPending}
-              onClick={handleMarkPaid}
-            >
-              {updateStatus.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+            <AlertDialogAction disabled={updateStatus.isPending} onClick={handleMarkPaid}>
+              {updateStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Confirmar Pagamento
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -257,8 +236,8 @@ export function BillingDetailClient() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar Fatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar esta fatura? Esta a&ccedil;&atilde;o n&atilde;o
-              pode ser desfeita.
+              Tem certeza que deseja cancelar esta fatura? Esta a&ccedil;&atilde;o n&atilde;o pode
+              ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

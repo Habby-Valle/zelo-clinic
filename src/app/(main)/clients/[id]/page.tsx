@@ -6,7 +6,7 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function FamilyMemberDetailPage({ params }: Props) {
+export default async function ClientDetailPage({ params }: Props) {
   const { id } = await params;
   return <FamilyMemberDetailClient id={id} />;
 }

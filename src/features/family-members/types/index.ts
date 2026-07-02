@@ -13,8 +13,20 @@ export interface FamilyMemberPatient {
   name: string;
 }
 
+export interface FamilyMemberAddress {
+  zip_code?: string | null;
+  street?: string | null;
+  number?: string | null;
+  complement?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+}
+
 export interface FamilyMemberDetail extends FamilyMember {
   patients: FamilyMemberPatient[];
+  address?: FamilyMemberAddress | null;
 }
 
 export interface FamilyMembersPage {

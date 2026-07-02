@@ -38,9 +38,7 @@ export function FamilyMembersListClient() {
           <Users className="h-6 w-6" />
           Clientes
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          Familiares vinculados à clínica.
-        </p>
+        <p className="mt-1 text-muted-foreground">Familiares vinculados à clínica.</p>
       </div>
 
       <Input
@@ -70,12 +68,24 @@ export function FamilyMembersListClient() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-36" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-48" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-8 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : familyMembers.length === 0 ? (
@@ -92,7 +102,7 @@ export function FamilyMembersListClient() {
                   <TableRow
                     key={fm.id}
                     className="cursor-pointer"
-                    onClick={() => router.push(`/family-members/${fm.id}`)}
+                    onClick={() => router.push(`/clients/${fm.id}`)}
                   >
                     <TableCell className="font-medium">{fm.name}</TableCell>
                     <TableCell className="text-muted-foreground">{fm.email}</TableCell>
@@ -119,7 +129,8 @@ export function FamilyMembersListClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total} clientes
+            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
+            clientes
           </p>
           <div className="flex gap-2">
             <Button

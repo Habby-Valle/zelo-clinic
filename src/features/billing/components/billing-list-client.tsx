@@ -21,14 +21,12 @@ import { useInvoices, useInvoiceStats } from "../hooks";
 import type { InvoiceStatus } from "../types";
 import { INVOICE_STATUS_LABELS } from "../types";
 
-const STATUS_VARIANTS: Record<
-  InvoiceStatus,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  pending: "secondary",
-  paid: "default",
-  cancelled: "destructive",
-};
+const STATUS_VARIANTS: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> =
+  {
+    pending: "secondary",
+    paid: "default",
+    cancelled: "destructive",
+  };
 
 const STATUS_TABS = [
   { value: "", label: "Todas" },
@@ -91,9 +89,7 @@ export function BillingListClient() {
               <p className="text-2xl font-bold text-amber-600">
                 {formatCurrency(stats.total_pending)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {stats.pending_count} fatura(s)
-              </p>
+              <p className="text-xs text-muted-foreground">{stats.pending_count} fatura(s)</p>
             </CardContent>
           </Card>
           <Card className="flex-1">
@@ -102,18 +98,13 @@ export function BillingListClient() {
               <p className="text-2xl font-bold text-emerald-600">
                 {formatCurrency(stats.total_paid)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {stats.paid_count} fatura(s)
-              </p>
+              <p className="text-xs text-muted-foreground">{stats.paid_count} fatura(s)</p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      <Tabs
-        value={status}
-        onValueChange={(v) => updateParams({ status: v, page: "" })}
-      >
+      <Tabs value={status} onValueChange={(v) => updateParams({ status: v, page: "" })}>
         <TabsList>
           {STATUS_TABS.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
@@ -139,11 +130,21 @@ export function BillingListClient() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-36" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : invoices.length === 0 ? (
@@ -161,16 +162,11 @@ export function BillingListClient() {
                   return (
                     <TableRow key={invoice.id}>
                       <TableCell className="font-mono text-sm font-medium">
-                        <Link
-                          href={`/billing/${invoice.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/billing/${invoice.id}`} className="hover:underline">
                           {invoice.invoice_number}
                         </Link>
                       </TableCell>
-                      <TableCell className="font-medium">
-                        {invoice.patient_name}
-                      </TableCell>
+                      <TableCell className="font-medium">{invoice.patient_name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(invoice.period_start)} — {formatDate(invoice.period_end)}
                       </TableCell>
@@ -194,8 +190,8 @@ export function BillingListClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a{" "}
-            {Math.min(page * pageSize, total)} de {total} faturas
+            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
+            faturas
           </p>
           <div className="flex gap-2">
             <Button

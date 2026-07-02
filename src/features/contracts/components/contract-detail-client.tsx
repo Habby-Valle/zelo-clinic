@@ -378,13 +378,8 @@ export function ContractDetailClient() {
             <Button variant="outline" onClick={() => setGenInvoiceOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={() => generateInvoice.mutate()}
-              disabled={generateInvoice.isPending}
-            >
-              {generateInvoice.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button onClick={() => generateInvoice.mutate()} disabled={generateInvoice.isPending}>
+              {generateInvoice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Gerar
             </Button>
           </DialogFooter>

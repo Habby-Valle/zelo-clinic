@@ -66,10 +66,7 @@ export async function fetchInvoiceById(id: string): Promise<Invoice | null> {
   }
 }
 
-export async function updateInvoiceStatus(
-  id: string,
-  status: "paid" | "cancelled"
-): Promise<void> {
+export async function updateInvoiceStatus(id: string, status: "paid" | "cancelled"): Promise<void> {
   await apiFetchClient(`/billing/invoices/${id}/`, {
     method: "PATCH",
     body: JSON.stringify({ status }),

@@ -8,11 +8,7 @@ import {
   fetchInvoiceStats,
 } from "../services";
 
-export function useInvoices(params: {
-  status: string;
-  page: number;
-  pageSize: number;
-}) {
+export function useInvoices(params: { status: string; page: number; pageSize: number }) {
   return useQuery({
     queryKey: ["invoices", params.status, params.page, params.pageSize],
     queryFn: () => fetchInvoices(params),
