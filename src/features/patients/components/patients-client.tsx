@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Plus, Users, MoreHorizontal, Pencil, Trash2, CheckCircle2, XOctagon } from "lucide-react";
+import { Users, MoreHorizontal, Pencil, Trash2, CheckCircle2, XOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,10 +112,6 @@ export function PatientsClient() {
           </h1>
           <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
         </div>
-        <Link href="/patients/new" className={cn(buttonVariants())}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Paciente
-        </Link>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -195,12 +191,6 @@ export function PatientsClient() {
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Users className="h-8 w-8" />
                       <p>Nenhum paciente encontrado</p>
-                      <Link
-                        href="/patients/new"
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                      >
-                        Cadastrar primeiro paciente
-                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>

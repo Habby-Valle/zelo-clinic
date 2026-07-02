@@ -337,12 +337,6 @@ export default async function DashboardPage() {
             </div>
             <div className="space-y-2 p-4">
               <QuickActionLink
-                href="/patients/new"
-                icon={Users}
-                label="Novo Paciente"
-                description="Cadastrar paciente na clínica"
-              />
-              <QuickActionLink
                 href="/users"
                 icon={UserCog}
                 label="Gerenciar Usuários"
