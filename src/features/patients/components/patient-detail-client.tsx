@@ -3,6 +3,7 @@
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Check, X, Users } from "lucide-react";
+import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -249,7 +250,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                   <div>
                     <p className="text-sm font-medium">{c.profile_family_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.profile_family_phone} · Prioridade {c.priority}
+                      {formatPhone(c.profile_family_phone)} · Prioridade {c.priority}
                     </p>
                   </div>
                 </div>
