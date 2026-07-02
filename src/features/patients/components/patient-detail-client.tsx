@@ -125,6 +125,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
   }
 
   const isActive = patient.is_active;
+  const emergencyContacts = patient.emergency_contacts ?? [];
 
   return (
     <div className="space-y-6">
@@ -222,6 +223,41 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Familiares Vinculados */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Familiares Vinculados
+          </CardTitle>
+          <CardDescription>Familiares que acompanham este paciente.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {emergencyContacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum familiar vinculado.</p>
+          ) : (
+            <div className="space-y-2">
+              {emergencyContacts.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 rounded-lg border p-3"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{c.profile_family_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.profile_family_phone} · Prioridade {c.priority}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Cuidadores */}
       <Card>
