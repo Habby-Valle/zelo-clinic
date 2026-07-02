@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   UserCircle,
   Calendar,
   ClipboardList,
@@ -76,6 +77,7 @@ const allNavItems = [
   { href: "/contracts", label: "Contratos", icon: FileText },
   { href: "/billing", label: "Faturas", icon: Receipt },
   { href: "/patients", label: "Pacientes", icon: UserCircle },
+  { href: "/family-members", label: "Clientes", icon: UserCheck },
   { href: "/users", label: "Cuidadores", icon: Users },
   { href: "/shifts", label: "Turnos", icon: Calendar },
   { href: "/checklists", label: "Checklists", icon: ClipboardList },
