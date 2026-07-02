@@ -433,8 +433,8 @@ export function SettingsClient() {
                 Pedir avaliação após cada turno
               </Label>
               <p className="text-sm text-muted-foreground">
-                Quando um turno é concluído, os familiares recebem por push e e-mail um convite
-                para avaliar o atendimento (nota de 1 a 5 e comentário).
+                Quando um turno é concluído, os familiares recebem por push e e-mail um convite para
+                avaliar o atendimento (nota de 1 a 5 e comentário).
               </p>
             </div>
             <Switch

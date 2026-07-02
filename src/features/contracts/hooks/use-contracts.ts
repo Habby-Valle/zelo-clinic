@@ -32,8 +32,7 @@ export function useContract(id: string) {
 export function useUpdateContract(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof updateContractApi>[1]) =>
-      updateContractApi(id, data),
+    mutationFn: (data: Parameters<typeof updateContractApi>[1]) => updateContractApi(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
@@ -44,10 +43,7 @@ export function useUpdateContract(id: string) {
 export function useApproveContract(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
-      price_per_hour: number;
-      price_per_shift: number;
-    }) => {
+    mutationFn: async (data: { price_per_hour: number; price_per_shift: number }) => {
       await updateContractApi(id, data);
       await approveContractApi(id);
     },
