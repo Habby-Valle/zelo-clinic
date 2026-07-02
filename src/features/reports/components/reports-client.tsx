@@ -8,6 +8,7 @@ import {
   useShiftsReport,
   useChecklistsReport,
   usePatientsGrowthReport,
+  useFamilyMembersGrowthReport,
   useSosReport,
   useCaregiversReport,
   useSatisfactionReport,
@@ -17,6 +18,7 @@ import { SummaryCards } from "./summary-cards";
 import { ShiftsReport } from "./shifts-report";
 import { ChecklistsReport } from "./checklists-report";
 import { PatientsGrowthReport } from "./patients-growth-report";
+import { FamilyMembersGrowthReport } from "./family-members-growth-report";
 import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
 import { SatisfactionReport } from "./satisfaction-report";
@@ -48,8 +50,8 @@ function buildCsv(headers: string[], rows: string[][]): string {
 
 function SummaryCardsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {Array.from({ length: 5 }).map((_, i) => (
         <Card key={i}>
           <CardContent className="pt-6">
             <Skeleton className="h-8 w-16" />
@@ -71,6 +73,7 @@ export function ReportsClient() {
   const shiftsQuery = useShiftsReport(dateRange);
   const checklistsQuery = useChecklistsReport(dateRange);
   const patientsQuery = usePatientsGrowthReport(6);
+  const familyMembersQuery = useFamilyMembersGrowthReport(6);
   const sosQuery = useSosReport(dateRange);
   const caregiversQuery = useCaregiversReport(dateRange);
   const satisfactionQuery = useSatisfactionReport(dateRange);
@@ -100,6 +103,14 @@ export function ReportsClient() {
       (checklistsQuery.data ?? []).map((d) => [d.date, String(d.completed), String(d.pending)])
     );
     downloadCsv(csv, "relatorio-checklists.csv");
+  }
+
+  function exportFamilyMembersCsv() {
+    const csv = buildCsv(
+      ["Mês", "Total", "Novos"],
+      (familyMembersQuery.data ?? []).map((d) => [d.month, String(d.total), String(d.new)])
+    );
+    downloadCsv(csv, "relatorio-clientes.csv");
   }
 
   function exportPatientsCsv() {
@@ -183,6 +194,12 @@ export function ReportsClient() {
             data={patientsQuery.data ?? []}
             loading={isPending}
             onExport={exportPatientsCsv}
+          />
+
+          <FamilyMembersGrowthReport
+            data={familyMembersQuery.data ?? []}
+            loading={familyMembersQuery.isLoading}
+            onExport={exportFamilyMembersCsv}
           />
 
           <div className="grid gap-6 md:grid-cols-2">

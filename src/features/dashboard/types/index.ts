@@ -2,6 +2,7 @@ export interface DashboardKpis {
   totalPatients: number;
   newPatientsThisMonth: number;
   totalCaregivers: number;
+  totalFamilyMembers: number;
   activeShifts: number;
   shiftsToday: number;
   completedToday: number;

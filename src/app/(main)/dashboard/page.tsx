@@ -198,6 +198,13 @@ export default async function DashboardPage() {
               highlight="blue"
             />
             <KpiCard
+              label="Clientes"
+              value={kpis.totalFamilyMembers}
+              sub="familiares cadastrados"
+              icon={Users}
+              highlight="blue"
+            />
+            <KpiCard
               label="Turnos Hoje"
               value={kpis.shiftsToday}
               sub={`${kpis.completedToday} concluídos`}

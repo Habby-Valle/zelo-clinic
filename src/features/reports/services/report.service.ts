@@ -1,6 +1,7 @@
 import { apiFetchClient } from "@/lib/api-client";
 import type {
   ClinicReportSummary,
+  FamilyMembersGrowthData,
   ShiftsReportData,
   ChecklistsReportData,
   PatientsGrowthData,
@@ -28,6 +29,14 @@ export async function fetchChecklistsReportApi(
   qs.set("date_from", dateRange.from);
   qs.set("date_to", dateRange.to);
   return apiFetchClient<ChecklistsReportData[]>(`/reports/checklists/?${qs}`);
+}
+
+export async function fetchFamilyMembersGrowthApi(
+  months: number = 6
+): Promise<FamilyMembersGrowthData[]> {
+  const qs = new URLSearchParams();
+  qs.set("months", String(months));
+  return apiFetchClient<FamilyMembersGrowthData[]>(`/reports/family-members-growth/?${qs}`);
 }
 
 export async function fetchPatientsGrowthApi(months: number = 6): Promise<PatientsGrowthData[]> {

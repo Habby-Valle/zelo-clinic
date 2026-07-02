@@ -1,3 +1,9 @@
+export interface FamilyMembersGrowthData {
+  month: string;
+  total: number;
+  new: number;
+}
+
 export interface DateRange {
   from: string;
   to: string;
@@ -60,6 +66,7 @@ export interface ClinicReportSummary {
   totalChecklistsCompleted: number;
   totalPatients: number;
   totalCaregivers: number;
+  totalFamilyMembers: number;
   avgSatisfaction: number | null;
   nps: number | null;
   totalRatings: number;

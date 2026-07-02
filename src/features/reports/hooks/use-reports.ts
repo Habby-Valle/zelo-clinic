@@ -5,6 +5,7 @@ import {
   fetchReportSummaryApi,
   fetchShiftsReportApi,
   fetchChecklistsReportApi,
+  fetchFamilyMembersGrowthApi,
   fetchPatientsGrowthApi,
   fetchSosReportApi,
   fetchCaregiversReportApi,
@@ -32,6 +33,13 @@ export function useChecklistsReport(dateRange: DateRange) {
     queryKey: ["reports", "checklists", dateRange],
     queryFn: () => fetchChecklistsReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
+  });
+}
+
+export function useFamilyMembersGrowthReport(months: number = 6) {
+  return useQuery({
+    queryKey: ["reports", "family-members-growth", months],
+    queryFn: () => fetchFamilyMembersGrowthApi(months),
   });
 }
 
