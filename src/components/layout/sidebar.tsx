@@ -19,6 +19,7 @@ import {
   TestTube,
   CheckCircle,
   FileText,
+  Receipt,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ function EnvironmentBadge() {
 const allNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contracts", label: "Contratos", icon: FileText },
+  { href: "/billing", label: "Faturas", icon: Receipt },
   { href: "/patients", label: "Pacientes", icon: UserCircle },
   { href: "/users", label: "Cuidadores", icon: Users },
   { href: "/shifts", label: "Turnos", icon: Calendar },
