@@ -8,7 +8,6 @@ import {
   Clock,
   ArrowRight,
   CheckCircle2,
-  TrendingUp,
   Star,
 } from "lucide-react";
 import { requireClinicAdmin } from "@/lib/auth";
@@ -179,7 +178,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI principal — 4 cards */}
+      {/* KPI cards — 2 linhas de 4 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis ? (
           <>
@@ -222,9 +221,34 @@ export default async function DashboardPage() {
               icon={AlertTriangle}
               highlight={kpis.activeSosAlerts > 0 ? "red" : "default"}
             />
+            <KpiCard
+              label="Em Andamento"
+              value={kpis.activeShifts}
+              sub="turnos agora"
+              icon={Clock}
+              highlight={kpis.activeShifts > 0 ? "blue" : "default"}
+            />
+            <KpiCard
+              label="Checklists Hoje"
+              value={kpis.checklistsToday}
+              sub="concluídos"
+              icon={ClipboardCheck}
+              highlight={kpis.checklistsToday > 0 ? "green" : "default"}
+            />
+            <KpiCard
+              label="Satisfação"
+              value={kpis.avgSatisfaction != null ? `${kpis.avgSatisfaction.toFixed(1)}★` : "—"}
+              sub={
+                kpis.totalRatings > 0
+                  ? `NPS ${kpis.nps} · ${kpis.totalRatings} avaliação${kpis.totalRatings > 1 ? "ões" : ""}`
+                  : "sem avaliações"
+              }
+              icon={Star}
+              highlight={kpis.avgSatisfaction != null ? "green" : "default"}
+            />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
@@ -236,44 +260,6 @@ export default async function DashboardPage() {
           ))
         )}
       </div>
-
-      {/* KPI secundário — 4 cards */}
-      {kpis && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Em Andamento"
-            value={kpis.activeShifts}
-            sub="turnos agora"
-            icon={Clock}
-            highlight={kpis.activeShifts > 0 ? "blue" : "default"}
-          />
-          <KpiCard
-            label="Checklists Hoje"
-            value={kpis.checklistsToday}
-            sub="concluídos"
-            icon={ClipboardCheck}
-            highlight={kpis.checklistsToday > 0 ? "green" : "default"}
-          />
-          <KpiCard
-            label="Pendentes Hoje"
-            value={kpis.pendingToday}
-            sub="ainda em aberto"
-            icon={TrendingUp}
-            highlight={kpis.pendingToday > 0 ? "blue" : "default"}
-          />
-          <KpiCard
-            label="Satisfação"
-            value={kpis.avgSatisfaction != null ? `${kpis.avgSatisfaction.toFixed(1)}★` : "—"}
-            sub={
-              kpis.totalRatings > 0
-                ? `NPS ${kpis.nps} · ${kpis.totalRatings} avaliação${kpis.totalRatings > 1 ? "ões" : ""}`
-                : "sem avaliações"
-            }
-            icon={Star}
-            highlight={kpis.avgSatisfaction != null ? "green" : "default"}
-          />
-        </div>
-      )}
 
       {/* Conteúdo principal */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
