@@ -22,6 +22,7 @@ import {
   FileText,
   Receipt,
   HeartPulse,
+  Clock,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -95,6 +96,7 @@ const allNavItems: NavItem[] = [
   { href: "/shifts", label: "Turnos", icon: Calendar, roles: CLINIC_STAFF },
   { href: "/checklists", label: "Checklists", icon: ClipboardList, roles: CLINIC_STAFF },
   { href: "/sos", label: "SOS", icon: AlertTriangle },
+  { href: "/caregiver-hours", label: "Horas", icon: Clock, roles: CLINIC_STAFF },
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/plan", label: "Plano", icon: CreditCard },
