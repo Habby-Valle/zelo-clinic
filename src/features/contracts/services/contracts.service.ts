@@ -11,7 +11,8 @@ function mapContract(r: Record<string, unknown>): ServiceContract {
     requested_by_name: r.requested_by_name != null ? String(r.requested_by_name) : null,
     patient: String(r.patient ?? ""),
     patient_name: String(r.patient_name ?? ""),
-    patient_health_status: (r.patient_health_status as ServiceContract["patient_health_status"]) ?? "pending",
+    patient_health_status:
+      (r.patient_health_status as ServiceContract["patient_health_status"]) ?? "pending",
     clinic: String(r.clinic ?? ""),
     clinic_name: String(r.clinic_name ?? ""),
     status: (r.status as ContractStatus) ?? "draft",

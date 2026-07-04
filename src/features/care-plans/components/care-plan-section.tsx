@@ -190,10 +190,7 @@ export function CarePlanSection({
               </div>
             )}
 
-            <CaregiverMatchSection
-              patientId={patientId}
-              onSelect={selectCaregiver}
-            />
+            <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="relative space-y-1.5">
@@ -317,12 +314,10 @@ function CaregiverMatchSection({
   onSelect: (c: CaregiverOption) => void;
 }) {
   const [enabled, setEnabled] = useState(false);
-  const { data: matches, isLoading, isFetching } = useCaregiverMatch(
-    enabled ? patientId : ""
-  );
+  const { data: matches, isLoading, isFetching } = useCaregiverMatch(enabled ? patientId : "");
 
   return (
-    <div className="rounded-lg border border-dashed p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-dashed p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Sparkles className="h-4 w-4" />
@@ -345,7 +340,7 @@ function CaregiverMatchSection({
       </div>
 
       {isLoading && (
-        <p className="text-xs text-muted-foreground animate-pulse">
+        <p className="animate-pulse text-xs text-muted-foreground">
           Analisando cuidadores disponíveis...
         </p>
       )}
@@ -421,9 +416,7 @@ function CaregiverMatchSection({
       )}
 
       {matches && matches.length === 0 && !isLoading && (
-        <p className="text-xs text-muted-foreground">
-          Nenhum cuidador disponível encontrado.
-        </p>
+        <p className="text-xs text-muted-foreground">Nenhum cuidador disponível encontrado.</p>
       )}
     </div>
   );

@@ -60,8 +60,8 @@ export function NurseInviteButton() {
           <DialogHeader>
             <DialogTitle>Convidar Enfermeiro(a)</DialogTitle>
             <DialogDescription>
-              Enviaremos um e-mail com o link de cadastro. O enfermeiro poderá acessar os
-              planos de cuidado da clínica.
+              Enviaremos um e-mail com o link de cadastro. O enfermeiro poderá acessar os planos de
+              cuidado da clínica.
             </DialogDescription>
           </DialogHeader>
 

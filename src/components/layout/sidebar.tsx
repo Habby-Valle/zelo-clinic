@@ -108,8 +108,7 @@ export function Sidebar({ role }: { role: UserRole }) {
   const { data: systemConfig } = useSystemConfig();
   const navItems = allNavItems.filter((item) => {
     const roleOk = item.roles ? item.roles.includes(role) : role === "clinic_admin";
-    const feedbackOk =
-      item.href !== "/feedback" || systemConfig?.feedback_visible !== false;
+    const feedbackOk = item.href !== "/feedback" || systemConfig?.feedback_visible !== false;
     return roleOk && feedbackOk;
   });
   const clinicLogo = clinic?.media_url;

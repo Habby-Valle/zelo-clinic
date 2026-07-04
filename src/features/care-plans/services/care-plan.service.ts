@@ -18,9 +18,7 @@ export async function fetchCaregiverOptions(): Promise<CaregiverOption[]> {
   }));
 }
 
-export async function fetchCarePlanByPatient(
-  patientId: string
-): Promise<CarePlan | null> {
+export async function fetchCarePlanByPatient(patientId: string): Promise<CarePlan | null> {
   const data = await apiFetchClient<{ results: CarePlan[] }>(
     `/care-plans/?patient_id=${patientId}`
   );
@@ -51,10 +49,7 @@ export async function createCarePlan(input: SaveCarePlanInput): Promise<CarePlan
   });
 }
 
-export async function updateCarePlan(
-  id: string,
-  input: SaveCarePlanInput
-): Promise<CarePlan> {
+export async function updateCarePlan(id: string, input: SaveCarePlanInput): Promise<CarePlan> {
   return apiFetchClient<CarePlan>(`/care-plans/${id}/`, {
     method: "PATCH",
     body: JSON.stringify(input),
@@ -62,9 +57,7 @@ export async function updateCarePlan(
 }
 
 export async function fetchCarePlansForReview(): Promise<CarePlan[]> {
-  const data = await apiFetchClient<{ results: CarePlan[] }>(
-    `/care-plans/?status=pending_review`
-  );
+  const data = await apiFetchClient<{ results: CarePlan[] }>(`/care-plans/?status=pending_review`);
   return data.results ?? [];
 }
 
@@ -89,9 +82,7 @@ export async function updateCarePlanChecklists(
   });
 }
 
-export async function fetchCaregiverMatch(
-  patientId: string
-): Promise<CaregiverMatchResult[]> {
+export async function fetchCaregiverMatch(patientId: string): Promise<CaregiverMatchResult[]> {
   return apiFetchClient<CaregiverMatchResult[]>(
     `/api/ai/caregiver-match/?patient_id=${patientId}&use_ai=true`
   );

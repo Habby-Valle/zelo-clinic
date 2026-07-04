@@ -31,12 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import {
-  useContract,
-  useSendProposal,
-  useRejectContract,
-  useValidateHealth,
-} from "../hooks";
+import { useContract, useSendProposal, useRejectContract, useValidateHealth } from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -170,9 +165,7 @@ export function ContractDetailClient() {
       {contract.status === "requested" && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center justify-between p-4">
-            <p className="text-sm font-medium">
-              Esta solicitação aguarda uma proposta de valores.
-            </p>
+            <p className="text-sm font-medium">Esta solicitação aguarda uma proposta de valores.</p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setRejectOpen(true)}>
                 <XCircle className="mr-2 h-4 w-4" />

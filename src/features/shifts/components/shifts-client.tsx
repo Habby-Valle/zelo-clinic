@@ -55,12 +55,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useShifts,
-  useShiftTemplates,
-  useClinicPatients,
-  useClinicCaregivers,
-} from "../hooks";
+import { useShifts, useShiftTemplates, useClinicPatients, useClinicCaregivers } from "../hooks";
 import {
   createShift,
   finishShift,
