@@ -1,6 +1,6 @@
 "use client";
 
-import { PartyPopper, Users, ClipboardList, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { PartyPopper, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
