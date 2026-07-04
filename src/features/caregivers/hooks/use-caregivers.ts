@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchCaregivers,
+  fetchCaregiver,
+  verifyCaregiverApi,
   fetchCaregiverInvites,
   inviteCaregiverApi,
   cancelCaregiverInviteApi,
@@ -13,6 +15,26 @@ export function useCaregivers(params: { search: string; page: number; pageSize: 
   return useQuery({
     queryKey: ["caregivers", params.search, params.page, params.pageSize],
     queryFn: () => fetchCaregivers(params),
+  });
+}
+
+export function useCaregiver(id: string) {
+  return useQuery({
+    queryKey: ["caregiver", id],
+    queryFn: () => fetchCaregiver(id),
+    enabled: !!id,
+  });
+}
+
+export function useVerifyCaregiver(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, note }: { action: "approve" | "reject"; note?: string }) =>
+      verifyCaregiverApi(id, action, note),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["caregiver", id], data);
+      queryClient.invalidateQueries({ queryKey: ["caregivers"] });
+    },
   });
 }
 

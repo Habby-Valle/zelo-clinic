@@ -77,13 +77,21 @@ export async function fetchPatientById(id: string): Promise<ClinicPatient | null
 export async function fetchClinicCaregivers(): Promise<PatientCaregiver[]> {
   try {
     const data = await apiFetchClient<{
-      results: Array<{ id: string; name: string; email: string }>;
+      results: Array<{
+        id: string;
+        name: string;
+        email: string;
+        verification_status?: string | null;
+      }>;
     }>("/users/?role=caregiver&page_size=200");
-    return (data.results ?? []).map((u) => ({
-      id: String(u.id),
-      name: u.name,
-      email: u.email,
-    }));
+    // Só cuidadores aprovados podem ser vinculados a pacientes (gate de segurança).
+    return (data.results ?? [])
+      .filter((u) => u.verification_status === "approved")
+      .map((u) => ({
+        id: String(u.id),
+        name: u.name,
+        email: u.email,
+      }));
   } catch {
     return [];
   }

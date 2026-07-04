@@ -54,7 +54,8 @@ export async function fetchClinicCaregiversApi(): Promise<CaregiverOption[]> {
   const data = await apiFetchClient<ListResult<CaregiverOption>>(
     "/users/?role=caregiver&page_size=100"
   );
-  return data.results;
+  // Só cuidadores aprovados podem ser escalados em turnos (gate de segurança).
+  return data.results.filter((c) => c.verification_status === "approved");
 }
 
 export async function fetchChecklistOptionsApi(): Promise<{ id: string; name: string }[]> {

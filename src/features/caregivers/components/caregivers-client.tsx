@@ -65,6 +65,15 @@ const STATUS_LABELS: Record<CaregiverInvite["status"], string> = {
   cancelled: "Cancelado",
 };
 
+const VERIFICATION_META: Record<
+  "pending" | "approved" | "rejected",
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
+  pending: { label: "Aguardando", variant: "outline" },
+  approved: { label: "Aprovado", variant: "secondary" },
+  rejected: { label: "Rejeitado", variant: "destructive" },
+};
+
 export function CaregiversClient() {
   const router = useRouter();
   const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
@@ -217,6 +226,7 @@ export function CaregiversClient() {
                     <TableHead>Email</TableHead>
                     <TableHead>Pacientes</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Verificação</TableHead>
                     <TableHead>Criado em</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -237,13 +247,16 @@ export function CaregiversClient() {
                           <Skeleton className="h-5 w-16 rounded-full" />
                         </TableCell>
                         <TableCell>
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                        </TableCell>
+                        <TableCell>
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
                       </TableRow>
                     ))
                   ) : caregivers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center">
+                      <TableCell colSpan={6} className="h-32 text-center">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <Users className="h-8 w-8" />
                           <p>Nenhum cuidador encontrado</p>
@@ -278,6 +291,12 @@ export function CaregiversClient() {
                               Inativo
                             </Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const v = VERIFICATION_META[cg.verification_status ?? "pending"];
+                            return <Badge variant={v.variant}>{v.label}</Badge>;
+                          })()}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(cg.created_at).toLocaleDateString("pt-BR")}

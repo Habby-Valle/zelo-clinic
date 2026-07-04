@@ -43,6 +43,7 @@ export interface PatientOption {
 export interface CaregiverOption {
   id: string;
   name: string;
+  verification_status?: string | null;
 }
 
 export interface ShiftFilters {

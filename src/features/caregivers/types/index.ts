@@ -1,3 +1,5 @@
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
 export interface CaregiverProfile {
   id: string;
   email: string;
@@ -7,6 +9,9 @@ export interface CaregiverProfile {
   media_id: string | null;
   is_active: boolean;
   patient_count: number;
+  verification_status: VerificationStatus | null;
+  verification_note: string | null;
+  verified_at: string | null;
   created_at: string;
 }
 
