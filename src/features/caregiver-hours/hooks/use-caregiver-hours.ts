@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchCaregiverHoursApi,
-  fetchCaregiverHoursSummaryApi,
-} from "../services";
+import { fetchCaregiverHoursApi, fetchCaregiverHoursSummaryApi } from "../services";
 import type { CaregiverHoursFilters } from "../types";
 
 export function useCaregiverHours(filters: CaregiverHoursFilters) {
@@ -14,10 +11,7 @@ export function useCaregiverHours(filters: CaregiverHoursFilters) {
   });
 }
 
-export function useCaregiverHoursSummary(
-  startDate?: string,
-  endDate?: string
-) {
+export function useCaregiverHoursSummary(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: ["caregiver-hours-summary", startDate, endDate],
     queryFn: () => fetchCaregiverHoursSummaryApi(startDate, endDate),

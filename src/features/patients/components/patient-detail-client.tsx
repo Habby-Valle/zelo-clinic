@@ -56,7 +56,6 @@ interface PatientDetailClientProps {
 }
 
 export function PatientDetailClient({ id }: PatientDetailClientProps) {
-
   const { data: patient, isLoading: patientLoading } = usePatient(id);
   const { data: allCaregivers = [] } = useClinicCaregivers();
 

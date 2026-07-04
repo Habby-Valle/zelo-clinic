@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import {
-  Clock,
-  Calendar,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Clock, Calendar, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useCaregiverHours,
-  useCaregiverHoursSummary,
-} from "../hooks";
+import { useCaregiverHours, useCaregiverHoursSummary } from "../hooks";
 import type { CaregiverWorkLog } from "../types";
 
 function formatHours(totalHours: string): string {
@@ -68,22 +59,11 @@ export function CaregiverHoursClient() {
   const { data: pageData, isLoading } = useCaregiverHours(filters);
   const { data: summary } = useCaregiverHoursSummary(startDate, endDate);
 
-  const totalPages = useMemo(
-    () => (pageData ? Math.ceil(pageData.count / 365) : 0),
-    [pageData]
-  );
+  const totalPages = useMemo(() => (pageData ? Math.ceil(pageData.count / 365) : 0), [pageData]);
 
   const handleExport = useCallback(() => {
     if (!pageData?.results?.length) return;
-    const headers = [
-      "Data",
-      "Cuidador",
-      "Horas",
-      "Turnos",
-      "Completados",
-      "Cancelados",
-      "Noturno",
-    ];
+    const headers = ["Data", "Cuidador", "Horas", "Turnos", "Completados", "Cancelados", "Noturno"];
     const rows = pageData.results.map((w: CaregiverWorkLog) => [
       w.date,
       w.caregiver_name,
@@ -93,9 +73,7 @@ export function CaregiverHoursClient() {
       String(w.cancelled),
       w.overnight ? "Sim" : "Não",
     ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join(
-      "\n"
-    );
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -111,37 +89,27 @@ export function CaregiverHoursClient() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total de Horas
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Horas</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summary ? (
-              <div className="text-2xl font-bold">
-                {formatHours(summary.total_hours)}
-              </div>
+              <div className="text-2xl font-bold">{formatHours(summary.total_hours)}</div>
             ) : (
               <Skeleton className="h-8 w-24" />
             )}
-            <p className="text-xs text-muted-foreground">
-              Período selecionado
-            </p>
+            <p className="text-xs text-muted-foreground">Período selecionado</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Média por Turno
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Média por Turno</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summary ? (
-              <div className="text-2xl font-bold">
-                {formatHours(summary.avg_hours_per_shift)}
-              </div>
+              <div className="text-2xl font-bold">{formatHours(summary.avg_hours_per_shift)}</div>
             ) : (
               <Skeleton className="h-8 w-24" />
             )}
@@ -151,22 +119,16 @@ export function CaregiverHoursClient() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Registros
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Registros</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {pageData ? (
-              <div className="text-2xl font-bold">
-                {pageData.count}
-              </div>
+              <div className="text-2xl font-bold">{pageData.count}</div>
             ) : (
               <Skeleton className="h-8 w-24" />
             )}
-            <p className="text-xs text-muted-foreground">
-              Dias com registro no período
-            </p>
+            <p className="text-xs text-muted-foreground">Dias com registro no período</p>
           </CardContent>
         </Card>
       </div>
@@ -205,12 +167,7 @@ export function CaregiverHoursClient() {
               />
             </div>
             {pageData?.results?.length ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="ml-auto"
-              >
+              <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto">
                 <Download className="mr-1.5 h-4 w-4" />
                 Exportar CSV
               </Button>
@@ -222,9 +179,7 @@ export function CaregiverHoursClient() {
       {/* Table Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            Registro de Horas por Dia
-          </CardTitle>
+          <CardTitle className="text-base">Registro de Horas por Dia</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -254,31 +209,19 @@ export function CaregiverHoursClient() {
                 <TableBody>
                   {pageData?.results?.map((w: CaregiverWorkLog) => (
                     <TableRow key={w.id}>
-                      <TableCell className="font-medium">
-                        {formatDate(w.date)}
-                      </TableCell>
+                      <TableCell className="font-medium">{formatDate(w.date)}</TableCell>
                       <TableCell>{w.caregiver_name}</TableCell>
-                      <TableCell className="text-right">
-                        {formatHours(w.total_hours)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {w.shift_count}
-                      </TableCell>
-                      <TableCell className="text-right text-green-600">
-                        {w.completed}
-                      </TableCell>
-                      <TableCell className="text-right text-red-600">
-                        {w.cancelled}
-                      </TableCell>
+                      <TableCell className="text-right">{formatHours(w.total_hours)}</TableCell>
+                      <TableCell className="text-right">{w.shift_count}</TableCell>
+                      <TableCell className="text-right text-green-600">{w.completed}</TableCell>
+                      <TableCell className="text-right text-red-600">{w.cancelled}</TableCell>
                       <TableCell className="text-center">
                         {w.overnight ? (
                           <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                             Sim
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">
-                            —
-                          </span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     </TableRow>
