@@ -93,7 +93,7 @@ const allNavItems: NavItem[] = [
   { href: "/clients", label: "Clientes", icon: UserCheck },
   { href: "/users", label: "Cuidadores", icon: Users },
   { href: "/shifts", label: "Turnos", icon: Calendar, roles: CLINIC_STAFF },
-  { href: "/checklists", label: "Checklists", icon: ClipboardList },
+  { href: "/checklists", label: "Checklists", icon: ClipboardList, roles: CLINIC_STAFF },
   { href: "/sos", label: "SOS", icon: AlertTriangle },
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },

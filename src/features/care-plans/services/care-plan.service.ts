@@ -76,6 +76,18 @@ export async function submitCarePlan(id: string): Promise<CarePlan> {
   return apiFetchClient<CarePlan>(`/care-plans/${id}/submit/`, { method: "POST" });
 }
 
+export async function updateCarePlanChecklists(
+  id: string,
+  checklistIds: string[]
+): Promise<CarePlan> {
+  return apiFetchClient<CarePlan>(`/care-plans/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      checklists: checklistIds.map((cid) => ({ checklist_id: cid })),
+    }),
+  });
+}
+
 export async function approveCarePlan(id: string): Promise<CarePlan> {
   return apiFetchClient<CarePlan>(`/care-plans/${id}/approve/`, { method: "POST" });
 }
