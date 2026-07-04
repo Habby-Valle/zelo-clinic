@@ -17,6 +17,7 @@ export interface Invoice {
   clinic_name: string;
   period_start: string;
   period_end: string;
+  due_date: string | null;
   total_amount: string;
   status: InvoiceStatus;
   status_display?: string;
@@ -47,4 +48,6 @@ export interface InvoiceStats {
   total_paid: string;
   pending_count: number;
   paid_count: number;
+  total_overdue: string;
+  overdue_count: number;
 }

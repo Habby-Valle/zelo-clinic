@@ -155,6 +155,10 @@ export function BillingDetailClient() {
               label="Per&iacute;odo"
               value={`${formatDate(invoice.period_start)} — ${formatDate(invoice.period_end)}`}
             />
+            <Row
+              label="Vencimento"
+              value={invoice.due_date ? formatDate(invoice.due_date) : "—"}
+            />
             <Row label="Paciente" value={invoice.patient_name} />
             <Row label="Contratante" value={invoice.payer_name} />
             {invoice.paid_at && <Row label="Pago em" value={formatDate(invoice.paid_at)} />}

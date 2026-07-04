@@ -93,6 +93,15 @@ export function BillingListClient() {
           </Card>
           <Card className="flex-1">
             <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Vencido</p>
+              <p className="text-2xl font-bold text-red-600">
+                {formatCurrency(stats.total_overdue)}
+              </p>
+              <p className="text-xs text-muted-foreground">{stats.overdue_count} fatura(s)</p>
+            </CardContent>
+          </Card>
+          <Card className="flex-1">
+            <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Recebido</p>
               <p className="text-2xl font-bold text-emerald-600">
                 {formatCurrency(stats.total_paid)}
@@ -121,6 +130,7 @@ export function BillingListClient() {
                 <TableHead>Fatura</TableHead>
                 <TableHead>Paciente</TableHead>
                 <TableHead>Per&iacute;odo</TableHead>
+                <TableHead>Vencimento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Valor</TableHead>
               </TableRow>
@@ -148,7 +158,7 @@ export function BillingListClient() {
                 ))
               ) : invoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center">
+                  <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Receipt className="h-8 w-8" />
                       <p>Nenhuma fatura encontrada</p>
@@ -168,6 +178,13 @@ export function BillingListClient() {
                       <TableCell className="font-medium">{invoice.patient_name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(invoice.period_start)} — {formatDate(invoice.period_end)}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.due_date ? (
+                          <span className={new Date(invoice.due_date) < new Date() && invoice.status === "pending" ? "text-destructive font-medium text-sm" : "text-sm"}>
+                            {formatDate(invoice.due_date)}
+                          </span>
+                        ) : "—"}
                       </TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANTS[statusKey]}>

@@ -13,6 +13,7 @@ function mapInvoice(r: Record<string, unknown>): Invoice {
     clinic_name: String(r.clinic_name ?? ""),
     period_start: String(r.period_start ?? ""),
     period_end: String(r.period_end ?? ""),
+    due_date: r.due_date != null ? String(r.due_date) : null,
     total_amount: String(r.total_amount ?? "0"),
     status: (r.status as InvoiceStatus) ?? "pending",
     status_display: r.status_display != null ? String(r.status_display) : undefined,
@@ -91,5 +92,7 @@ export async function fetchInvoiceStats(): Promise<InvoiceStats> {
     total_paid: String(data.total_paid ?? "0"),
     pending_count: Number(data.pending_count ?? 0),
     paid_count: Number(data.paid_count ?? 0),
+    total_overdue: String(data.total_overdue ?? "0"),
+    overdue_count: Number(data.overdue_count ?? 0),
   };
 }
