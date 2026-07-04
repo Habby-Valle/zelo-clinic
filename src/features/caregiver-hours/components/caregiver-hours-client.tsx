@@ -18,8 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCaregiverHours, useCaregiverHoursSummary } from "../hooks";
 import type { CaregiverWorkLog } from "../types";
 
-function formatHours(totalHours: string): string {
-  const num = parseFloat(totalHours);
+function formatHours(totalHours: number | string): string {
+  const num = typeof totalHours === "string" ? parseFloat(totalHours) : totalHours;
   if (isNaN(num)) return "0h";
   const h = Math.floor(num);
   const m = Math.round((num - h) * 60);
@@ -69,8 +69,8 @@ export function CaregiverHoursClient() {
       w.caregiver_name,
       w.total_hours,
       String(w.shift_count),
-      String(w.completed),
-      String(w.cancelled),
+      String(w.completed_shift_count),
+      String(w.cancelled_shift_count),
       w.overnight ? "Sim" : "Não",
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -213,8 +213,8 @@ export function CaregiverHoursClient() {
                       <TableCell>{w.caregiver_name}</TableCell>
                       <TableCell className="text-right">{formatHours(w.total_hours)}</TableCell>
                       <TableCell className="text-right">{w.shift_count}</TableCell>
-                      <TableCell className="text-right text-green-600">{w.completed}</TableCell>
-                      <TableCell className="text-right text-red-600">{w.cancelled}</TableCell>
+                      <TableCell className="text-right text-green-600">{w.completed_shift_count}</TableCell>
+                      <TableCell className="text-right text-red-600">{w.cancelled_shift_count}</TableCell>
                       <TableCell className="text-center">
                         {w.overnight ? (
                           <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
