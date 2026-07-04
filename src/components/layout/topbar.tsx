@@ -22,9 +22,10 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/format";
+import type { UserRole } from "@/types/common";
 import { MobileSidebar } from "./mobile-sidebar";
 
-export function Topbar() {
+export function Topbar({ role }: { role: UserRole }) {
   const { user, hasHydrated } = useCurrentUser();
   const { setTheme } = useTheme();
   const router = useRouter();
@@ -44,7 +45,7 @@ export function Topbar() {
 
   return (
     <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
-      <MobileSidebar />
+      <MobileSidebar role={role} />
 
       <div className="ml-auto flex items-center gap-2">
         <DropdownMenu>

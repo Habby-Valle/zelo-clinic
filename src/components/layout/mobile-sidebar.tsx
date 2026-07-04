@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { UserRole } from "@/types/common";
 import { Sidebar } from "./sidebar";
 
-export function MobileSidebar() {
+export function MobileSidebar({ role }: { role: UserRole }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,7 +18,7 @@ export function MobileSidebar() {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
-        <Sidebar />
+        <Sidebar role={role} />
       </SheetContent>
     </Sheet>
   );

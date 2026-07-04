@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  useActivateCarePlan,
+  useSubmitCarePlan,
   useCaregiverOptionsForPlan,
   useCarePlan,
   useChecklistOptionsForPlan,
@@ -23,6 +23,7 @@ import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "outline"> = {
   draft: "outline",
+  pending_review: "secondary",
   active: "default",
   archived: "secondary",
 };
@@ -56,7 +57,7 @@ export function CarePlanSection({
   const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const { data: caregivers = [] } = useCaregiverOptionsForPlan();
   const saveMutation = useSaveCarePlan(patientId, plan?.id);
-  const activateMutation = useActivateCarePlan(patientId);
+  const submitMutation = useSubmitCarePlan(patientId);
 
   const [selected, setSelected] = useState<string[]>([]);
   const [responsibleName, setResponsibleName] = useState("");
@@ -117,10 +118,7 @@ export function CarePlanSection({
     checklists: selected.map((id) => ({ checklist_id: id })),
   });
 
-  const canActivate = useMemo(
-    () => selected.length > 0 && responsibleName.trim().length > 0,
-    [selected, responsibleName]
-  );
+  const canSubmit = selected.length > 0;
 
   async function handleSave() {
     try {
@@ -131,17 +129,17 @@ export function CarePlanSection({
     }
   }
 
-  async function handleActivate() {
+  async function handleSubmit() {
     try {
       const saved = await saveMutation.mutateAsync(buildInput());
-      await activateMutation.mutateAsync(saved.id);
-      toast.success("Plano de cuidado aprovado e ativado.");
+      await submitMutation.mutateAsync(saved.id);
+      toast.success("Plano enviado para revisão do enfermeiro.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao ativar plano.");
+      toast.error(err instanceof Error ? err.message : "Erro ao enviar plano.");
     }
   }
 
-  const busy = saveMutation.isPending || activateMutation.isPending;
+  const busy = saveMutation.isPending || submitMutation.isPending;
 
   return (
     <Card>
@@ -176,6 +174,19 @@ export function CarePlanSection({
                   : ""}
                 .
               </p>
+            )}
+
+            {plan?.status === "pending_review" && (
+              <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
+                Em revisão pelo enfermeiro. Você pode ajustar e reenviar.
+              </p>
+            )}
+
+            {plan?.status === "draft" && plan.review_note && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <p className="font-medium text-destructive">Devolvido pelo enfermeiro</p>
+                <p className="mt-1 text-muted-foreground">{plan.review_note}</p>
+              </div>
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -272,17 +283,19 @@ export function CarePlanSection({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" onClick={handleSave} disabled={busy}>
-                {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar rascunho
-              </Button>
-              <Button onClick={handleActivate} disabled={busy || !canActivate}>
-                {activateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {isActive ? "Salvar e reaprovar" : "Aprovar e ativar"}
-              </Button>
-            </div>
+            {!isActive && (
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" onClick={handleSave} disabled={busy}>
+                  {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar rascunho
+                </Button>
+                <Button onClick={handleSubmit} disabled={busy || !canSubmit}>
+                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Enviar para revisão
+                </Button>
+              </div>
+            )}
           </>
         )}
       </CardContent>

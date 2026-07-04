@@ -2,11 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  activateCarePlan,
+  approveCarePlan,
   createCarePlan,
+  fetchActiveCarePlans,
   fetchCaregiverOptions,
   fetchCarePlanByPatient,
+  fetchCarePlansForReview,
   fetchChecklistOptions,
+  returnCarePlan,
+  submitCarePlan,
   updateCarePlan,
 } from "../services/care-plan.service";
 import type { SaveCarePlanInput } from "../types";
@@ -44,12 +48,47 @@ export function useSaveCarePlan(patientId: string, planId?: string) {
   });
 }
 
-export function useActivateCarePlan(patientId: string) {
+export function useSubmitCarePlan(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (planId: string) => activateCarePlan(planId),
+    mutationFn: (planId: string) => submitCarePlan(planId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["care-plan", patientId] });
+    },
+  });
+}
+
+export function useCarePlansForReview() {
+  return useQuery({
+    queryKey: ["care-plans", "review"],
+    queryFn: fetchCarePlansForReview,
+  });
+}
+
+export function useActiveCarePlans() {
+  return useQuery({
+    queryKey: ["care-plans", "active"],
+    queryFn: fetchActiveCarePlans,
+  });
+}
+
+export function useApproveCarePlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (planId: string) => approveCarePlan(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plans"] });
+    },
+  });
+}
+
+export function useReturnCarePlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ planId, note }: { planId: string; note: string }) =>
+      returnCarePlan(planId, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },
   });
 }

@@ -21,9 +21,11 @@ import {
   CheckCircle,
   FileText,
   Receipt,
+  HeartPulse,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@/types/common";
 import { useClinic } from "@/features/clinic/hooks";
 import { useSystemConfig } from "@/features/system-config";
 
@@ -72,14 +74,25 @@ function EnvironmentBadge() {
   );
 }
 
-const allNavItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles?: UserRole[];
+};
+
+// Itens visíveis ao enfermeiro (leitura + planos). Sem `roles` = só admin.
+const CLINIC_STAFF: UserRole[] = ["clinic_admin", "clinic_nurse"];
+
+const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contracts", label: "Contratos", icon: FileText },
   { href: "/billing", label: "Faturas", icon: Receipt },
-  { href: "/patients", label: "Pacientes", icon: UserCircle },
+  { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: CLINIC_STAFF },
+  { href: "/patients", label: "Pacientes", icon: UserCircle, roles: CLINIC_STAFF },
   { href: "/clients", label: "Clientes", icon: UserCheck },
   { href: "/users", label: "Cuidadores", icon: Users },
-  { href: "/shifts", label: "Turnos", icon: Calendar },
+  { href: "/shifts", label: "Turnos", icon: Calendar, roles: CLINIC_STAFF },
   { href: "/checklists", label: "Checklists", icon: ClipboardList },
   { href: "/sos", label: "SOS", icon: AlertTriangle },
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
@@ -87,15 +100,18 @@ const allNavItems = [
   { href: "/plan", label: "Plano", icon: CreditCard },
   { href: "/audit-logs", label: "Logs de Auditoria", icon: ScrollText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
-] as const;
+];
 
-export function Sidebar() {
+export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const { data: clinic } = useClinic();
   const { data: systemConfig } = useSystemConfig();
-  const navItems = allNavItems.filter(
-    (item) => item.href !== "/feedback" || systemConfig?.feedback_visible !== false
-  );
+  const navItems = allNavItems.filter((item) => {
+    const roleOk = item.roles ? item.roles.includes(role) : role === "clinic_admin";
+    const feedbackOk =
+      item.href !== "/feedback" || systemConfig?.feedback_visible !== false;
+    return roleOk && feedbackOk;
+  });
   const clinicLogo = clinic?.media_url;
   const clinicName = clinic?.name ?? "Clínica";
 

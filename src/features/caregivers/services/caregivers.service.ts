@@ -48,15 +48,27 @@ export async function inviteCaregiverApi(email: string, clinicId: string): Promi
   });
 }
 
+export async function inviteNurseApi(email: string, clinicId: string): Promise<void> {
+  await apiFetchClient("/invites/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      role: "clinic_nurse",
+      clinic_id: clinicId,
+    }),
+  });
+}
+
 export async function cancelCaregiverInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }
 
 export async function generateLinkCodeApi(
-  email: string
+  email: string,
+  role: "caregiver" | "clinic_nurse" = "caregiver"
 ): Promise<{ id: string; email: string; role: string; code: string }> {
   return apiFetchClient("/invites/link-codes/", {
     method: "POST",
-    body: JSON.stringify({ email, role: "caregiver" }),
+    body: JSON.stringify({ email, role }),
   });
 }

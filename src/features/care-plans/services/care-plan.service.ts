@@ -60,8 +60,29 @@ export async function updateCarePlan(
   });
 }
 
-export async function activateCarePlan(id: string): Promise<CarePlan> {
-  return apiFetchClient<CarePlan>(`/care-plans/${id}/activate/`, {
+export async function fetchCarePlansForReview(): Promise<CarePlan[]> {
+  const data = await apiFetchClient<{ results: CarePlan[] }>(
+    `/care-plans/?status=pending_review`
+  );
+  return data.results ?? [];
+}
+
+export async function fetchActiveCarePlans(): Promise<CarePlan[]> {
+  const data = await apiFetchClient<{ results: CarePlan[] }>(`/care-plans/?status=active`);
+  return data.results ?? [];
+}
+
+export async function submitCarePlan(id: string): Promise<CarePlan> {
+  return apiFetchClient<CarePlan>(`/care-plans/${id}/submit/`, { method: "POST" });
+}
+
+export async function approveCarePlan(id: string): Promise<CarePlan> {
+  return apiFetchClient<CarePlan>(`/care-plans/${id}/approve/`, { method: "POST" });
+}
+
+export async function returnCarePlan(id: string, note: string): Promise<CarePlan> {
+  return apiFetchClient<CarePlan>(`/care-plans/${id}/return/`, {
     method: "POST",
+    body: JSON.stringify({ note }),
   });
 }

@@ -120,6 +120,27 @@ export default function RegisterPage() {
     setTimeout(() => router.push("/login"), 3000);
   }
 
+  async function onNurseSubmit(values: RegisterClinicAdminStep1Values) {
+    setSubmitError(null);
+    const { confirm_password, ...personal } = values;
+    void confirm_password;
+
+    const res = await fetch(`/api/register/${params.token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(personal),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setSubmitError(data.error ?? "Erro ao criar conta");
+      return;
+    }
+
+    setSuccess(true);
+    setTimeout(() => router.push("/login"), 3000);
+  }
+
   async function handleCepSearch() {
     const digits = cepValue.replace(/\D/g, "");
     if (digits.length !== 8) return;
@@ -167,6 +188,89 @@ export default function RegisterPage() {
         <p className="text-muted-foreground">
           Você será redirecionado para o login em instantes...
         </p>
+      </div>
+    );
+  }
+
+  // Enfermeiro (e demais papéis do painel que não são admin de clínica):
+  // cadastro simples de 1 passo, sem criar clínica/endereço.
+  if (inviteInfo && inviteInfo.role !== "clinic_admin") {
+    return (
+      <div className="mx-auto max-w-md space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Criar sua conta</h1>
+          {inviteInfo.email && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Email: <strong>{inviteInfo.email}</strong>
+              {inviteInfo.clinic_name ? ` · ${inviteInfo.clinic_name}` : ""}
+            </p>
+          )}
+        </div>
+
+        {submitError && (
+          <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+            {submitError}
+          </div>
+        )}
+
+        <form onSubmit={form1.handleSubmit(onNurseSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-name">Nome completo *</Label>
+            <Input id="nurse-name" placeholder="Seu nome completo" {...form1.register("name")} />
+            {form1.formState.errors.name && (
+              <p className="text-xs text-destructive">{form1.formState.errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-phone">Telefone *</Label>
+            <Input
+              id="nurse-phone"
+              placeholder="(11) 99999-9999"
+              value={formatPhone(form1.watch("phone"))}
+              onChange={(e) =>
+                form1.setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                  shouldValidate: true,
+                })
+              }
+            />
+            {form1.formState.errors.phone && (
+              <p className="text-xs text-destructive">{form1.formState.errors.phone.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-password">Senha *</Label>
+            <Input
+              id="nurse-password"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              {...form1.register("password")}
+            />
+            {form1.formState.errors.password && (
+              <p className="text-xs text-destructive">{form1.formState.errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-confirm">Confirmar senha *</Label>
+            <Input
+              id="nurse-confirm"
+              type="password"
+              placeholder="Repita a senha"
+              {...form1.register("confirm_password")}
+            />
+            {form1.formState.errors.confirm_password && (
+              <p className="text-xs text-destructive">
+                {form1.formState.errors.confirm_password.message}
+              </p>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full">
+            Criar conta
+          </Button>
+        </form>
       </div>
     );
   }

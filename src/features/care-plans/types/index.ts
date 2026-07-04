@@ -1,16 +1,25 @@
-export type CarePlanStatus = "draft" | "active" | "archived";
+export type CarePlanStatus = "draft" | "pending_review" | "active" | "archived";
 
 export const CARE_PLAN_STATUS_LABELS: Record<CarePlanStatus, string> = {
   draft: "Rascunho",
+  pending_review: "Em revisão",
   active: "Ativo",
   archived: "Arquivado",
 };
+
+export interface CarePlanChecklistItem {
+  id: string;
+  name: string;
+  type: string;
+  required: boolean;
+}
 
 export interface CarePlanChecklist {
   id: string;
   checklist_id: string;
   checklist_name: string;
   checklist_category: string;
+  checklist_items: CarePlanChecklistItem[];
   frequency: string;
   order: number;
 }
@@ -26,6 +35,7 @@ export interface CarePlan {
   responsible_register: string;
   approved_by_name: string | null;
   approved_at: string | null;
+  review_note: string;
   notes: string;
   checklists: CarePlanChecklist[];
   created_at: string;

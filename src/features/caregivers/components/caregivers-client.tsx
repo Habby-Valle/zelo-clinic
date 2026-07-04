@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { NurseInviteButton } from "@/features/care-plans/components/nurse-invite-button";
 import {
   Table,
   TableBody,
@@ -179,6 +180,7 @@ export function CaregiversClient() {
             <Plus className="mr-2 h-4 w-4" />
             Convidar Cuidador
           </Button>
+          <NurseInviteButton />
         </div>
       </div>
 

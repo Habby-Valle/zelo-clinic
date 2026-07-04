@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api";
+import type { UserRole } from "@/types/common";
 
 interface LoginVariables {
   email: string;
@@ -9,12 +10,12 @@ interface LoginVariables {
 }
 
 interface LoginResult {
-  role: "clinic_admin";
+  role: UserRole;
   user: {
     id: string;
     email: string;
     name: string;
-    role: "clinic_admin";
+    role: UserRole;
     clinic_id: string | null;
   };
 }
