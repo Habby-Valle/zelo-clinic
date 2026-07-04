@@ -19,6 +19,7 @@ import {
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
+import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -231,6 +232,9 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         healthConditions={patient.health_conditions}
         medications={patient.medications}
       />
+
+      {/* Alertas de Saúde */}
+      <HealthAlertsSection patientId={id} />
 
       {/* Familiares Vinculados */}
       <Card>
