@@ -11,7 +11,7 @@ export async function createShift(data: {
   notes?: string;
   patient_id?: string;
   checklist_ids?: string[];
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; warnings?: string[] }> {
   try {
     const { user } = await requireClinicAdmin();
 
@@ -31,7 +31,7 @@ export async function createShift(data: {
       body.shift_patients = [{ patient_id: data.patient_id }];
     }
 
-    const shift = await apiFetchServer<{ id: string }>("/shifts/", {
+    const shift = await apiFetchServer<{ id: string; warnings?: string[] }>("/shifts/", {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -51,7 +51,7 @@ export async function createShift(data: {
     }
 
     revalidatePath("/shifts");
-    return { success: true };
+    return { success: true, warnings: shift.warnings ?? [] };
   } catch (err) {
     return {
       success: false,

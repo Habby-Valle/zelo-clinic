@@ -46,6 +46,7 @@ export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
       (p.caregiver_assignments as Array<Record<string, unknown>>)?.map(
         (a) => a.caregiver_id as string
       ) ?? [],
+    has_active_contract: Boolean(p.has_active_contract),
   }));
 }
 

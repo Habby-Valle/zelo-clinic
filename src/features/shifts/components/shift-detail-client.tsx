@@ -154,6 +154,24 @@ export function ShiftDetailClient({ id }: Props) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              Contrato
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {shift.contract_number ? (
+              <p className="font-medium">{shift.contract_number}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Sem contrato vinculado — este turno não será faturado.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               Horário
             </CardTitle>

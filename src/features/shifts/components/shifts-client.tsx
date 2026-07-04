@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import {
   Plus,
   Clock,
@@ -139,9 +140,11 @@ export function ShiftsClient() {
   const [formEnd, setFormEnd] = useState("");
   const [formNotes, setFormNotes] = useState("");
 
-  const filteredPatients = formCaregiver
+  const caregiverPatients = formCaregiver
     ? patients.filter((p) => p.caregiver_ids.includes(formCaregiver))
     : [];
+  // Só é possível agendar turnos para pacientes com contrato ativo.
+  const filteredPatients = caregiverPatients.filter((p) => p.has_active_contract);
 
   // Template CRUD dialog
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -224,6 +227,9 @@ export function ShiftsClient() {
     if (result.success) {
       setCreateOpen(false);
       invalidateShifts();
+      result.warnings?.forEach((w) => toast.warning(w));
+    } else if (result.error) {
+      toast.error(result.error);
     }
     setCreateLoading(false);
   }
@@ -739,7 +745,9 @@ export function ShiftsClient() {
                     </SelectItem>
                   ) : filteredPatients.length === 0 ? (
                     <SelectItem value="_empty" disabled>
-                      Nenhum paciente vinculado a este cuidador
+                      {caregiverPatients.length === 0
+                        ? "Nenhum paciente vinculado a este cuidador"
+                        : "Nenhum paciente com contrato ativo"}
                     </SelectItem>
                   ) : (
                     filteredPatients.map((p) => (
@@ -752,7 +760,9 @@ export function ShiftsClient() {
               </Select>
               {formCaregiver && filteredPatients.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Vincule pacientes a este cuidador na tela do paciente.
+                  {caregiverPatients.length === 0
+                    ? "Vincule pacientes a este cuidador na tela do paciente."
+                    : "Só é possível agendar turnos para pacientes com contrato ativo."}
                 </p>
               )}
             </div>
