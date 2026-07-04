@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
 import Link from "next/link";
 import { Loader2, CheckCircle, ClipboardList, Plus, Sparkles, UserCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -92,18 +92,21 @@ export function CarePlanSection({
 
   useEffect(() => {
     if (plan) {
-      setSelected(plan.checklists.map((c) => c.checklist_id));
-      setResponsibleName(plan.responsible_name);
-      setResponsibleRegister(plan.responsible_register);
-      setSuggestionsApplied(true); // não sobrepõe um plano já existente
+      startTransition(() => {
+        setSelected(plan.checklists.map((c) => c.checklist_id));
+        setResponsibleName(plan.responsible_name);
+        setResponsibleRegister(plan.responsible_register);
+        setSuggestionsApplied(true);
+      });
     }
   }, [plan]);
 
   useEffect(() => {
-    // Sem plano ainda: pré-seleciona as sugestões (uma vez).
     if (!suggestionsApplied && !isLoading && !plan && checklistOptions.length > 0) {
-      setSelected(suggestedIds);
-      setSuggestionsApplied(true);
+      startTransition(() => {
+        setSelected(suggestedIds);
+        setSuggestionsApplied(true);
+      });
     }
   }, [suggestionsApplied, isLoading, plan, checklistOptions, suggestedIds]);
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Check, X, Users } from "lucide-react";
+import { ArrowLeft, Loader2, Check, Users } from "lucide-react";
 import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuthStore } from "@/store/authStore";
 import {
   usePatient,
   useClinicCaregivers,
@@ -56,7 +55,6 @@ interface PatientDetailClientProps {
 }
 
 export function PatientDetailClient({ id }: PatientDetailClientProps) {
-  const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
 
   const { data: patient, isLoading: patientLoading } = usePatient(id);
   const { data: allCaregivers = [] } = useClinicCaregivers();
