@@ -167,14 +167,27 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
             <FileText className="h-5 w-5" />
             Prontuário
           </CardTitle>
-          <a
-            href={pdfUrl}
-            download
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch(pdfUrl);
+                if (!res.ok) throw new Error('Erro ao gerar PDF');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prontuario-${patientId}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch (e) {
+                alert('Erro ao baixar PDF: ' + (e instanceof Error ? e.message : 'Erro desconhecido'));
+              }
+            }}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Download className="h-4 w-4" />
             Exportar PDF
-          </a>
+          </button>
         </div>
         <CardDescription>
           {record.patient.clinic_name && `${record.patient.clinic_name} · `}
