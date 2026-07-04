@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,20 +21,50 @@ import {
 import {
   useApproveCarePlan,
   useCarePlansForReview,
+  useChecklistOptionsForPlan,
   useReturnCarePlan,
+  useUpdateCarePlanChecklists,
 } from "../hooks/use-care-plans";
+import type { CarePlan } from "../types";
 
 export function CarePlansReviewClient() {
   const { data: plans = [], isLoading } = useCarePlansForReview();
+  const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const approve = useApproveCarePlan();
   const returnPlan = useReturnCarePlan();
+  const updateChecklists = useUpdateCarePlanChecklists();
 
   const [returnFor, setReturnFor] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [edits, setEdits] = useState<Record<string, string[]>>({});
 
-  async function handleApprove(id: string) {
+  const busy = approve.isPending || returnPlan.isPending || updateChecklists.isPending;
+
+  function selectedFor(plan: CarePlan): string[] {
+    return edits[plan.id] ?? plan.checklists.map((c) => c.checklist_id);
+  }
+
+  function toggle(plan: CarePlan, checklistId: string, checked: boolean) {
+    setEdits((prev) => {
+      const current = prev[plan.id] ?? plan.checklists.map((c) => c.checklist_id);
+      const next = checked
+        ? [...current, checklistId]
+        : current.filter((id) => id !== checklistId);
+      return { ...prev, [plan.id]: next };
+    });
+  }
+
+  async function handleApprove(plan: CarePlan) {
+    const selected = selectedFor(plan);
+    if (selected.length === 0) return;
+    const original = plan.checklists.map((c) => c.checklist_id);
+    const changed =
+      selected.length !== original.length || selected.some((id) => !original.includes(id));
     try {
-      await approve.mutateAsync(id);
+      if (changed) {
+        await updateChecklists.mutateAsync({ planId: plan.id, checklistIds: selected });
+      }
+      await approve.mutateAsync(plan.id);
       toast.success("Plano aprovado e ativado.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao aprovar plano.");
@@ -57,7 +88,7 @@ export function CarePlansReviewClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Planos de Cuidado</h1>
         <p className="text-muted-foreground">
-          Revise os planos enviados pela clínica e aprove ou devolva.
+          Revise os planos, ajuste os checklists se necessário, e aprove ou devolva.
         </p>
       </div>
 
@@ -76,83 +107,105 @@ export function CarePlansReviewClient() {
         </div>
       ) : (
         <div className="space-y-4">
-          {plans.map((plan) => (
-            <Card key={plan.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-base">
-                  {plan.patient_name}
-                  <Badge variant="secondary">Em revisão</Badge>
-                </CardTitle>
-                {plan.responsible_name && (
-                  <p className="text-sm text-muted-foreground">
-                    Responsável indicado: {plan.responsible_name}
-                    {plan.responsible_register ? ` (${plan.responsible_register})` : ""}
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <p className="text-sm font-medium">Checklists propostos</p>
-                  {plan.checklists.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum checklist.</p>
-                  ) : (
-                    plan.checklists.map((c) => (
-                      <div key={c.id} className="rounded-lg border p-3">
-                        <div className="mb-2 flex items-center gap-2">
-                          <span className="text-sm font-medium">{c.checklist_name}</span>
-                          {c.checklist_category && c.checklist_category !== "general" && (
-                            <Badge variant="outline" className="text-xs">
-                              {c.checklist_category}
-                            </Badge>
-                          )}
-                        </div>
-                        {c.checklist_items.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">Sem itens.</p>
-                        ) : (
-                          <ul className="space-y-1">
-                            {c.checklist_items.map((it) => (
-                              <li
-                                key={it.id}
-                                className="flex items-center gap-2 text-sm text-muted-foreground"
-                              >
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
-                                <span>{it.name}</span>
-                                {it.required && (
-                                  <span className="text-xs text-destructive">obrigatório</span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))
+          {plans.map((plan) => {
+            const selected = selectedFor(plan);
+            return (
+              <Card key={plan.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-base">
+                    {plan.patient_name}
+                    <Badge variant="secondary">Em revisão</Badge>
+                  </CardTitle>
+                  {plan.responsible_name && (
+                    <p className="text-sm text-muted-foreground">
+                      Responsável indicado: {plan.responsible_name}
+                      {plan.responsible_register ? ` (${plan.responsible_register})` : ""}
+                    </p>
                   )}
-                </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Checklists do plano</p>
+                    <p className="text-xs text-muted-foreground">
+                      Marque os checklists adequados a este idoso. Faltando algum, crie em
+                      Checklists.
+                    </p>
+                    {checklistOptions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum checklist disponível.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {checklistOptions.map((opt) => {
+                          const checked = selected.includes(opt.id);
+                          const planChecklist = plan.checklists.find(
+                            (c) => c.checklist_id === opt.id
+                          );
+                          return (
+                            <div key={opt.id} className="rounded-lg border p-3">
+                              <label className="flex items-center gap-2">
+                                <Checkbox
+                                  checked={checked}
+                                  onCheckedChange={(v) => toggle(plan, opt.id, v === true)}
+                                />
+                                <span className="text-sm font-medium">{opt.name}</span>
+                                {opt.category && opt.category !== "general" && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {opt.category}
+                                  </Badge>
+                                )}
+                              </label>
+                              {checked &&
+                                planChecklist &&
+                                planChecklist.checklist_items.length > 0 && (
+                                  <ul className="mt-2 space-y-1 pl-6">
+                                    {planChecklist.checklist_items.map((it) => (
+                                      <li
+                                        key={it.id}
+                                        className="flex items-center gap-2 text-sm text-muted-foreground"
+                                      >
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                                        <span>{it.name}</span>
+                                        {it.required && (
+                                          <span className="text-xs text-destructive">
+                                            obrigatório
+                                          </span>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setReturnFor(plan.id);
-                      setNote("");
-                    }}
-                    disabled={approve.isPending || returnPlan.isPending}
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Devolver
-                  </Button>
-                  <Button
-                    onClick={() => handleApprove(plan.id)}
-                    disabled={approve.isPending || returnPlan.isPending}
-                  >
-                    {approve.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Aprovar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setReturnFor(plan.id);
+                        setNote("");
+                      }}
+                      disabled={busy}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Devolver
+                    </Button>
+                    <Button onClick={() => handleApprove(plan)} disabled={busy || selected.length === 0}>
+                      {(approve.isPending || updateChecklists.isPending) && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Aprovar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

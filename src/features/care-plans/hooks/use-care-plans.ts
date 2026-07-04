@@ -13,6 +13,7 @@ import {
   returnCarePlan,
   submitCarePlan,
   updateCarePlan,
+  updateCarePlanChecklists,
 } from "../services/care-plan.service";
 import type { SaveCarePlanInput } from "../types";
 
@@ -97,6 +98,17 @@ export function useReturnCarePlan() {
   return useMutation({
     mutationFn: ({ planId, note }: { planId: string; note: string }) =>
       returnCarePlan(planId, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plans"] });
+    },
+  });
+}
+
+export function useUpdateCarePlanChecklists() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ planId, checklistIds }: { planId: string; checklistIds: string[] }) =>
+      updateCarePlanChecklists(planId, checklistIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },

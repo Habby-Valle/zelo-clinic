@@ -31,9 +31,9 @@ function formatPct(value: number, total: number): string {
 export function OnboardingSection() {
   const { data: stats, isLoading } = useOnboardingStats();
 
-  const totalProfiles = stats?.reduce((acc, r) => acc + r.total_profiles, 0) ?? 0;
-  const totalSteps = stats?.reduce((acc, r) => acc + r.total_steps, 0) ?? 0;
-  const totalCompleted = stats?.reduce((acc, r) => acc + r.completed_steps, 0) ?? 0;
+  const totalProfiles = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_profiles, 0) ?? 0;
+  const totalSteps = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_steps, 0) ?? 0;
+  const totalCompleted = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.completed_steps, 0) ?? 0;
 
   return (
     <Card>
