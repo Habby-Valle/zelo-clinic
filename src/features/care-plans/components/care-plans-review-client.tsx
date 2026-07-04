@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, ClipboardList, Loader2, XCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { CheckCircle, ClipboardList, Loader2, Plus, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { ChecklistDialog } from "@/features/checklists/components/checklist-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,7 @@ import {
 import type { CarePlan } from "../types";
 
 export function CarePlansReviewClient() {
+  const queryClient = useQueryClient();
   const { data: plans = [], isLoading } = useCarePlansForReview();
   const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const approve = useApproveCarePlan();
@@ -37,6 +40,15 @@ export function CarePlansReviewClient() {
   const [returnFor, setReturnFor] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [edits, setEdits] = useState<Record<string, string[]>>({});
+  const [newChecklistOpen, setNewChecklistOpen] = useState(false);
+
+  function handleChecklistDialogChange(open: boolean) {
+    setNewChecklistOpen(open);
+    // Ao fechar (após criar), recarrega as opções para o novo checklist aparecer.
+    if (!open) {
+      queryClient.invalidateQueries({ queryKey: ["checklist-options-plan"] });
+    }
+  }
 
   const busy = approve.isPending || returnPlan.isPending || updateChecklists.isPending;
 
@@ -152,7 +164,7 @@ export function CarePlansReviewClient() {
                                   </Badge>
                                 )}
                               </label>
-                              {checked && opt.items.length > 0 && (
+                              {opt.items.length > 0 && (
                                 <ul className="mt-2 space-y-1 pl-6">
                                   {opt.items.map((it) => (
                                     <li
@@ -175,6 +187,14 @@ export function CarePlansReviewClient() {
                         })}
                       </div>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewChecklistOpen(true)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Novo checklist
+                    </Button>
                   </div>
 
                   <div className="flex justify-end gap-2">
@@ -237,6 +257,8 @@ export function CarePlansReviewClient() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ChecklistDialog open={newChecklistOpen} onOpenChange={handleChecklistDialogChange} />
     </div>
   );
 }

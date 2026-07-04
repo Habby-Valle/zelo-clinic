@@ -84,19 +84,20 @@ type NavItem = {
 
 // Itens visíveis ao enfermeiro (leitura + planos). Sem `roles` = só admin.
 const CLINIC_STAFF: UserRole[] = ["clinic_admin", "clinic_nurse"];
+const NURSE_ONLY: UserRole[] = ["clinic_nurse"];
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contracts", label: "Contratos", icon: FileText },
   { href: "/billing", label: "Faturas", icon: Receipt },
-  { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: CLINIC_STAFF },
+  { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: NURSE_ONLY },
   { href: "/patients", label: "Pacientes", icon: UserCircle, roles: CLINIC_STAFF },
   { href: "/clients", label: "Clientes", icon: UserCheck },
   { href: "/users", label: "Cuidadores", icon: Users },
   { href: "/shifts", label: "Turnos", icon: Calendar, roles: CLINIC_STAFF },
   { href: "/checklists", label: "Checklists", icon: ClipboardList, roles: CLINIC_STAFF },
   { href: "/sos", label: "SOS", icon: AlertTriangle },
-  { href: "/caregiver-hours", label: "Horas", icon: Clock, roles: CLINIC_STAFF },
+  { href: "/caregiver-hours", label: "Horas", icon: Clock },
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/plan", label: "Plano", icon: CreditCard },
