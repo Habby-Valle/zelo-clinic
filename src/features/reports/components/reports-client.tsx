@@ -23,6 +23,7 @@ import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
 import { SatisfactionReport } from "./satisfaction-report";
 import { ComplianceSection } from "@/features/quality";
+import { OnboardingSection } from "@/features/onboarding";
 import { usePlanLimits } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
@@ -241,6 +242,8 @@ export function ReportsClient() {
           />
 
           <ComplianceSection />
+
+          <OnboardingSection />
         </>
       )}
     </div>
