@@ -1,5 +1,5 @@
 import { apiFetchClient } from "@/lib/api-client";
-import type { ServiceContract, ContractsPage, ContractStatus } from "../types";
+import type { ServiceContract, ContractsPage, ContractStatus, PricingSuggestion } from "../types";
 
 function mapContract(r: Record<string, unknown>): ServiceContract {
   return {
@@ -103,6 +103,12 @@ export async function validateHealthApi(id: string): Promise<void> {
   await apiFetchClient(`/contracts/${id}/health/validate/`, {
     method: "POST",
   });
+}
+
+export async function fetchPricingSuggestion(contractId: string): Promise<PricingSuggestion> {
+  return apiFetchClient<PricingSuggestion>(
+    `/ai/pricing-suggestion/?contract_id=${contractId}`
+  );
 }
 
 export async function updateContractApi(

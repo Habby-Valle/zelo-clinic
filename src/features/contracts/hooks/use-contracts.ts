@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchContracts,
   fetchContractById,
+  fetchPricingSuggestion,
   sendProposalApi,
   rejectContractApi,
   transitionContractApi,
@@ -80,6 +81,16 @@ export function useTransitionContract(id: string) {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
     },
+  });
+}
+
+export function usePricingSuggestion(contractId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["pricing-suggestion", contractId],
+    queryFn: () => fetchPricingSuggestion(contractId),
+    enabled: !!contractId && enabled,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

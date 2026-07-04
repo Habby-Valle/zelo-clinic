@@ -11,6 +11,7 @@ import {
   PauseCircle,
   PlayCircle,
   Ban,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -47,8 +48,9 @@ import {
   useRejectContract,
   useValidateHealth,
   useTransitionContract,
+  usePricingSuggestion,
 } from "../hooks";
-import type { ContractStatus } from "../types";
+import type { ContractStatus, PricingSuggestion } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
@@ -86,6 +88,13 @@ export function ContractDetailClient() {
   const transitionContract = useTransitionContract(id);
 
   const [proposalOpen, setProposalOpen] = useState(false);
+
+  const handleProposalOpenChange = (open: boolean) => {
+    setProposalOpen(open);
+    if (!open) {
+      setPricingEnabled(false);
+    }
+  };
   const [rejectOpen, setRejectOpen] = useState(false);
   // Ciclo de vida: 'suspend' | 'reactivate' | 'cancel' | null
   const [lifecycleAction, setLifecycleAction] = useState<
@@ -95,6 +104,12 @@ export function ContractDetailClient() {
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
   const [pricePerHour, setPricePerHour] = useState("");
   const [pricePerShift, setPricePerShift] = useState("");
+  const [pricingEnabled, setPricingEnabled] = useState(false);
+
+  const { data: pricingSuggestion, isLoading: pricingLoading } = usePricingSuggestion(
+    id,
+    pricingEnabled
+  );
   const [genMonth, setGenMonth] = useState(new Date().getMonth());
   const [genYear, setGenYear] = useState(new Date().getFullYear());
 
@@ -472,7 +487,7 @@ export function ContractDetailClient() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={proposalOpen} onOpenChange={setProposalOpen}>
+      <Dialog open={proposalOpen} onOpenChange={handleProposalOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Enviar Proposta</DialogTitle>
@@ -481,6 +496,78 @@ export function ContractDetailClient() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            <div className="rounded-lg border border-dashed p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  Precificação Inteligente
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pricingLoading}
+                  onClick={() => setPricingEnabled(true)}
+                >
+                  {pricingLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3" />
+                  )}
+                  Sugerir preços
+                </Button>
+              </div>
+              {pricingSuggestion && (
+                <div className="mt-3 space-y-2 rounded-md bg-muted/50 p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Preço/h sugerido:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(Number(pricingSuggestion.price_per_hour_suggested))}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Preço/turno sugerido:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(Number(pricingSuggestion.price_per_shift_suggested))}
+                    </span>
+                  </div>
+                  {pricingSuggestion.factors.region && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Região de referência:</span>
+                      <span>{pricingSuggestion.factors.region}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Confiança:</span>
+                    <Badge
+                      variant={pricingSuggestion.confidence === "high" ? "default" : "secondary"}
+                    >
+                      {pricingSuggestion.confidence === "high" ? "Alta" : "Média"}
+                    </Badge>
+                  </div>
+                  {pricingSuggestion.explanation && (
+                    <p className="mt-1 text-xs italic text-muted-foreground">
+                      {pricingSuggestion.explanation}
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      setPricePerHour(pricingSuggestion.price_per_hour_suggested);
+                      setPricePerShift(pricingSuggestion.price_per_shift_suggested);
+                    }}
+                  >
+                    Aplicar sugestão
+                  </Button>
+                </div>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="price_per_hour">Preço por hora (R$)</Label>
               <Input

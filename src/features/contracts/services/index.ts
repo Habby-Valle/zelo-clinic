@@ -1,6 +1,7 @@
 export {
   fetchContracts,
   fetchContractById,
+  fetchPricingSuggestion,
   sendProposalApi,
   rejectContractApi,
   transitionContractApi,

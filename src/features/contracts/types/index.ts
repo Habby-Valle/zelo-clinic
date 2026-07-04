@@ -58,3 +58,22 @@ export interface ContractsPage {
   contracts: ServiceContract[];
   total: number;
 }
+
+export interface PricingSuggestion {
+  price_per_hour_suggested: string;
+  price_per_shift_suggested: string;
+  night_surcharge_suggested: string;
+  confidence: string;
+  factors: {
+    complexity: string;
+    complexity_multiplier: string;
+    specialty_premium: string;
+    distance_km: number | null;
+    distance_multiplier: string;
+    frequency_discount: string;
+    night_surcharge: string;
+    market_avg_per_hour: string | null;
+    region: string;
+  };
+  explanation: string;
+}
