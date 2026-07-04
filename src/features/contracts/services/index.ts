@@ -1,7 +1,8 @@
 export {
   fetchContracts,
   fetchContractById,
-  approveContractApi,
+  sendProposalApi,
   rejectContractApi,
   updateContractApi,
+  validateHealthApi,
 } from "./contracts.service";

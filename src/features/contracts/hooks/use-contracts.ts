@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchContracts,
   fetchContractById,
-  approveContractApi,
+  sendProposalApi,
   rejectContractApi,
   updateContractApi,
+  validateHealthApi,
 } from "../services";
 
 export function useContracts(params: {
@@ -40,13 +41,15 @@ export function useUpdateContract(id: string) {
   });
 }
 
-export function useApproveContract(id: string) {
+export function useSendProposal(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { price_per_hour: number; price_per_shift: number }) => {
-      await updateContractApi(id, data);
-      await approveContractApi(id);
-    },
+    mutationFn: (data: {
+      price_per_hour: number;
+      price_per_shift: number;
+      night_surcharge?: number;
+      night_surcharge_type?: string;
+    }) => sendProposalApi(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
@@ -58,6 +61,17 @@ export function useRejectContract(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => rejectContractApi(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts", id] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+  });
+}
+
+export function useValidateHealth(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => validateHealthApi(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });

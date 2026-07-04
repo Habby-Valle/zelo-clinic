@@ -31,13 +31,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useContract, useApproveContract, useRejectContract } from "../hooks";
+import {
+  useContract,
+  useSendProposal,
+  useRejectContract,
+  useValidateHealth,
+} from "../hooks";
 import type { ContractStatus } from "../types";
-import { CONTRACT_STATUS_LABELS } from "../types";
+import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
   {
     requested: "secondary",
+    proposal_sent: "secondary",
     draft: "outline",
     active: "default",
     suspended: "outline",
@@ -63,10 +69,11 @@ export function ContractDetailClient() {
   const id = params.id as string;
 
   const { data: contract, isLoading } = useContract(id);
-  const approveContract = useApproveContract(id);
+  const sendProposal = useSendProposal(id);
   const rejectContract = useRejectContract(id);
+  const validateHealth = useValidateHealth(id);
 
-  const [approveOpen, setApproveOpen] = useState(false);
+  const [proposalOpen, setProposalOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
   const [pricePerHour, setPricePerHour] = useState("");
@@ -116,15 +123,15 @@ export function ContractDetailClient() {
     );
   }
 
-  const handleApprove = () => {
-    approveContract.mutate(
+  const handleSendProposal = () => {
+    sendProposal.mutate(
       {
         price_per_hour: Number(pricePerHour),
         price_per_shift: Number(pricePerShift),
       },
       {
         onSuccess: () => {
-          setApproveOpen(false);
+          setProposalOpen(false);
         },
       }
     );
@@ -163,17 +170,57 @@ export function ContractDetailClient() {
       {contract.status === "requested" && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center justify-between p-4">
-            <p className="text-sm font-medium">Este contrato está pendente de aprovação.</p>
+            <p className="text-sm font-medium">
+              Esta solicitação aguarda uma proposta de valores.
+            </p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setRejectOpen(true)}>
                 <XCircle className="mr-2 h-4 w-4" />
                 Recusar
               </Button>
-              <Button onClick={() => setApproveOpen(true)}>
+              <Button onClick={() => setProposalOpen(true)}>
                 <CheckCircle className="mr-2 h-4 w-4" />
-                Aprovar
+                Enviar proposta
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {contract.status === "proposal_sent" && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center justify-between p-4">
+            <p className="text-sm font-medium">
+              Proposta enviada. Aguardando a resposta da família.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPricePerHour(contract.price_per_hour ?? "");
+                setPricePerShift(contract.price_per_shift ?? "");
+                setProposalOpen(true);
+              }}
+            >
+              Revisar proposta
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {contract.status === "active" && contract.patient_health_status === "declared" && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
+              <p className="text-xs text-muted-foreground">
+                Revise as informações contra os documentos e valide antes de iniciar os cuidados.
+              </p>
+            </div>
+            <Button onClick={() => validateHealth.mutate()} disabled={validateHealth.isPending}>
+              {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Validar saúde
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -202,6 +249,10 @@ export function ContractDetailClient() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <Row label="Paciente" value={contract.patient_name} />
+            <Row
+              label="Cadastro de saúde"
+              value={PATIENT_HEALTH_STATUS_LABELS[contract.patient_health_status]}
+            />
             <Row label="Solicitante" value={contract.requested_by_name ?? contract.payer_name} />
             <Row label="Contratante" value={contract.payer_name} />
             <Row label="Clínica" value={contract.clinic_name} />
@@ -256,11 +307,13 @@ export function ContractDetailClient() {
         </Card>
       )}
 
-      <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+      <Dialog open={proposalOpen} onOpenChange={setProposalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Aprovar Contrato</DialogTitle>
-            <DialogDescription>Defina os valores antes de ativar o contrato.</DialogDescription>
+            <DialogTitle>Enviar Proposta</DialogTitle>
+            <DialogDescription>
+              Defina os valores. A família recebe a proposta e decide se aceita.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -289,15 +342,15 @@ export function ContractDetailClient() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApproveOpen(false)}>
+            <Button variant="outline" onClick={() => setProposalOpen(false)}>
               Cancelar
             </Button>
             <Button
-              onClick={handleApprove}
-              disabled={approveContract.isPending || !pricePerHour || !pricePerShift}
+              onClick={handleSendProposal}
+              disabled={sendProposal.isPending || !pricePerHour || !pricePerShift}
             >
-              {approveContract.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar Aprovação
+              {sendProposal.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enviar Proposta
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,6 @@
 export type ContractStatus =
   | "requested"
+  | "proposal_sent"
   | "draft"
   | "active"
   | "suspended"
@@ -8,11 +9,20 @@ export type ContractStatus =
 
 export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   requested: "Solicitado",
+  proposal_sent: "Proposta enviada",
   draft: "Rascunho",
   active: "Ativo",
   suspended: "Suspenso",
   cancelled: "Cancelado",
   expired: "Expirado",
+};
+
+export type PatientHealthStatus = "pending" | "declared" | "validated";
+
+export const PATIENT_HEALTH_STATUS_LABELS: Record<PatientHealthStatus, string> = {
+  pending: "Aguardando declaração",
+  declared: "Declarado pela família",
+  validated: "Validado",
 };
 
 export interface ServiceContract {
@@ -24,6 +34,7 @@ export interface ServiceContract {
   requested_by_name: string | null;
   patient: string;
   patient_name: string;
+  patient_health_status: PatientHealthStatus;
   clinic: string;
   clinic_name: string;
   status: ContractStatus;

@@ -2,6 +2,7 @@ export {
   useContracts,
   useContract,
   useUpdateContract,
-  useApproveContract,
+  useSendProposal,
   useRejectContract,
+  useValidateHealth,
 } from "./use-contracts";
