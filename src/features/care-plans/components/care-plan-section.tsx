@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, CheckCircle, ClipboardList, Plus } from "lucide-react";
+import { Loader2, CheckCircle, ClipboardList, Plus, Sparkles, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  useCaregiverMatch,
   useSubmitCarePlan,
   useCaregiverOptionsForPlan,
   useCarePlan,
@@ -189,6 +190,11 @@ export function CarePlanSection({
               </div>
             )}
 
+            <CaregiverMatchSection
+              patientId={patientId}
+              onSelect={selectCaregiver}
+            />
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="relative space-y-1.5">
                 <Label htmlFor="resp-name">Profissional responsável</Label>
@@ -300,5 +306,125 @@ export function CarePlanSection({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function CaregiverMatchSection({
+  patientId,
+  onSelect,
+}: {
+  patientId: string;
+  onSelect: (c: CaregiverOption) => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const { data: matches, isLoading, isFetching } = useCaregiverMatch(
+    enabled ? patientId : ""
+  );
+
+  return (
+    <div className="rounded-lg border border-dashed p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Sparkles className="h-4 w-4" />
+          Cuidadores Recomendados
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setEnabled(true)}
+          disabled={isLoading}
+        >
+          {isFetching ? (
+            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+          ) : (
+            <UserCheck className="mr-2 h-3 w-3" />
+          )}
+          {isFetching ? "Buscando..." : "Buscar melhores cuidadores"}
+        </Button>
+      </div>
+
+      {isLoading && (
+        <p className="text-xs text-muted-foreground animate-pulse">
+          Analisando cuidadores disponíveis...
+        </p>
+      )}
+
+      {matches && matches.length > 0 && (
+        <div className="overflow-hidden rounded-md border">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="px-3 py-2 text-left font-medium">Cuidador</th>
+                <th className="px-3 py-2 text-center font-medium">Match</th>
+                <th className="px-3 py-2 text-center font-medium">Qualidade</th>
+                <th className="px-3 py-2 text-center font-medium">Disp.</th>
+                <th className="px-3 py-2 text-center font-medium" />
+              </tr>
+            </thead>
+            <tbody>
+              {matches.map((m) => (
+                <tr key={m.caregiver_id} className="border-t hover:bg-accent/50">
+                  <td className="px-3 py-2">
+                    <div className="font-medium">{m.caregiver_name}</div>
+                    {m.explanation && (
+                      <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground">
+                        {m.explanation}
+                      </div>
+                    )}
+                    {!m.explanation && m.specialization && (
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">
+                        {m.specialization}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <Badge
+                      variant={m.overall_score >= 70 ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {m.overall_score}%
+                    </Badge>
+                  </td>
+                  <td className="px-3 py-2 text-center text-muted-foreground">
+                    {m.quality_score}%
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {m.availability_score >= 100 ? (
+                      <span className="text-green-600">✓</span>
+                    ) : (
+                      <span className="text-red-400">✗</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() =>
+                        onSelect({
+                          id: m.caregiver_id,
+                          name: m.caregiver_name,
+                          register: m.professional_register,
+                        })
+                      }
+                    >
+                      Selecionar
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {matches && matches.length === 0 && !isLoading && (
+        <p className="text-xs text-muted-foreground">
+          Nenhum cuidador disponível encontrado.
+        </p>
+      )}
+    </div>
   );
 }

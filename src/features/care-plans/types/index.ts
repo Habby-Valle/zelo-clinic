@@ -54,6 +54,20 @@ export interface CaregiverOption {
   register: string;
 }
 
+export interface CaregiverMatchResult {
+  caregiver_id: string;
+  caregiver_name: string;
+  specialization: string;
+  professional_register: string;
+  skill_match: number;
+  quality_score: number;
+  experience_score: number;
+  availability_score: number;
+  proximity_score: number;
+  overall_score: number;
+  explanation?: string;
+}
+
 export interface SaveCarePlanInput {
   patient_id: string;
   responsible_name: string;

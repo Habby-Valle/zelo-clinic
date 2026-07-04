@@ -1,5 +1,6 @@
 import { apiFetchClient } from "@/lib/api-client";
 import type {
+  CaregiverMatchResult,
   CaregiverOption,
   CarePlan,
   ChecklistOption,
@@ -86,6 +87,14 @@ export async function updateCarePlanChecklists(
       checklists: checklistIds.map((cid) => ({ checklist_id: cid })),
     }),
   });
+}
+
+export async function fetchCaregiverMatch(
+  patientId: string
+): Promise<CaregiverMatchResult[]> {
+  return apiFetchClient<CaregiverMatchResult[]>(
+    `/api/ai/caregiver-match/?patient_id=${patientId}&use_ai=true`
+  );
 }
 
 export async function approveCarePlan(id: string): Promise<CarePlan> {

@@ -5,6 +5,7 @@ import {
   approveCarePlan,
   createCarePlan,
   fetchActiveCarePlans,
+  fetchCaregiverMatch,
   fetchCaregiverOptions,
   fetchCarePlanByPatient,
   fetchCarePlansForReview,
@@ -34,6 +35,15 @@ export function useCaregiverOptionsForPlan() {
   return useQuery({
     queryKey: ["caregiver-options-plan"],
     queryFn: fetchCaregiverOptions,
+  });
+}
+
+export function useCaregiverMatch(patientId: string) {
+  return useQuery({
+    queryKey: ["caregiver-match", patientId],
+    queryFn: () => fetchCaregiverMatch(patientId),
+    enabled: !!patientId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
