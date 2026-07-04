@@ -11,7 +11,7 @@ export async function fetchCaregiverHoursApi(
   if (filters.page) qs.set("page", String(filters.page));
   qs.set("page_size", "365");
 
-  return apiFetchClient<CaregiverHoursPage>(`/shifts/caregiver-hours/?${qs.toString()}`);
+  return apiFetchClient<CaregiverHoursPage>(    `/caregiver-hours/?${qs.toString()}`);
 }
 
 export async function fetchCaregiverHoursSummaryApi(
@@ -22,5 +22,5 @@ export async function fetchCaregiverHoursSummaryApi(
   if (startDate) qs.set("start_date", startDate);
   if (endDate) qs.set("end_date", endDate);
 
-  return apiFetchClient<CaregiverHoursSummary>(`/shifts/caregiver-hours/summary/?${qs.toString()}`);
+  return apiFetchClient<CaregiverHoursSummary>(    `/caregiver-hours/summary/?${qs.toString()}`);
 }
