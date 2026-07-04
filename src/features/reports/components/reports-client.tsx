@@ -22,6 +22,7 @@ import { FamilyMembersGrowthReport } from "./family-members-growth-report";
 import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
 import { SatisfactionReport } from "./satisfaction-report";
+import { ComplianceSection } from "@/features/quality";
 import { usePlanLimits } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
@@ -238,6 +239,8 @@ export function ReportsClient() {
             loading={satisfactionQuery.isLoading}
             onExport={exportSatisfactionCsv}
           />
+
+          <ComplianceSection />
         </>
       )}
     </div>
