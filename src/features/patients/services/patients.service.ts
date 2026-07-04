@@ -207,6 +207,49 @@ export async function cancelInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }
 
+export interface PatientRecord {
+  patient: {
+    id: string;
+    name: string;
+    birth_date: string;
+    gender: string;
+    blood_type: string | null;
+    health_conditions: string;
+    allergies: string;
+    medications: string;
+    health_status: string;
+    health_validated_at: string | null;
+    observations: string;
+    complexity: string | null;
+    clinic_name: string | null;
+    created_at: string;
+  };
+  contracts: Array<Record<string, unknown>>;
+  care_plan: Record<string, unknown> | null;
+  caregivers: Array<Record<string, unknown>>;
+  emergency_contacts: Array<Record<string, unknown>>;
+  timeline: Array<{
+    event_type: string;
+    timestamp: string;
+    title: string;
+    description: string;
+    actor_name: string;
+    data: Record<string, unknown>;
+  }>;
+}
+
+export async function fetchPatientRecord(id: string): Promise<PatientRecord | null> {
+  try {
+    return await apiFetchClient<PatientRecord>(`/patients/${id}/record/`);
+  } catch {
+    return null;
+  }
+}
+
+export function getPatientRecordExportUrl(id: string): string {
+  return `/api/proxy/patients/${id}/record/export/`;
+}
+
 export async function removeEmergencyContactApi(
   patientId: string,
   contactId: string
