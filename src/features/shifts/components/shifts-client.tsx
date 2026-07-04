@@ -60,7 +60,6 @@ import {
   useShiftTemplates,
   useClinicPatients,
   useClinicCaregivers,
-  useChecklistOptions,
 } from "../hooks";
 import {
   createShift,
@@ -120,19 +119,16 @@ export function ShiftsClient() {
   const templatesQuery = useShiftTemplates();
   const patientsQuery = useClinicPatients();
   const caregiversQuery = useClinicCaregivers();
-  const checklistsQuery = useChecklistOptions();
 
   const shifts = shiftsQuery.data?.shifts ?? [];
   const shiftsTotal = shiftsQuery.data?.total ?? 0;
   const templates = templatesQuery.data ?? [];
   const patients = patientsQuery.data ?? [];
   const caregivers = caregiversQuery.data ?? [];
-  const checklistOptions = checklistsQuery.data ?? [];
 
   // Create shift dialog
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [selectedChecklists, setSelectedChecklists] = useState<string[]>([]);
   const [formPatient, setFormPatient] = useState("");
   const [formCaregiver, setFormCaregiver] = useState("");
   const [formTemplate, setFormTemplate] = useState("");
@@ -181,7 +177,6 @@ export function ShiftsClient() {
     setFormCaregiver("");
     setFormTemplate("");
     setFormNotes("");
-    setSelectedChecklists([]);
     const now = new Date();
     now.setSeconds(0, 0);
     const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
@@ -222,7 +217,6 @@ export function ShiftsClient() {
       end: new Date(formEnd).toISOString(),
       notes: formNotes || undefined,
       patient_id: formPatient || undefined,
-      checklist_ids: selectedChecklists.length > 0 ? selectedChecklists : undefined,
     });
     if (result.success) {
       setCreateOpen(false);
@@ -799,34 +793,12 @@ export function ShiftsClient() {
               />
             </div>
 
-            {checklistOptions.length > 0 && (
-              <div className="space-y-2 rounded-lg border p-3">
-                <Label>Checklists para o cuidador</Label>
-                <p className="text-xs text-muted-foreground">
-                  Selecione os checklists que o cuidador deve executar neste turno.
-                </p>
-                <div className="space-y-1.5">
-                  {checklistOptions.map((cl) => (
-                    <div key={cl.id} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`cl-${cl.id}`}
-                        checked={selectedChecklists.includes(cl.id)}
-                        onCheckedChange={(v) => {
-                          if (v === true) {
-                            setSelectedChecklists((prev) => [...prev, cl.id]);
-                          } else {
-                            setSelectedChecklists((prev) => prev.filter((id) => id !== cl.id));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`cl-${cl.id}`} className="cursor-pointer text-sm font-normal">
-                        {cl.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="rounded-lg border border-dashed p-3">
+              <p className="text-xs text-muted-foreground">
+                Os checklists deste turno são gerados automaticamente a partir do
+                <strong> plano de cuidado ativo</strong> do paciente.
+              </p>
+            </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>

@@ -27,6 +27,7 @@ export interface ClinicPatient {
   allergies: string;
   medications: string;
   blood_type: string | null;
+  health_status: string;
   observations: string;
   media_id: string | null;
   media: { id: string; url: string } | null;

@@ -19,6 +19,7 @@ import {
   useAssignCaregivers,
   useTogglePatientStatus,
 } from "../hooks";
+import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -224,6 +225,14 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Plano de Cuidado */}
+      <CarePlanSection
+        patientId={id}
+        healthStatus={patient.health_status}
+        healthConditions={patient.health_conditions}
+        medications={patient.medications}
+      />
 
       {/* Familiares Vinculados */}
       <Card>

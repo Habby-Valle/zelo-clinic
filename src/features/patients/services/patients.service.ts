@@ -25,6 +25,7 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     allergies: String(r.allergies ?? ""),
     medications: String(r.medications ?? ""),
     blood_type: r.blood_type != null ? String(r.blood_type) : null,
+    health_status: String(r.health_status ?? "pending"),
     observations: String(r.observations ?? ""),
     media_id: r.media_id != null ? String(r.media_id) : null,
     media: r.media_url ? { id: String(r.media_id ?? ""), url: String(r.media_url) } : null,

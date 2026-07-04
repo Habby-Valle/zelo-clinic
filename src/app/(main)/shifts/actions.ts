@@ -10,7 +10,6 @@ export async function createShift(data: {
   end: string;
   notes?: string;
   patient_id?: string;
-  checklist_ids?: string[];
 }): Promise<{ success: boolean; error?: string; warnings?: string[] }> {
   try {
     const { user } = await requireClinicAdmin();
@@ -31,24 +30,12 @@ export async function createShift(data: {
       body.shift_patients = [{ patient_id: data.patient_id }];
     }
 
+    // Os checklists são gerados pelo backend a partir do plano de cuidado ativo
+    // do paciente — não são mais selecionados manualmente por turno.
     const shift = await apiFetchServer<{ id: string; warnings?: string[] }>("/shifts/", {
       method: "POST",
       body: JSON.stringify(body),
     });
-
-    if (data.checklist_ids && data.checklist_ids.length > 0 && data.patient_id) {
-      for (const checklistId of data.checklist_ids) {
-        await apiFetchServer<unknown>("/checklist-executions/", {
-          method: "POST",
-          body: JSON.stringify({
-            checklist_id: checklistId,
-            shift_id: shift.id,
-            patient_id: data.patient_id,
-            caregiver_id: data.caregiver_id,
-          }),
-        });
-      }
-    }
 
     revalidatePath("/shifts");
     return { success: true, warnings: shift.warnings ?? [] };
