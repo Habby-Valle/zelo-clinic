@@ -19,6 +19,7 @@ import {
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
+import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
 
 function parseLocalDate(dateStr: string): Date {
@@ -61,6 +62,8 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
   const assignCaregivers = useAssignCaregivers(id);
   const toggleStatus = useTogglePatientStatus(id);
+  // Enfermeiro: acesso somente leitura ao cadastro do paciente.
+  const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
 
   const [selectedCaregivers, setSelectedCaregivers] = useState<string[]>([]);
   const [caregiverMsg, setCaregiverMsg] = useState<string | null>(null);
@@ -150,27 +153,29 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
             <p className="text-muted-foreground">Detalhes do paciente</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          {isActive ? (
-            <Button
-              variant="outline"
-              disabled={toggleStatus.isPending}
-              onClick={() => toggleStatus.mutate(false)}
-            >
-              {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Desativar
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              disabled={toggleStatus.isPending}
-              onClick={() => toggleStatus.mutate(true)}
-            >
-              {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reativar
-            </Button>
-          )}
-        </div>
+        {!isNurse && (
+          <div className="flex gap-2">
+            {isActive ? (
+              <Button
+                variant="outline"
+                disabled={toggleStatus.isPending}
+                onClick={() => toggleStatus.mutate(false)}
+              >
+                {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Desativar
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={toggleStatus.isPending}
+                onClick={() => toggleStatus.mutate(true)}
+              >
+                {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Reativar
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Info Cards */}
@@ -224,13 +229,15 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         </Card>
       </div>
 
-      {/* Plano de Cuidado */}
-      <CarePlanSection
-        patientId={id}
-        healthStatus={patient.health_status}
-        healthConditions={patient.health_conditions}
-        medications={patient.medications}
-      />
+      {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
+      {!isNurse && (
+        <CarePlanSection
+          patientId={id}
+          healthStatus={patient.health_status}
+          healthConditions={patient.health_conditions}
+          medications={patient.medications}
+        />
+      )}
 
       {/* Alertas de Saúde */}
       <HealthAlertsSection patientId={id} />
@@ -267,7 +274,8 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         </CardContent>
       </Card>
 
-      {/* Cuidadores */}
+      {/* Cuidadores — atribuição é ação do admin */}
+      {!isNurse && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -317,6 +325,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,8 @@ function formatDuration(start: string, end: string): string {
 
 export function ShiftsClient() {
   const queryClient = useQueryClient();
+  // Enfermeiro tem acesso somente leitura aos turnos.
+  const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
   const [tab, setTab] = useState("shifts");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -315,13 +318,13 @@ export function ShiftsClient() {
           <h1 className="text-2xl font-bold tracking-tight">Turnos</h1>
           <p className="mt-1 text-muted-foreground">Gestão de turnos de cuidado da clínica.</p>
         </div>
-        {tab === "shifts" && (
+        {tab === "shifts" && !isNurse && (
           <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Turno
           </Button>
         )}
-        {tab === "templates" && (
+        {tab === "templates" && !isNurse && (
           <Button onClick={openTemplateCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Template
@@ -460,7 +463,7 @@ export function ShiftsClient() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {shift.status === "in_progress" && (
+                          {!isNurse && shift.status === "in_progress" && (
                             <div className="flex gap-1">
                               <Button
                                 variant="ghost"
@@ -486,7 +489,7 @@ export function ShiftsClient() {
                               </Button>
                             </div>
                           )}
-                          {shift.status === "scheduled" && (
+                          {!isNurse && shift.status === "scheduled" && (
                             <Button
                               variant="ghost"
                               size="icon"
