@@ -6,6 +6,7 @@ import {
   fetchContractById,
   sendProposalApi,
   rejectContractApi,
+  transitionContractApi,
   updateContractApi,
   validateHealthApi,
 } from "../services";
@@ -61,6 +62,20 @@ export function useRejectContract(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => rejectContractApi(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts", id] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+  });
+}
+
+export function useTransitionContract(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      status: "suspended" | "active" | "cancelled" | "expired";
+      reason?: string;
+    }) => transitionContractApi(id, vars.status, vars.reason ?? ""),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });

@@ -24,6 +24,9 @@ function mapContract(r: Record<string, unknown>): ServiceContract {
     night_surcharge_type: (r.night_surcharge_type as "percentage" | "fixed_amount") ?? "percentage",
     weekly_hours: String(r.weekly_hours ?? "0"),
     notes: String(r.notes ?? ""),
+    cancellation_reason: String(r.cancellation_reason ?? ""),
+    cancelled_by_name: r.cancelled_by_name != null ? String(r.cancelled_by_name) : null,
+    ended_at: r.ended_at != null ? String(r.ended_at) : null,
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),
     status_display: r.status_display != null ? String(r.status_display) : undefined,
@@ -81,6 +84,18 @@ export async function rejectContractApi(id: string): Promise<void> {
   await apiFetchClient(`/contracts/${id}/transition/`, {
     method: "POST",
     body: JSON.stringify({ status: "cancelled" }),
+  });
+}
+
+/** Transição de ciclo de vida (suspender/reativar/encerrar) pela clínica. */
+export async function transitionContractApi(
+  id: string,
+  status: "suspended" | "active" | "cancelled" | "expired",
+  reason = ""
+): Promise<void> {
+  await apiFetchClient(`/contracts/${id}/transition/`, {
+    method: "POST",
+    body: JSON.stringify({ status, reason }),
   });
 }
 

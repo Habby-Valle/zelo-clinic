@@ -5,4 +5,5 @@ export {
   useSendProposal,
   useRejectContract,
   useValidateHealth,
+  useTransitionContract,
 } from "./use-contracts";

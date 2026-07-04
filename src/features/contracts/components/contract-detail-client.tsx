@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle, XCircle, Loader2, Receipt } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Receipt,
+  PauseCircle,
+  PlayCircle,
+  Ban,
+} from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +40,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useContract, useSendProposal, useRejectContract, useValidateHealth } from "../hooks";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useContract,
+  useSendProposal,
+  useRejectContract,
+  useValidateHealth,
+  useTransitionContract,
+} from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -67,9 +83,15 @@ export function ContractDetailClient() {
   const sendProposal = useSendProposal(id);
   const rejectContract = useRejectContract(id);
   const validateHealth = useValidateHealth(id);
+  const transitionContract = useTransitionContract(id);
 
   const [proposalOpen, setProposalOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  // Ciclo de vida: 'suspend' | 'reactivate' | 'cancel' | null
+  const [lifecycleAction, setLifecycleAction] = useState<
+    "suspend" | "reactivate" | "cancel" | null
+  >(null);
+  const [lifecycleReason, setLifecycleReason] = useState("");
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
   const [pricePerHour, setPricePerHour] = useState("");
   const [pricePerShift, setPricePerShift] = useState("");
@@ -140,6 +162,47 @@ export function ContractDetailClient() {
     });
   };
 
+  const closeLifecycle = () => {
+    setLifecycleAction(null);
+    setLifecycleReason("");
+  };
+
+  const handleLifecycle = () => {
+    if (!lifecycleAction) return;
+    const statusMap = {
+      suspend: "suspended",
+      reactivate: "active",
+      cancel: "cancelled",
+    } as const;
+    transitionContract.mutate(
+      { status: statusMap[lifecycleAction], reason: lifecycleReason.trim() },
+      { onSuccess: closeLifecycle }
+    );
+  };
+
+  const LIFECYCLE_COPY = {
+    suspend: {
+      title: "Suspender contrato",
+      description:
+        "O contrato fica suspenso e os turnos agendados futuros são cancelados. Você pode reativá-lo depois.",
+      confirm: "Suspender",
+      reasonRequired: false,
+    },
+    reactivate: {
+      title: "Reativar contrato",
+      description: "O contrato volta a ficar ativo e novos turnos podem ser agendados.",
+      confirm: "Reativar",
+      reasonRequired: false,
+    },
+    cancel: {
+      title: "Encerrar contrato",
+      description:
+        "O contrato é encerrado definitivamente e os turnos agendados futuros são cancelados. Esta ação não pode ser desfeita.",
+      confirm: "Encerrar",
+      reasonRequired: true,
+    },
+  } as const;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -161,6 +224,26 @@ export function ContractDetailClient() {
           </p>
         </div>
       </div>
+
+      {(contract.status === "cancelled" ||
+        contract.status === "suspended" ||
+        contract.status === "expired") &&
+        (contract.cancellation_reason || contract.ended_at) && (
+          <Card className="border-muted bg-muted/40">
+            <CardContent className="space-y-1 p-4 text-sm">
+              <p className="font-medium">
+                Contrato {CONTRACT_STATUS_LABELS[contract.status].toLowerCase()}
+                {contract.ended_at ? ` em ${formatDate(contract.ended_at)}` : ""}
+                {contract.cancelled_by_name ? ` por ${contract.cancelled_by_name}` : ""}.
+              </p>
+              {contract.cancellation_reason && (
+                <p className="text-muted-foreground">
+                  <span className="font-medium">Motivo:</span> {contract.cancellation_reason}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       {contract.status === "requested" && (
         <Card className="border-primary/20 bg-primary/5">
@@ -299,6 +382,95 @@ export function ContractDetailClient() {
           </CardContent>
         </Card>
       )}
+
+      {(contract.status === "active" || contract.status === "suspended") && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Gerenciar contrato</p>
+              <p className="text-xs text-muted-foreground">
+                {contract.status === "active"
+                  ? "Suspenda temporariamente ou encerre o contrato."
+                  : "Reative o contrato ou encerre definitivamente."}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {contract.status === "active" ? (
+                <Button variant="outline" onClick={() => setLifecycleAction("suspend")}>
+                  <PauseCircle className="mr-2 h-4 w-4" />
+                  Suspender
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => setLifecycleAction("reactivate")}>
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Reativar
+                </Button>
+              )}
+              <Button variant="destructive" onClick={() => setLifecycleAction("cancel")}>
+                <Ban className="mr-2 h-4 w-4" />
+                Encerrar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog
+        open={lifecycleAction !== null}
+        onOpenChange={(v) => {
+          if (!v) closeLifecycle();
+        }}
+      >
+        <DialogContent>
+          {lifecycleAction && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{LIFECYCLE_COPY[lifecycleAction].title}</DialogTitle>
+                <DialogDescription>
+                  {LIFECYCLE_COPY[lifecycleAction].description}
+                </DialogDescription>
+              </DialogHeader>
+              {lifecycleAction !== "reactivate" && (
+                <div className="space-y-2 py-2">
+                  <Label htmlFor="lifecycle-reason">
+                    Motivo{LIFECYCLE_COPY[lifecycleAction].reasonRequired ? " *" : " (opcional)"}
+                  </Label>
+                  <Textarea
+                    id="lifecycle-reason"
+                    placeholder="Ex.: inadimplência, alta do paciente, mudança de instituição..."
+                    value={lifecycleReason}
+                    onChange={(e) => setLifecycleReason(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              )}
+              {transitionContract.error && (
+                <p className="text-sm text-destructive">
+                  {transitionContract.error instanceof Error
+                    ? transitionContract.error.message
+                    : "Erro ao atualizar contrato"}
+                </p>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={closeLifecycle}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant={lifecycleAction === "cancel" ? "destructive" : "default"}
+                  onClick={handleLifecycle}
+                  disabled={
+                    transitionContract.isPending ||
+                    (LIFECYCLE_COPY[lifecycleAction].reasonRequired && !lifecycleReason.trim())
+                  }
+                >
+                  {transitionContract.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {LIFECYCLE_COPY[lifecycleAction].confirm}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={proposalOpen} onOpenChange={setProposalOpen}>
         <DialogContent>
