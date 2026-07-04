@@ -33,12 +33,23 @@ export async function fetchCarePlanByPatient(patientId: string): Promise<CarePla
 
 export async function fetchChecklistOptions(): Promise<ChecklistOption[]> {
   const data = await apiFetchClient<{
-    results: { id: string; name: string; category?: string }[];
+    results: {
+      id: string;
+      name: string;
+      category?: string;
+      items?: { id: string; name: string; type: string; required: boolean }[];
+    }[];
   }>(`/checklists/?is_active=true&page_size=100`);
   return (data.results ?? []).map((c) => ({
     id: String(c.id),
     name: String(c.name),
     category: String(c.category ?? "general"),
+    items: (c.items ?? []).map((it) => ({
+      id: String(it.id),
+      name: String(it.name),
+      type: String(it.type),
+      required: Boolean(it.required),
+    })),
   }));
 }
 

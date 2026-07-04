@@ -46,6 +46,7 @@ export interface ChecklistOption {
   id: string;
   name: string;
   category: string;
+  items: CarePlanChecklistItem[];
 }
 
 export interface CaregiverOption {

@@ -138,9 +138,6 @@ export function CarePlansReviewClient() {
                       <div className="space-y-2">
                         {checklistOptions.map((opt) => {
                           const checked = selected.includes(opt.id);
-                          const planChecklist = plan.checklists.find(
-                            (c) => c.checklist_id === opt.id
-                          );
                           return (
                             <div key={opt.id} className="rounded-lg border p-3">
                               <label className="flex items-center gap-2">
@@ -155,26 +152,24 @@ export function CarePlansReviewClient() {
                                   </Badge>
                                 )}
                               </label>
-                              {checked &&
-                                planChecklist &&
-                                planChecklist.checklist_items.length > 0 && (
-                                  <ul className="mt-2 space-y-1 pl-6">
-                                    {planChecklist.checklist_items.map((it) => (
-                                      <li
-                                        key={it.id}
-                                        className="flex items-center gap-2 text-sm text-muted-foreground"
-                                      >
-                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
-                                        <span>{it.name}</span>
-                                        {it.required && (
-                                          <span className="text-xs text-destructive">
-                                            obrigatório
-                                          </span>
-                                        )}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
+                              {checked && opt.items.length > 0 && (
+                                <ul className="mt-2 space-y-1 pl-6">
+                                  {opt.items.map((it) => (
+                                    <li
+                                      key={it.id}
+                                      className="flex items-center gap-2 text-sm text-muted-foreground"
+                                    >
+                                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                                      <span>{it.name}</span>
+                                      {it.required && (
+                                        <span className="text-xs text-destructive">
+                                          obrigatório
+                                        </span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                             </div>
                           );
                         })}
