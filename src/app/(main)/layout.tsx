@@ -1,6 +1,7 @@
 import { requireClinicUser } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { OnboardingWrapper } from "@/features/onboarding/components/onboarding-wrapper";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const { user } = await requireClinicUser();
@@ -14,6 +15,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         <Topbar role={user.role} />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
+      <OnboardingWrapper />
     </div>
   );
 }

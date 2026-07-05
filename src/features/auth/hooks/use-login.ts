@@ -17,6 +17,7 @@ interface LoginResult {
     name: string;
     role: UserRole;
     clinic_id: string | null;
+    avatar_url?: string | null;
   };
 }
 

@@ -43,7 +43,7 @@ async function requireClinicRole(allowed: UserRole[]): Promise<ClinicAdminContex
     name: profile.name,
     role: profile.role as UserRole,
     clinic_id: profile.clinic_id,
-    avatar_url: null,
+    avatar_url: profile.avatar_url ?? null,
   };
 
   return { user };

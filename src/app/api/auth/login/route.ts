@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       name: data.user.profile?.name ?? "",
       role: data.user.profile?.role ?? "",
       clinic_id: data.user.profile?.clinic_id ?? null,
+      avatar_url: data.user.profile?.avatar_url ?? null,
     },
   });
 

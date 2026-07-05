@@ -6,6 +6,7 @@ export interface ApiProfile {
   phone: string;
   role: string;
   clinic_id: string | null;
+  avatar_url?: string | null;
 }
 
 export interface ApiUser {

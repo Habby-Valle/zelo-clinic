@@ -7,3 +7,11 @@ export interface RoleOnboardingStats {
 }
 
 export type ClinicOnboardingStats = RoleOnboardingStats[];
+
+export interface TourStep {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  details: string[];
+}

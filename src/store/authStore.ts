@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
                 name: state.user.name,
                 email: state.user.email,
                 clinic_id: state.user.clinic_id,
+                avatar_url: state.user.avatar_url,
               },
             }
           : {},
