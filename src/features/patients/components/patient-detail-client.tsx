@@ -281,14 +281,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
       {/* Cuidadores — atribuição é ação do admin */}
       {!isNurse && (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Cuidadores Vinculados
-          </CardTitle>
-          <CardDescription>Selecione os cuidadores que atendem este paciente.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           {allCaregivers.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum cuidador cadastrado na clínica.</p>
           ) : (

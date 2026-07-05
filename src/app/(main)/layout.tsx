@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { OnboardingWrapper } from "@/features/onboarding/components/onboarding-wrapper";
 
-export default async function MainLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { user } = await requireClinicUser();
 
   return (
