@@ -12,6 +12,25 @@ export interface CarePlanChecklistItem {
   name: string;
   type: string;
   required: boolean;
+  has_observation: boolean;
+  unit: string;
+  expected_min: number | null;
+  expected_max: number | null;
+  target_value: number | null;
+  alert_severity: string;
+  criticality: string;
+  instructions: string;
+  requires_photo: boolean;
+  frequency: string;
+  scheduled_times: string[];
+}
+
+export interface CarePlanChecklistOverride {
+  item_id: string;
+  is_active?: boolean;
+  scheduled_times?: string[] | null;
+  expected_min?: number | null;
+  expected_max?: number | null;
 }
 
 export interface CarePlanChecklist {
@@ -22,6 +41,7 @@ export interface CarePlanChecklist {
   checklist_items: CarePlanChecklistItem[];
   frequency: string;
   order: number;
+  overrides?: CarePlanChecklistOverride[];
 }
 
 export interface CarePlan {
@@ -69,10 +89,15 @@ export interface CaregiverMatchResult {
   explanation?: string;
 }
 
+export interface SaveCarePlanChecklist {
+  checklist_id: string;
+  overrides?: CarePlanChecklistOverride[];
+}
+
 export interface SaveCarePlanInput {
   patient_id: string;
   responsible_name: string;
   responsible_register: string;
   notes?: string;
-  checklists: { checklist_id: string }[];
+  checklists: SaveCarePlanChecklist[];
 }

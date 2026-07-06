@@ -4,6 +4,9 @@ export type {
   ChecklistItem,
   ChecklistItemType,
   ChecklistItemOption,
+  AlertSeverity,
+  Criticality,
+  FrequencyType,
   ChecklistFilters,
 } from "./types";
 export {

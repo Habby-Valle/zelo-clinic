@@ -19,6 +19,7 @@ import {
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
+import { PatientAssessmentSection } from "@/features/patient-assessments/components/patient-assessment-section";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
@@ -229,6 +230,9 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Avaliação Clínica — pré-requisito para ativar o plano de cuidado */}
+      {!isNurse && <PatientAssessmentSection patientId={id} />}
 
       {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
       {!isNurse && (
