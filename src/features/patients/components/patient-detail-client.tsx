@@ -19,6 +19,7 @@ import {
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
+import { MedicationSection } from "@/features/medications";
 import { PatientAssessmentSection } from "@/features/patient-assessments/components/patient-assessment-section";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
@@ -246,6 +247,9 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
       {/* Alertas de Saúde */}
       <HealthAlertsSection patientId={id} />
+
+      {/* Medicações (MAR) */}
+      {!isNurse && <MedicationSection patientId={id} />}
 
       {/* Prontuário */}
       <PatientRecordSection patientId={id} />
