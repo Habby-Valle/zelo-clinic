@@ -10,6 +10,7 @@ import {
   fetchCarePlanByPatient,
   fetchCarePlansForReview,
   fetchChecklistOptions,
+  fetchChecklistSuggestions,
   returnCarePlan,
   submitCarePlan,
   updateCarePlan,
@@ -36,6 +37,15 @@ export function useCaregiverOptionsForPlan() {
   return useQuery({
     queryKey: ["caregiver-options-plan"],
     queryFn: fetchCaregiverOptions,
+  });
+}
+
+export function useChecklistSuggestions(patientId: string) {
+  return useQuery({
+    queryKey: ["checklist-suggestions", patientId],
+    queryFn: () => fetchChecklistSuggestions(patientId),
+    enabled: !!patientId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

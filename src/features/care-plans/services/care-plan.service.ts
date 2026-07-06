@@ -194,6 +194,24 @@ export async function updateCarePlanChecklists(
   return mapCarePlan(raw);
 }
 
+export async function fetchChecklistSuggestions(
+  patientId: string
+): Promise<{ categories: string[]; suggestions: ChecklistOption[] }> {
+  const data = await apiFetchClient<{
+    categories: string[];
+    suggestions: Record<string, unknown>[];
+  }>(`/patients/${patientId}/checklist-suggestions/`);
+  return {
+    categories: data.categories ?? [],
+    suggestions: (data.suggestions ?? []).map((cl) => ({
+      id: String(cl.id),
+      name: String(cl.name),
+      category: String(cl.category ?? "general"),
+      items: ((cl.items as Record<string, unknown>[]) ?? []).map(mapChecklistItem),
+    })),
+  };
+}
+
 export async function fetchCaregiverMatch(patientId: string): Promise<CaregiverMatchResult[]> {
   return apiFetchClient<CaregiverMatchResult[]>(
     `/api/ai/caregiver-match/?patient_id=${patientId}&use_ai=true`

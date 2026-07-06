@@ -28,6 +28,7 @@ import {
   useCaregiverOptionsForPlan,
   useCarePlan,
   useChecklistOptionsForPlan,
+  useChecklistSuggestions,
   useSaveCarePlan,
 } from "../hooks/use-care-plans";
 import { usePatientAssessments } from "@/features/patient-assessments/hooks/use-patient-assessments";
@@ -48,18 +49,6 @@ interface CarePlanSectionProps {
   medications: string;
 }
 
-const MOBILITY_KEYWORDS = [
-  "acamad",
-  "mobilidad",
-  "avc",
-  "cadeira de rodas",
-  "deambul",
-  "locomo",
-  "fratura",
-  "prótese",
-  "protese",
-];
-
 export function CarePlanSection({
   patientId,
   healthStatus,
@@ -69,6 +58,7 @@ export function CarePlanSection({
   const { data: plan, isLoading } = useCarePlan(patientId);
   const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const { data: caregivers = [] } = useCaregiverOptionsForPlan();
+  const { data: suggestions } = useChecklistSuggestions(patientId);
   const saveMutation = useSaveCarePlan(patientId, plan?.id);
   const submitMutation = useSubmitCarePlan(patientId);
   const { data: assessments = [] } = usePatientAssessments(patientId);
@@ -172,15 +162,19 @@ export function CarePlanSection({
     });
   }
 
-  // Sugestão automática por categoria, com base no perfil do paciente.
-  // Baseline: sinais vitais + higiene. O profissional confirma/ajusta e aprova.
+  // Sugestão via API a partir dos diagnósticos do PatientAssessment.
+  // Fallback: sinais vitais + higiene se a API não retornar sugestões.
   const suggestedIds = useMemo(() => {
+    if (suggestions && suggestions.suggestions.length > 0) {
+      return suggestions.suggestions.map((cl) => cl.id);
+    }
     const wanted = new Set<string>(["vitals", "hygiene"]);
     if (medications.trim()) wanted.add("medication");
     const conditions = healthConditions.toLowerCase();
-    if (MOBILITY_KEYWORDS.some((k) => conditions.includes(k))) wanted.add("mobility");
+    const mobilityKw = ["acamad", "mobilidad", "avc", "cadeira", "deambul", "locomo", "fratura", "prótese", "protese"];
+    if (mobilityKw.some((k) => conditions.includes(k))) wanted.add("mobility");
     return checklistOptions.filter((c) => wanted.has(c.category)).map((c) => c.id);
-  }, [checklistOptions, medications, healthConditions]);
+  }, [checklistOptions, medications, healthConditions, suggestions]);
 
   const respSuggestions = useMemo(() => {
     const q = responsibleName.trim().toLowerCase();
@@ -217,6 +211,7 @@ export function CarePlanSection({
   }, [suggestionsApplied, isLoading, plan, checklistOptions, suggestedIds]);
 
   const showSuggestionHint = !plan && suggestedIds.length > 0;
+  const suggestionCategories = suggestions?.categories ?? [];
 
   const isValidated = healthStatus === "validated";
   const isActive = plan?.status === "active";
@@ -374,7 +369,8 @@ export function CarePlanSection({
               <Label>Checklists do plano</Label>
               {showSuggestionHint && (
                 <p className="text-xs text-muted-foreground">
-                  Pré-selecionados com base no perfil do paciente. Ajuste se necessário.
+                  Pré-selecionados com base {suggestionCategories.length > 0 ? `nos diagnósticos (${suggestionCategories.join(", ")})` : "no perfil do paciente"}
+                  . Ajuste se necessário.
                 </p>
               )}
               {checklistOptions.length === 0 ? (
