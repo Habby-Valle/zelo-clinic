@@ -11,8 +11,7 @@ import {
   Plus,
   Sparkles,
   UserCheck,
-  Camera,
-  Clock,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -32,7 +31,7 @@ import {
   useSaveCarePlan,
 } from "../hooks/use-care-plans";
 import { usePatientAssessments } from "@/features/patient-assessments/hooks/use-patient-assessments";
-import type { CaregiverOption, CarePlanChecklistOverride, CarePlanChecklistItem } from "../types";
+import type { CaregiverOption, CarePlanChecklistOverride, CarePlanChecklistItem, CarePlanGoal } from "../types";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "outline"> = {
@@ -81,6 +80,7 @@ export function CarePlanSection({
   const [respFocused, setRespFocused] = useState(false);
   const [suggestionsApplied, setSuggestionsApplied] = useState(false);
   const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
+  const [goals, setGoals] = useState<CarePlanGoal[]>([]);
   // overridesByChecklist[checklistId][itemId] = CarePlanChecklistOverride
   const [overridesByChecklist, setOverridesByChecklist] = useState<
     Record<string, Record<string, CarePlanChecklistOverride>>
@@ -99,8 +99,28 @@ export function CarePlanSection({
     }
     startTransition(() => {
       setOverridesByChecklist(init);
+      setGoals(plan.goals);
     });
   }, [plan]);
+
+  function addGoal() {
+    setGoals((prev) => [
+      ...prev,
+      { description: "", target_metric: "", order: prev.length },
+    ]);
+  }
+
+  function removeGoal(index: number) {
+    setGoals((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateGoal(index: number, field: keyof CarePlanGoal, value: string | number) {
+    setGoals((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  }
 
   function getChecklistItemOverrides(checklistId: string): Record<string, CarePlanChecklistOverride> {
     return overridesByChecklist[checklistId] ?? {};
@@ -219,6 +239,11 @@ export function CarePlanSection({
         ...(overrideList.length > 0 ? { overrides: overrideList } : {}),
       };
     }),
+    goals: goals.map(({ description, target_metric, order }) => ({
+      description,
+      target_metric,
+      order,
+    })),
   });
 
   const canSubmit = selected.length > 0 && hasAssessment;
@@ -515,6 +540,69 @@ export function CarePlanSection({
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Metas do Plano</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addGoal}>
+                  <Plus className="mr-1 h-3 w-3" />
+                  Adicionar meta
+                </Button>
+              </div>
+              {goals.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma meta cadastrada. Adicione objetivos mensuráveis para o cuidado.
+                </p>
+              ) : (
+                <div className="space-y-2 rounded-lg border p-3">
+                  {goals.map((goal, index) => (
+                    <div key={goal.id ?? index} className="space-y-2 rounded-md border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 space-y-1">
+                          <Label className="text-xs">Descrição</Label>
+                          <textarea
+                            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                            rows={2}
+                            value={goal.description}
+                            onChange={(e) => updateGoal(index, "description", e.target.value)}
+                            placeholder="Ex.: Reduzir a dor do paciente para nível leve"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => removeGoal(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Métrica alvo</Label>
+                          <Input
+                            className="h-8 text-xs"
+                            value={goal.target_metric}
+                            onChange={(e) => updateGoal(index, "target_metric", e.target.value)}
+                            placeholder="Ex.: Escala de dor &lt; 3"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Ordem</Label>
+                          <Input
+                            className="h-8 text-xs"
+                            type="number"
+                            value={goal.order}
+                            onChange={(e) => updateGoal(index, "order", Number(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

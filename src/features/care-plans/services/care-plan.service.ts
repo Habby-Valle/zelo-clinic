@@ -4,6 +4,7 @@ import type {
   CaregiverOption,
   CarePlan,
   CarePlanChecklistItem,
+  CarePlanGoal,
   ChecklistOption,
   SaveCarePlanInput,
 } from "../types";
@@ -80,6 +81,7 @@ export async function fetchCarePlanByPatient(patientId: string): Promise<CarePla
         expected_max: ov.expected_max != null ? Number(ov.expected_max) : null,
       })),
     })),
+    goals: mapGoals(raw.goals),
     created_at: String(raw.created_at ?? ""),
     updated_at: String(raw.updated_at ?? ""),
   };
@@ -118,6 +120,16 @@ export async function updateCarePlan(id: string, input: SaveCarePlanInput): Prom
   return mapCarePlan(raw);
 }
 
+function mapGoals(raw: unknown): CarePlanGoal[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((g: Record<string, unknown>) => ({
+    id: String(g.id),
+    description: String(g.description ?? ""),
+    target_metric: String(g.target_metric ?? ""),
+    order: Number(g.order ?? 0),
+  }));
+}
+
 function mapCarePlan(raw: Record<string, unknown>): CarePlan {
   return {
     id: String(raw.id),
@@ -148,6 +160,7 @@ function mapCarePlan(raw: Record<string, unknown>): CarePlan {
         expected_max: ov.expected_max != null ? Number(ov.expected_max) : null,
       })),
     })),
+    goals: mapGoals(raw.goals),
     created_at: String(raw.created_at ?? ""),
     updated_at: String(raw.updated_at ?? ""),
   };

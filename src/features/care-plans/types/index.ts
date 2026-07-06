@@ -58,6 +58,7 @@ export interface CarePlan {
   review_note: string;
   notes: string;
   checklists: CarePlanChecklist[];
+  goals: CarePlanGoal[];
   created_at: string;
   updated_at: string;
 }
@@ -94,10 +95,18 @@ export interface SaveCarePlanChecklist {
   overrides?: CarePlanChecklistOverride[];
 }
 
+export interface CarePlanGoal {
+  id?: string;
+  description: string;
+  target_metric: string;
+  order: number;
+}
+
 export interface SaveCarePlanInput {
   patient_id: string;
   responsible_name: string;
   responsible_register: string;
   notes?: string;
   checklists: SaveCarePlanChecklist[];
+  goals?: CarePlanGoal[];
 }
