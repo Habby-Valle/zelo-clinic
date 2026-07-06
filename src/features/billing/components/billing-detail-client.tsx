@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Loader2, QrCode } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +118,12 @@ export function BillingDetailClient() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight">{invoice.invoice_number}</h1>
             <Badge variant={STATUS_VARIANTS[statusKey]}>{INVOICE_STATUS_LABELS[statusKey]}</Badge>
+            {invoice.pix_status && (
+              <Badge variant="outline" className="gap-1 border-emerald-300 text-emerald-700">
+                <QrCode className="h-3 w-3" />
+                PIX
+              </Badge>
+            )}
           </div>
           <p className="mt-1 text-muted-foreground">
             {invoice.patient_name} — {invoice.clinic_name}

@@ -19,6 +19,7 @@ function mapInvoice(r: Record<string, unknown>): Invoice {
     status_display: r.status_display != null ? String(r.status_display) : undefined,
     paid_at: r.paid_at != null ? String(r.paid_at) : null,
     notes: String(r.notes ?? ""),
+    pix_status: r.pix_status != null ? String(r.pix_status) : null,
     items: Array.isArray(r.items) ? r.items.map(mapLineItem) : [],
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),
