@@ -93,6 +93,7 @@ export function CaregiversClient() {
   const [page, setPage] = useState(1);
   const [isActiveFilter, setIsActiveFilter] = useState("");
   const [inviteStatusFilter, setInviteStatusFilter] = useState("");
+  const [inviteRoleFilter, setInviteRoleFilter] = useState("");
   const pageSize = 20;
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -129,6 +130,7 @@ export function CaregiversClient() {
     page: tab === "invites" ? page : 1,
     pageSize,
     status: tab === "invites" ? inviteStatusFilter : undefined,
+    role: tab === "invites" ? inviteRoleFilter : undefined,
   });
 
   const inviteCaregiver = useInviteCaregiver();
@@ -152,6 +154,7 @@ export function CaregiversClient() {
     setPage(1);
     setIsActiveFilter("");
     setInviteStatusFilter("");
+    setInviteRoleFilter("");
   }
 
   function handleInvite(e: React.FormEvent) {
@@ -194,10 +197,15 @@ export function CaregiversClient() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            Cuidadores
-            <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
+            {tab === "caregivers" && "Cuidadores"}
+            {tab === "nurses" && "Enfermeiros"}
+            {tab === "invites" && "Convites"}
           </h1>
-          <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
+          <p className="mt-1 text-muted-foreground">
+            {tab === "caregivers" && "Gerencie cuidadores e convites da clínica."}
+            {tab === "nurses" && "Gerencie os enfermeiros da clínica."}
+            {tab === "invites" && "Acompanhe os convites enviados pela clínica."}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -451,7 +459,7 @@ export function CaregiversClient() {
                       <TableRow
                         key={nurse.id}
                         className="cursor-pointer"
-                        onClick={() => router.push(`/users/${nurse.id}`)}
+                        onClick={() => router.push(`/users/${nurse.id}/nurse`)}
                       >
                         <TableCell className="font-medium">{nurse.name}</TableCell>
                         <TableCell className="text-muted-foreground">{nurse.email}</TableCell>
@@ -520,6 +528,21 @@ export function CaregiversClient() {
               }}
               className="max-w-xs"
             />
+            <Select
+              value={inviteRoleFilter}
+              onValueChange={(v) => { setInviteRoleFilter(v ?? ""); setPage(1); }}
+            >
+              <SelectTrigger className="w-[160px]">
+                <Filter className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="caregiver">Cuidador</SelectItem>
+                <SelectItem value="clinic_nurse">Enfermeiro</SelectItem>
+                <SelectItem value="family">Familiar</SelectItem>
+              </SelectContent>
+            </Select>
             <Select
               value={inviteStatusFilter}
               onValueChange={(v) => { setInviteStatusFilter(v ?? ""); setPage(1); }}

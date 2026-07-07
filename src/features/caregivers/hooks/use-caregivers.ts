@@ -24,6 +24,7 @@ interface InviteListParams {
   page: number;
   pageSize: number;
   status?: string;
+  role?: string;
 }
 
 export function useCaregivers(params: ListParams) {

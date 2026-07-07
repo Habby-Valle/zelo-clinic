@@ -35,11 +35,10 @@ export async function verifyCaregiverApi(
 }
 
 export async function fetchCaregiverInvites(
-  params: { search: string; page: number; pageSize: number; status?: string },
-  role?: string
+  params: { search: string; page: number; pageSize: number; status?: string; role?: string }
 ): Promise<{ invites: CaregiverInvite[]; total: number }> {
   const qs = new URLSearchParams();
-  if (role) qs.set("role", role);
+  if (params.role) qs.set("role", params.role);
   if (params.search) qs.set("search", params.search);
   if (params.status) qs.set("status", params.status);
   qs.set("page", String(params.page));
