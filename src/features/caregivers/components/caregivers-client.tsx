@@ -41,7 +41,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
@@ -264,7 +263,7 @@ export function CaregiversClient() {
             >
               <SelectTrigger className="w-[150px]">
                 <Filter className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Status" />
+                {isActiveFilter === "true" ? "Ativo" : isActiveFilter === "false" ? "Inativo" : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
@@ -412,7 +411,7 @@ export function CaregiversClient() {
             >
               <SelectTrigger className="w-[150px]">
                 <Filter className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Status" />
+                {isActiveFilter === "true" ? "Ativo" : isActiveFilter === "false" ? "Inativo" : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
