@@ -42,6 +42,7 @@ import {
   useCaregivers,
   useCaregiverInvites,
   useInviteCaregiver,
+  useNurses,
   useResendInvite,
   useCancelCaregiverInvite,
   useGenerateLinkCode,
@@ -106,6 +107,12 @@ export function CaregiversClient() {
     pageSize,
   });
 
+  const { data: nursesData, isLoading: loadingNurses } = useNurses({
+    search: tab === "nurses" ? search : "",
+    page: tab === "nurses" ? page : 1,
+    pageSize,
+  });
+
   const { data: invitesData, isLoading: loadingInvites } = useCaregiverInvites({
     search: tab === "invites" ? search : "",
     page: tab === "invites" ? page : 1,
@@ -118,10 +125,12 @@ export function CaregiversClient() {
 
   const caregivers = caregiversData?.caregivers ?? [];
   const caregiversTotal = caregiversData?.total ?? 0;
+  const nurses = nursesData?.caregivers ?? [];
+  const nursesTotal = nursesData?.total ?? 0;
   const invites = invitesData?.invites ?? [];
   const invitesTotal = invitesData?.total ?? 0;
 
-  const currentTotal = tab === "caregivers" ? caregiversTotal : invitesTotal;
+  const currentTotal = tab === "caregivers" ? caregiversTotal : tab === "nurses" ? nursesTotal : invitesTotal;
   const totalPages = Math.ceil(currentTotal / pageSize);
 
   function onTabChange(value: string | null) {
@@ -201,6 +210,10 @@ export function CaregiversClient() {
           <TabsTrigger value="caregivers">
             <Users className="mr-2 h-4 w-4" />
             Cuidadores
+          </TabsTrigger>
+          <TabsTrigger value="nurses">
+            <Users className="mr-2 h-4 w-4" />
+            Enfermeiros
           </TabsTrigger>
           <TabsTrigger value="invites">
             <Mail className="mr-2 h-4 w-4" />
@@ -317,6 +330,115 @@ export function CaregiversClient() {
               <p className="text-sm text-muted-foreground">
                 Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, caregiversTotal)}{" "}
                 de {caregiversTotal} cuidadores
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── Enfermeiros ── */}
+        <TabsContent value="nurses" className="mt-4 space-y-4">
+          <Input
+            placeholder="Buscar por nome ou email..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="max-w-xs"
+          />
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Registro</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Criado em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingNurses ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : nurses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <Users className="h-8 w-8" />
+                          <p>Nenhum enfermeiro encontrado</p>
+                          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+                            Convidar primeiro enfermeiro
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    nurses.map((nurse) => (
+                      <TableRow
+                        key={nurse.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/users/${nurse.id}`)}
+                      >
+                        <TableCell className="font-medium">{nurse.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{nurse.email}</TableCell>
+                        <TableCell className="text-muted-foreground">{nurse.professional_register ?? "—"}</TableCell>
+                        <TableCell>
+                          {nurse.is_active ? (
+                            <Badge variant="secondary" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Ativo
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1">
+                              <XOctagon className="h-3 w-3" />
+                              Inativo
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(nurse.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, nursesTotal)} de{" "}
+                {nursesTotal} enfermeiros
               </p>
               <div className="flex gap-2">
                 <Button

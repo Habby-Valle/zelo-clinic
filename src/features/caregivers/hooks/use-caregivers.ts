@@ -15,7 +15,14 @@ import {
 export function useCaregivers(params: { search: string; page: number; pageSize: number }) {
   return useQuery({
     queryKey: ["caregivers", params.search, params.page, params.pageSize],
-    queryFn: () => fetchCaregivers(params),
+    queryFn: () => fetchCaregivers(params, "caregiver"),
+  });
+}
+
+export function useNurses(params: { search: string; page: number; pageSize: number }) {
+  return useQuery({
+    queryKey: ["nurses", params.search, params.page, params.pageSize],
+    queryFn: () => fetchCaregivers(params, "clinic_nurse"),
   });
 }
 
@@ -35,13 +42,14 @@ export function useVerifyCaregiver(id: string) {
     onSuccess: (data) => {
       queryClient.setQueryData(["caregiver", id], data);
       queryClient.invalidateQueries({ queryKey: ["caregivers"] });
+      queryClient.invalidateQueries({ queryKey: ["nurses"] });
     },
   });
 }
 
 export function useCaregiverInvites(params: { search: string; page: number; pageSize: number }) {
   return useQuery({
-    queryKey: ["caregiver-invites", params.search, params.page, params.pageSize],
+    queryKey: ["invites", params.search, params.page, params.pageSize],
     queryFn: () => fetchCaregiverInvites(params),
   });
 }
@@ -52,7 +60,7 @@ export function useInviteCaregiver() {
     mutationFn: ({ email, clinicId }: { email: string; clinicId: string }) =>
       inviteCaregiverApi(email, clinicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
+      queryClient.invalidateQueries({ queryKey: ["invites"] });
     },
   });
 }
@@ -62,7 +70,7 @@ export function useResendInvite() {
   return useMutation({
     mutationFn: (inviteId: string) => resendInviteApi(inviteId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
+      queryClient.invalidateQueries({ queryKey: ["invites"] });
     },
   });
 }
@@ -72,7 +80,7 @@ export function useCancelCaregiverInvite() {
   return useMutation({
     mutationFn: (inviteId: string) => cancelCaregiverInviteApi(inviteId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
+      queryClient.invalidateQueries({ queryKey: ["invites"] });
     },
   });
 }

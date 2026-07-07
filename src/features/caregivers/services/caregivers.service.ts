@@ -1,12 +1,11 @@
 import { apiFetchClient } from "@/lib/api-client";
 import type { CaregiverProfile, CaregiverInvite } from "../types";
 
-export async function fetchCaregivers(params: {
-  search: string;
-  page: number;
-  pageSize: number;
-}): Promise<{ caregivers: CaregiverProfile[]; total: number }> {
-  const qs = new URLSearchParams({ role: "caregiver" });
+export async function fetchCaregivers(
+  params: { search: string; page: number; pageSize: number },
+  role = "caregiver"
+): Promise<{ caregivers: CaregiverProfile[]; total: number }> {
+  const qs = new URLSearchParams({ role });
   if (params.search) qs.set("search", params.search);
   qs.set("page", String(params.page));
   qs.set("page_size", String(params.pageSize));
@@ -34,12 +33,12 @@ export async function verifyCaregiverApi(
   });
 }
 
-export async function fetchCaregiverInvites(params: {
-  search: string;
-  page: number;
-  pageSize: number;
-}): Promise<{ invites: CaregiverInvite[]; total: number }> {
-  const qs = new URLSearchParams({ role: "caregiver" });
+export async function fetchCaregiverInvites(
+  params: { search: string; page: number; pageSize: number },
+  role?: string
+): Promise<{ invites: CaregiverInvite[]; total: number }> {
+  const qs = new URLSearchParams();
+  if (role) qs.set("role", role);
   if (params.search) qs.set("search", params.search);
   qs.set("page", String(params.page));
   qs.set("page_size", String(params.pageSize));

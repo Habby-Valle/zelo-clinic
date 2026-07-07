@@ -9,6 +9,7 @@ export interface CaregiverProfile {
   media_id: string | null;
   is_active: boolean;
   patient_count: number;
+  professional_register?: string | null;
   verification_status: VerificationStatus | null;
   verification_note: string | null;
   verified_at: string | null;
