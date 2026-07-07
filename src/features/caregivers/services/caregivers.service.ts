@@ -74,6 +74,10 @@ export async function inviteNurseApi(email: string, clinicId: string): Promise<v
   });
 }
 
+export async function resendInviteApi(inviteId: string): Promise<void> {
+  await apiFetchClient(`/invites/${inviteId}/resend/`, { method: "POST" });
+}
+
 export async function cancelCaregiverInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }

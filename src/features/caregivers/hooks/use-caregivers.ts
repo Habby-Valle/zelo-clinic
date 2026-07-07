@@ -7,6 +7,7 @@ import {
   verifyCaregiverApi,
   fetchCaregiverInvites,
   inviteCaregiverApi,
+  resendInviteApi,
   cancelCaregiverInviteApi,
   generateLinkCodeApi,
 } from "../services";
@@ -50,6 +51,16 @@ export function useInviteCaregiver() {
   return useMutation({
     mutationFn: ({ email, clinicId }: { email: string; clinicId: string }) =>
       inviteCaregiverApi(email, clinicId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
+    },
+  });
+}
+
+export function useResendInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) => resendInviteApi(inviteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["caregiver-invites"] });
     },

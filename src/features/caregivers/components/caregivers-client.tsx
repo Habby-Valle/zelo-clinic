@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2 } from "lucide-react";
+import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +36,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import {
   useCaregivers,
   useCaregiverInvites,
   useInviteCaregiver,
+  useResendInvite,
   useCancelCaregiverInvite,
   useGenerateLinkCode,
 } from "../hooks";
@@ -112,6 +114,7 @@ export function CaregiversClient() {
 
   const inviteCaregiver = useInviteCaregiver();
   const cancelInvite = useCancelCaregiverInvite();
+  const resendInvite = useResendInvite();
 
   const caregivers = caregiversData?.caregivers ?? [];
   const caregiversTotal = caregiversData?.total ?? 0;
@@ -414,16 +417,36 @@ export function CaregiversClient() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {invite.status === "pending" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => setCancelId(invite.id)}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {invite.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground"
+                                  onClick={() => {
+                                    resendInvite.mutate(invite.id, {
+                                      onSuccess: () => toast.success("Convite reenviado"),
+                                      onError: (err) =>
+                                        toast.error(
+                                          err instanceof Error ? err.message : "Erro ao reenviar"
+                                        ),
+                                    });
+                                  }}
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => setCancelId(invite.id)}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
