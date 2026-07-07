@@ -200,6 +200,9 @@ export function CaregiversClient() {
             {tab === "caregivers" && "Cuidadores"}
             {tab === "nurses" && "Enfermeiros"}
             {tab === "invites" && "Convites"}
+            {tab === "caregivers" && (
+              <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
+            )}
           </h1>
           <p className="mt-1 text-muted-foreground">
             {tab === "caregivers" && "Gerencie cuidadores e convites da clínica."}
@@ -539,8 +542,7 @@ export function CaregiversClient() {
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
                 <SelectItem value="caregiver">Cuidador</SelectItem>
-                <SelectItem value="clinic_nurse">Enfermeiro</SelectItem>
-                <SelectItem value="family">Familiar</SelectItem>
+                <SelectItem value="clinic_nurse">Enfermeiro(a)</SelectItem>
               </SelectContent>
             </Select>
             <Select
