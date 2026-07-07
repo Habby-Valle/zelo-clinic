@@ -12,16 +12,30 @@ import {
   generateLinkCodeApi,
 } from "../services";
 
-export function useCaregivers(params: { search: string; page: number; pageSize: number }) {
+interface ListParams {
+  search: string;
+  page: number;
+  pageSize: number;
+  isActive?: string;
+}
+
+interface InviteListParams {
+  search: string;
+  page: number;
+  pageSize: number;
+  status?: string;
+}
+
+export function useCaregivers(params: ListParams) {
   return useQuery({
-    queryKey: ["caregivers", params.search, params.page, params.pageSize],
+    queryKey: ["caregivers", params.search, params.isActive, params.page, params.pageSize],
     queryFn: () => fetchCaregivers(params, "caregiver"),
   });
 }
 
-export function useNurses(params: { search: string; page: number; pageSize: number }) {
+export function useNurses(params: ListParams) {
   return useQuery({
-    queryKey: ["nurses", params.search, params.page, params.pageSize],
+    queryKey: ["nurses", params.search, params.isActive, params.page, params.pageSize],
     queryFn: () => fetchCaregivers(params, "clinic_nurse"),
   });
 }
@@ -47,9 +61,9 @@ export function useVerifyCaregiver(id: string) {
   });
 }
 
-export function useCaregiverInvites(params: { search: string; page: number; pageSize: number }) {
+export function useCaregiverInvites(params: InviteListParams) {
   return useQuery({
-    queryKey: ["invites", params.search, params.page, params.pageSize],
+    queryKey: ["invites", params.search, params.status, params.page, params.pageSize],
     queryFn: () => fetchCaregiverInvites(params),
   });
 }

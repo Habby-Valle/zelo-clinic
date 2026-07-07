@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2, RefreshCw, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -84,6 +91,8 @@ export function CaregiversClient() {
   const [tab, setTab] = useState("caregivers");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [isActiveFilter, setIsActiveFilter] = useState("");
+  const [inviteStatusFilter, setInviteStatusFilter] = useState("");
   const pageSize = 20;
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -105,18 +114,21 @@ export function CaregiversClient() {
     search: tab === "caregivers" ? search : "",
     page: tab === "caregivers" ? page : 1,
     pageSize,
+    isActive: tab === "caregivers" ? isActiveFilter : undefined,
   });
 
   const { data: nursesData, isLoading: loadingNurses } = useNurses({
     search: tab === "nurses" ? search : "",
     page: tab === "nurses" ? page : 1,
     pageSize,
+    isActive: tab === "nurses" ? isActiveFilter : undefined,
   });
 
   const { data: invitesData, isLoading: loadingInvites } = useCaregiverInvites({
     search: tab === "invites" ? search : "",
     page: tab === "invites" ? page : 1,
     pageSize,
+    status: tab === "invites" ? inviteStatusFilter : undefined,
   });
 
   const inviteCaregiver = useInviteCaregiver();
@@ -138,6 +150,8 @@ export function CaregiversClient() {
     setTab(value);
     setSearch("");
     setPage(1);
+    setIsActiveFilter("");
+    setInviteStatusFilter("");
   }
 
   function handleInvite(e: React.FormEvent) {
@@ -223,15 +237,31 @@ export function CaregiversClient() {
 
         {/* ── Cuidadores ── */}
         <TabsContent value="caregivers" className="mt-4 space-y-4">
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-xs"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={isActiveFilter}
+              onValueChange={(v) => { setIsActiveFilter(v ?? ""); setPage(1); }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <Filter className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Card>
             <CardContent className="p-0">
@@ -355,15 +385,31 @@ export function CaregiversClient() {
 
         {/* ── Enfermeiros ── */}
         <TabsContent value="nurses" className="mt-4 space-y-4">
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-xs"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={isActiveFilter}
+              onValueChange={(v) => { setIsActiveFilter(v ?? ""); setPage(1); }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <Filter className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Card>
             <CardContent className="p-0">
@@ -464,15 +510,33 @@ export function CaregiversClient() {
 
         {/* ── Convites ── */}
         <TabsContent value="invites" className="mt-4 space-y-4">
-          <Input
-            placeholder="Buscar por email..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-xs"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={inviteStatusFilter}
+              onValueChange={(v) => { setInviteStatusFilter(v ?? ""); setPage(1); }}
+            >
+              <SelectTrigger className="w-[160px]">
+                <Filter className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="accepted">Aceito</SelectItem>
+                <SelectItem value="expired">Expirado</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Card>
             <CardContent className="p-0">
