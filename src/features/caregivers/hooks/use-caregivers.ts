@@ -24,7 +24,7 @@ interface InviteListParams {
   page: number;
   pageSize: number;
   status?: string;
-  role?: string;
+  role?: string | null;
 }
 
 export function useCaregivers(params: ListParams) {
@@ -64,7 +64,7 @@ export function useVerifyCaregiver(id: string) {
 
 export function useCaregiverInvites(params: InviteListParams) {
   return useQuery({
-    queryKey: ["invites", params.search, params.status, params.page, params.pageSize],
+    queryKey: ["invites", params.search, params.status, params.role, params.page, params.pageSize],
     queryFn: () => fetchCaregiverInvites(params),
   });
 }

@@ -93,7 +93,7 @@ export function CaregiversClient() {
   const [page, setPage] = useState(1);
   const [isActiveFilter, setIsActiveFilter] = useState("");
   const [inviteStatusFilter, setInviteStatusFilter] = useState("");
-  const [inviteRoleFilter, setInviteRoleFilter] = useState("");
+  const [inviteRoleFilter, setInviteRoleFilter] = useState<string | null>(null);
   const pageSize = 20;
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -154,7 +154,7 @@ export function CaregiversClient() {
     setPage(1);
     setIsActiveFilter("");
     setInviteStatusFilter("");
-    setInviteRoleFilter("");
+    setInviteRoleFilter(null);
   }
 
   function handleInvite(e: React.FormEvent) {
@@ -532,12 +532,12 @@ export function CaregiversClient() {
               className="max-w-xs"
             />
             <Select
-              value={inviteRoleFilter}
-              onValueChange={(v) => { setInviteRoleFilter(v ?? ""); setPage(1); }}
+              value={inviteRoleFilter ?? ""}
+              onValueChange={(v) => { setInviteRoleFilter(v); setPage(1); }}
             >
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Tipo" />
+                {inviteRoleFilter === "caregiver" ? "Cuidador" : inviteRoleFilter === "clinic_nurse" ? "Enfermeiro(a)" : "Tipo"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
@@ -551,7 +551,7 @@ export function CaregiversClient() {
             >
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Status" />
+                {inviteStatusFilter === "pending" ? "Pendente" : inviteStatusFilter === "accepted" ? "Aceito" : inviteStatusFilter === "expired" ? "Expirado" : inviteStatusFilter === "cancelled" ? "Cancelado" : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
