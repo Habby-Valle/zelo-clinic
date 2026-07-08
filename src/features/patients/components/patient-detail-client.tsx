@@ -2,6 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ArrowLeft, Loader2, Check, Users } from "lucide-react";
 import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -67,6 +69,20 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
   const toggleStatus = useTogglePatientStatus(id);
   // Enfermeiro: acesso somente leitura ao cadastro do paciente.
   const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
+
+  // Aba ativa espelhada na URL (?tab=) — sobrevive a refresh e é compartilhável.
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab") ?? "overview";
+
+  function handleTabChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "overview") params.delete("tab");
+    else params.set("tab", value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }
 
   const [selectedCaregivers, setSelectedCaregivers] = useState<string[]>([]);
   const [caregiverMsg, setCaregiverMsg] = useState<string | null>(null);
@@ -181,156 +197,193 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         )}
       </div>
 
-      {/* Info Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>Dados do paciente</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Nome</p>
-                <p>{patient.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Idade</p>
-                <p>{calculateAge(patient.birth_date)} anos</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Data de Nascimento</p>
-                <p>{formatDate(patient.birth_date)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Criado em</p>
-                <p>{formatDate(patient.created_at)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs value={tab} onValueChange={handleTabChange}>
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="clinical">Clínico</TabsTrigger>
+          <TabsTrigger value="record">Prontuário</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Saúde</CardTitle>
-            <CardDescription>Informações clínicas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div>
-              <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Medicamentos:</span> {patient.medications || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Avaliação Clínica — pré-requisito para ativar o plano de cuidado */}
-      {!isNurse && <PatientAssessmentSection patientId={id} />}
-
-      {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
-      {!isNurse && (
-        <CarePlanSection
-          patientId={id}
-          healthStatus={patient.health_status}
-          healthConditions={patient.health_conditions}
-          medications={patient.medications}
-        />
-      )}
-
-      {/* Alertas de Saúde */}
-      <HealthAlertsSection patientId={id} />
-
-      {/* Medicações (MAR) */}
-      {!isNurse && <MedicationSection patientId={id} />}
-
-      {/* Prontuário */}
-      <PatientRecordSection patientId={id} />
-
-      {/* Familiares Vinculados */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Familiares Vinculados
-          </CardTitle>
-          <CardDescription>Familiares que acompanham este paciente.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {emergencyContacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum familiar vinculado.</p>
-          ) : (
-            <div className="space-y-2">
-              {emergencyContacts.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
+        {/* Visão Geral — cadastro, saúde declarada, vínculos */}
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          {/* Info Cards */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+                <CardDescription>Dados do paciente</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Nome</p>
+                    <p>{patient.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{c.profile_family_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatPhone(c.profile_family_phone)} · Prioridade {c.priority}
-                    </p>
+                    <p className="text-sm font-medium text-muted-foreground">Idade</p>
+                    <p>{calculateAge(patient.birth_date)} anos</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Data de Nascimento</p>
+                    <p>{formatDate(patient.birth_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Criado em</p>
+                    <p>{formatDate(patient.created_at)}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
 
-      {/* Cuidadores — atribuição é ação do admin */}
-      {!isNurse && (
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          {allCaregivers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum cuidador cadastrado na clínica.</p>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {allCaregivers.map((cg) => {
-                const isSelected = selectedCaregivers.includes(cg.id);
-                return (
-                  <label
-                    key={cg.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
-                      isSelected ? "border-primary bg-primary/5" : ""
-                    }`}
-                  >
-                    <Checkbox checked={isSelected} onCheckedChange={() => toggleCaregiver(cg.id)} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{cg.name}</p>
-                      <p className="text-xs text-muted-foreground">{cg.email}</p>
-                    </div>
-                    {isSelected && <Check className="h-4 w-4 text-primary" />}
-                  </label>
-                );
-              })}
-            </div>
-          )}
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSaveCaregivers} disabled={assignCaregivers.isPending}>
-              {assignCaregivers.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar vínculos
-            </Button>
-            {caregiverMsg && (
-              <Alert
-                variant={caregiverMsg.includes("sucesso") ? "default" : "destructive"}
-                className="flex-1 py-2"
-              >
-                <AlertDescription>{caregiverMsg}</AlertDescription>
-              </Alert>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Saúde</CardTitle>
+                <CardDescription>Informações clínicas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Medicamentos:</span> {patient.medications || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
-      )}
+
+          {/* Familiares Vinculados */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Familiares Vinculados
+              </CardTitle>
+              <CardDescription>Familiares que acompanham este paciente.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {emergencyContacts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum familiar vinculado.</p>
+              ) : (
+                <div className="space-y-2">
+                  {emergencyContacts.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{c.profile_family_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatPhone(c.profile_family_phone)} · Prioridade {c.priority}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cuidadores — atribuição é ação do admin */}
+          {!isNurse && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Cuidadores
+                </CardTitle>
+                <CardDescription>Cuidadores atribuídos a este paciente.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {allCaregivers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum cuidador cadastrado na clínica.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {allCaregivers.map((cg) => {
+                      const isSelected = selectedCaregivers.includes(cg.id);
+                      return (
+                        <label
+                          key={cg.id}
+                          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
+                            isSelected ? "border-primary bg-primary/5" : ""
+                          }`}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleCaregiver(cg.id)}
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{cg.name}</p>
+                            <p className="text-xs text-muted-foreground">{cg.email}</p>
+                          </div>
+                          {isSelected && <Check className="h-4 w-4 text-primary" />}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <Button onClick={handleSaveCaregivers} disabled={assignCaregivers.isPending}>
+                    {assignCaregivers.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Salvar vínculos
+                  </Button>
+                  {caregiverMsg && (
+                    <Alert
+                      variant={caregiverMsg.includes("sucesso") ? "default" : "destructive"}
+                      className="flex-1 py-2"
+                    >
+                      <AlertDescription>{caregiverMsg}</AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Clínico — avaliação, plano, medicações, alertas */}
+        <TabsContent value="clinical" className="mt-6 space-y-6">
+          {/* Avaliação Clínica — pré-requisito para ativar o plano de cuidado */}
+          {!isNurse && (
+            <PatientAssessmentSection
+              patientId={id}
+              declaredConditions={patient.health_conditions}
+            />
+          )}
+
+          {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
+          {!isNurse && (
+            <CarePlanSection
+              patientId={id}
+              healthStatus={patient.health_status}
+              healthConditions={patient.health_conditions}
+              medications={patient.medications}
+            />
+          )}
+
+          {/* Medicações (MAR) */}
+          {!isNurse && (
+            <MedicationSection patientId={id} declaredMedications={patient.medications} />
+          )}
+
+          {/* Alertas de Saúde */}
+          <HealthAlertsSection patientId={id} />
+        </TabsContent>
+
+        {/* Prontuário */}
+        <TabsContent value="record" className="mt-6 space-y-6">
+          <PatientRecordSection patientId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

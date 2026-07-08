@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Loader2, Plus, Stethoscope } from "lucide-react";
+import { Loader2, Plus, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -26,10 +26,12 @@ import { Badge } from "@/components/ui/badge";
 
 interface PatientAssessmentSectionProps {
   patientId: string;
+  declaredConditions?: string;
 }
 
 export function PatientAssessmentSection({
   patientId,
+  declaredConditions,
 }: PatientAssessmentSectionProps) {
   const { data: assessments = [], isLoading } = usePatientAssessments(patientId);
   const createAssessment = useCreatePatientAssessment(patientId);
@@ -38,7 +40,15 @@ export function PatientAssessmentSection({
   const [mobilityLevel, setMobilityLevel] = useState<MobilityLevel | "">("");
   const [fallRiskScore, setFallRiskScore] = useState("");
   const [pressureUlcerRisk, setPressureUlcerRisk] = useState("");
-  const [diagnoses, setDiagnoses] = useState("");
+  // Pré-preenche os diagnósticos com as condições declaradas pela família.
+  // Morse/Braden/mobilidade seguem manuais — exigem exame presencial.
+  const [diagnoses, setDiagnoses] = useState(() =>
+    (declaredConditions ?? "")
+      .split(/[\n,;]+/)
+      .map((d) => d.trim())
+      .filter(Boolean)
+      .join("\n")
+  );
   const [notes, setNotes] = useState("");
 
   const latest = assessments[0];

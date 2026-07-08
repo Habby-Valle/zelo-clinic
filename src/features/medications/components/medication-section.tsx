@@ -18,15 +18,18 @@ import {
 } from "@/components/ui/select";
 import {
   useMedications,
+  useMedicationSuggestions,
   useCreateMedication,
   useUpdateMedication,
   useDeleteMedication,
 } from "../hooks/use-medications";
-import type { Medication, SaveMedicationInput } from "../types";
+import type { Medication, MedicationSuggestion, SaveMedicationInput } from "../types";
 import { MEDICATION_ROUTE_LABELS, type MedicationRoute } from "../types";
+import { parseDeclaredMedications } from "../lib/parse-declared";
 
 interface MedicationSectionProps {
   patientId: string;
+  declaredMedications?: string;
 }
 
 function emptyForm(): SaveMedicationInput {
@@ -41,7 +44,7 @@ function emptyForm(): SaveMedicationInput {
   };
 }
 
-export function MedicationSection({ patientId }: MedicationSectionProps) {
+export function MedicationSection({ patientId, declaredMedications }: MedicationSectionProps) {
   const { data: medications = [], isLoading } = useMedications(patientId);
   const createMutation = useCreateMedication(patientId);
   const updateMutation = useUpdateMedication(patientId);
@@ -52,6 +55,28 @@ export function MedicationSection({ patientId }: MedicationSectionProps) {
   const [timesCsv, setTimesCsv] = useState("");
 
   const busy = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  // Sugestões de NOME extraídas do texto declarado pela família. Só aparecem
+  // enquanto não há medicação cadastrada, para não duplicar o que já foi revisado.
+  // A IA (backend) só sugere nomes; se indisponível, cai no parser heurístico local.
+  const canSuggest = medications.length === 0 && !!declaredMedications?.trim();
+  const { data: aiSuggestions } = useMedicationSuggestions(patientId, canSuggest);
+  const suggestions: MedicationSuggestion[] = canSuggest
+    ? aiSuggestions?.length
+      ? aiSuggestions
+      : parseDeclaredMedications(declaredMedications ?? "")
+    : [];
+
+  function applySuggestion(s: MedicationSuggestion) {
+    // Só o nome é pré-preenchido. Dose, via e horários vêm da receita — manuais.
+    setForm({
+      ...emptyForm(),
+      name: s.name,
+      notes: `Declarado pela família: "${s.source_text}" — conferir dose e via na receita.`,
+    });
+    setTimesCsv("");
+    setShowForm(true);
+  }
 
   function resetForm() {
     setForm(emptyForm());
@@ -264,6 +289,30 @@ export function MedicationSection({ patientId }: MedicationSectionProps) {
                 {createMutation.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                 Adicionar
               </Button>
+            </div>
+          </div>
+        )}
+
+        {!showForm && suggestions.length > 0 && (
+          <div className="rounded-lg border border-dashed p-3">
+            <p className="mb-2 text-xs text-muted-foreground">
+              Nomes citados pela família. Dose, via e horários devem ser preenchidos a
+              partir da receita médica.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((s, i) => (
+                <Button
+                  key={i}
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => applySuggestion(s)}
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  {s.name}
+                </Button>
+              ))}
             </div>
           </div>
         )}

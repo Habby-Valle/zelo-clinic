@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMedications,
+  fetchMedicationSuggestions,
   createMedication,
   updateMedication,
   deleteMedication,
@@ -14,6 +15,16 @@ export function useMedications(patientId: string) {
     queryKey: ["medications", patientId],
     queryFn: () => fetchMedications(patientId),
     enabled: !!patientId,
+  });
+}
+
+export function useMedicationSuggestions(patientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["medication-suggestions", patientId],
+    queryFn: () => fetchMedicationSuggestions(patientId),
+    enabled: !!patientId && enabled,
+    staleTime: Infinity, // extração é cara; não refazer sozinha
+    retry: false,
   });
 }
 

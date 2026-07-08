@@ -27,6 +27,13 @@ export interface Medication {
   updated_at: string;
 }
 
+// Sugestão de medicação a partir do texto declarado pela família.
+// Apenas nome + trecho de origem — dose/via/horários são sempre manuais.
+export interface MedicationSuggestion {
+  name: string;
+  source_text: string;
+}
+
 export interface SaveMedicationInput {
   name: string;
   dose?: string;
