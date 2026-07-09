@@ -173,7 +173,11 @@ export function ContractsListClient() {
                           {contract.contract_number}
                         </Link>
                       </TableCell>
-                      <TableCell className="font-medium">{contract.patient_name}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link href={`/patients/${contract.patient}`} className="hover:underline">
+                          {contract.patient_name}
+                        </Link>
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {contract.requested_by_name ?? contract.payer_name}
                       </TableCell>

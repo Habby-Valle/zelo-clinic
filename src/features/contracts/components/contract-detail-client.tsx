@@ -339,7 +339,15 @@ export function ContractDetailClient() {
             <CardTitle className="text-base">Partes Envolvidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <Row label="Paciente" value={contract.patient_name} />
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Paciente</span>
+              <Link
+                href={`/patients/${contract.patient}`}
+                className="font-medium hover:underline"
+              >
+                {contract.patient_name}
+              </Link>
+            </div>
             <Row
               label="Cadastro de saúde"
               value={PATIENT_HEALTH_STATUS_LABELS[contract.patient_health_status]}
