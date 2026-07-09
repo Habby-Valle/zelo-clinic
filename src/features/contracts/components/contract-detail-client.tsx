@@ -52,6 +52,9 @@ import {
 } from "../hooks";
 import type { ContractStatus, PricingSuggestion } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
+import { usePatient } from "@/features/patients/hooks/use-patients";
+import { PatientDocuments } from "@/features/patients/components/patient-documents";
+import { DeclaredMedications } from "@/features/medications";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
   {
@@ -82,6 +85,7 @@ export function ContractDetailClient() {
   const id = params.id as string;
 
   const { data: contract, isLoading } = useContract(id);
+  const { data: patient } = usePatient(contract?.patient ?? "");
   const sendProposal = useSendProposal(id);
   const rejectContract = useRejectContract(id);
   const validateHealth = useValidateHealth(id);
@@ -300,18 +304,46 @@ export function ContractDetailClient() {
 
       {contract.status === "active" && contract.patient_health_status === "declared" && (
         <Card className="border-amber-300 bg-amber-50">
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
-              <p className="text-xs text-muted-foreground">
-                Revise as informações contra os documentos e valide antes de iniciar os cuidados.
-              </p>
+          <CardContent className="space-y-4 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
+                <p className="text-xs text-muted-foreground">
+                  Revise as informações contra a receita e valide antes de iniciar os cuidados.
+                </p>
+              </div>
+              <Button
+                onClick={() => validateHealth.mutate()}
+                disabled={validateHealth.isPending}
+                className="shrink-0"
+              >
+                {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Validar saúde
+              </Button>
             </div>
-            <Button onClick={() => validateHealth.mutate()} disabled={validateHealth.isPending}>
-              {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Validar saúde
-            </Button>
+
+            {patient && (
+              <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
+                <div>
+                  <span className="font-medium">Condições:</span>{" "}
+                  {patient.health_conditions || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Medicamentos:</span>
+                  <DeclaredMedications text={patient.medications} />
+                </div>
+                <div>
+                  <span className="font-medium">Receita médica:</span>
+                  <PatientDocuments
+                    documents={patient.documents.filter((d) => d.kind === "prescription")}
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
