@@ -1,4 +1,4 @@
-import { Pill } from "lucide-react";
+import { Clock, Pill } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { parseDeclaredMedicationDetails } from "../lib/parse-declared-detail";
 
@@ -24,6 +24,12 @@ export function DeclaredMedications({ text }: DeclaredMedicationsProps) {
             {med.turns.map((turn) => (
               <Badge key={turn} variant="secondary" className="font-normal">
                 {turn}
+              </Badge>
+            ))}
+            {med.times.map((time) => (
+              <Badge key={time} variant="outline" className="gap-1 font-normal">
+                <Clock className="h-3 w-3" />
+                {time}
               </Badge>
             ))}
           </div>
