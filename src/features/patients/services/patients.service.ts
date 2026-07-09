@@ -4,6 +4,7 @@ import type {
   PatientCaregiver,
   PendingInvite,
   CaregiverAssignment,
+  PatientDocument,
   PatientsPage,
 } from "../types";
 
@@ -34,6 +35,7 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     emergency_contacts: Array.isArray(r.emergency_contacts)
       ? (r.emergency_contacts as ClinicPatient["emergency_contacts"])
       : [],
+    documents: Array.isArray(r.documents) ? (r.documents as PatientDocument[]) : [],
     caregiver_assignments,
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),

@@ -22,6 +22,7 @@ import {
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
+import { PatientDocuments } from "./patient-documents";
 import { PatientAssessmentSection } from "@/features/patient-assessments/components/patient-assessment-section";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
@@ -253,6 +254,12 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                 </div>
                 <div>
                   <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Receita médica:</span>
+                  <PatientDocuments
+                    documents={patient.documents.filter((d) => d.kind === "prescription")}
+                  />
                 </div>
               </CardContent>
             </Card>
