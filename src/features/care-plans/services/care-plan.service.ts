@@ -166,6 +166,27 @@ function mapCarePlan(raw: Record<string, unknown>): CarePlan {
   };
 }
 
+export async function fetchCarePlans(params?: {
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ plans: CarePlan[]; total: number }> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+  if (params?.search) query.set("search", params.search);
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.pageSize) query.set("page_size", String(params.pageSize));
+  const qs = query.toString();
+  const data = await apiFetchClient<{ count: number; results: Record<string, unknown>[] }>(
+    `/care-plans/${qs ? `?${qs}` : ""}`
+  );
+  return {
+    plans: (data.results ?? []).map(mapCarePlan),
+    total: data.count ?? 0,
+  };
+}
+
 export async function fetchCarePlansForReview(): Promise<CarePlan[]> {
   const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(`/care-plans/?status=pending_review`);
   return (data.results ?? []).map(mapCarePlan);

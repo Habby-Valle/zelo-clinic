@@ -8,6 +8,7 @@ import {
   fetchCaregiverMatch,
   fetchCaregiverOptions,
   fetchCarePlanByPatient,
+  fetchCarePlans,
   fetchCarePlansForReview,
   fetchChecklistOptions,
   fetchChecklistSuggestions,
@@ -76,6 +77,18 @@ export function useSubmitCarePlan(patientId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["care-plan", patientId] });
     },
+  });
+}
+
+export function useCarePlans(params?: {
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  return useQuery({
+    queryKey: ["care-plans", "list", params],
+    queryFn: () => fetchCarePlans(params),
   });
 }
 

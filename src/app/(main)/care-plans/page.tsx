@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireClinicUser } from "@/lib/auth";
-import { CarePlansReviewClient } from "@/features/care-plans/components/care-plans-review-client";
+import { CarePlansListClient } from "@/features/care-plans/components/care-plans-list-client";
 
 export default async function CarePlansPage() {
   const { user } = await requireClinicUser();
@@ -8,5 +8,5 @@ export default async function CarePlansPage() {
   if (user.role !== "clinic_nurse" && user.role !== "super_admin") {
     redirect("/dashboard");
   }
-  return <CarePlansReviewClient />;
+  return <CarePlansListClient />;
 }
