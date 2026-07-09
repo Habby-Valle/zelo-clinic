@@ -51,4 +51,5 @@ export interface ShiftFilters {
   status?: string;
   page?: number;
   page_size?: number;
+  patient_id?: string;
 }

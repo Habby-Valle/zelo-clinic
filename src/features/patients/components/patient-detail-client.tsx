@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, startTransition, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { ArrowLeft, Loader2, Check, Users } from "lucide-react";
+import { ArrowLeft, Loader2, Check, Users, Calendar, Plus } from "lucide-react";
 import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -11,6 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,6 +34,28 @@ import { PatientDocuments } from "./patient-documents";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
+import { usePatientShifts } from "@/features/shifts/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { createShift } from "@/app/(main)/shifts/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -201,6 +231,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clinical">Clínico</TabsTrigger>
+          <TabsTrigger value="shifts">Turnos</TabsTrigger>
           <TabsTrigger value="record">Prontuário</TabsTrigger>
         </TabsList>
 
@@ -382,7 +413,220 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         <TabsContent value="record" className="mt-6 space-y-6">
           <PatientRecordSection patientId={id} />
         </TabsContent>
+
+        {/* Turnos */}
+        <TabsContent value="shifts" className="mt-6 space-y-6">
+          <PatientShiftsSection patientId={id} isNurse={isNurse} />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNurse: boolean }) {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = usePatientShifts(patientId);
+  const shifts = data?.shifts ?? [];
+  const { data: allCaregivers = [] } = useClinicCaregivers();
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [formCaregiver, setFormCaregiver] = useState("");
+  const [formStart, setFormStart] = useState("");
+  const [formEnd, setFormEnd] = useState("");
+  const [formNotes, setFormNotes] = useState("");
+
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["shifts"] });
+  }, [queryClient]);
+
+  function openCreate() {
+    setCreateOpen(true);
+    setFormCaregiver("");
+    setFormNotes("");
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    setFormStart(now.toISOString().slice(0, 16));
+    setFormEnd(later.toISOString().slice(0, 16));
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formCaregiver || !formStart || !formEnd) return;
+    setCreateLoading(true);
+    const result = await createShift({
+      caregiver_id: formCaregiver,
+      start: new Date(formStart).toISOString(),
+      end: new Date(formEnd).toISOString(),
+      notes: formNotes || undefined,
+      patient_id: patientId,
+    });
+    if (result.success) {
+      setCreateOpen(false);
+      invalidate();
+      result.warnings?.forEach((w) => toast.warning(w));
+    } else if (result.error) {
+      toast.error(result.error);
+    }
+    setCreateLoading(false);
+  }
+
+  function formatDateTime(dateStr: string) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    scheduled: "outline",
+    in_progress: "default",
+    completed: "secondary",
+    cancelled: "destructive",
+  };
+
+  const STATUS_LABELS: Record<string, string> = {
+    scheduled: "Agendado",
+    in_progress: "Em andamento",
+    completed: "Concluído",
+    cancelled: "Cancelado",
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              Turnos do Paciente
+            </CardTitle>
+            <CardDescription>Turnos agendados para este paciente.</CardDescription>
+          </div>
+          {!isNurse && (
+            <Button onClick={openCreate} size="sm">
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Turno
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cuidador</TableHead>
+              <TableHead>Início</TableHead>
+              <TableHead>Término</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                </TableRow>
+              ))
+            ) : shifts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  Nenhum turno encontrado para este paciente.
+                </TableCell>
+              </TableRow>
+            ) : (
+              shifts.map((shift) => (
+                <TableRow key={shift.id}>
+                  <TableCell className="font-medium">{shift.caregiver_name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDateTime(shift.start)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDateTime(shift.end)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={STATUS_VARIANTS[shift.status]}>
+                      {STATUS_LABELS[shift.status]}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Turno</DialogTitle>
+            <DialogDescription>
+              Agende um turno para este paciente.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="caregiver">Cuidador</Label>
+              <Select value={formCaregiver} onValueChange={(v) => v && setFormCaregiver(v)}>
+                <SelectTrigger id="caregiver">
+                  <SelectValue>
+                    {() => {
+                      const cg = allCaregivers.find((c) => c.id === formCaregiver);
+                      return cg?.name ?? "Selecione um cuidador";
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {allCaregivers.map((cg) => (
+                    <SelectItem key={cg.id} value={cg.id}>
+                      {cg.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="start">Início</Label>
+              <Input
+                id="start"
+                type="datetime-local"
+                value={formStart}
+                onChange={(e) => setFormStart(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end">Término</Label>
+              <Input
+                id="end"
+                type="datetime-local"
+                value={formEnd}
+                onChange={(e) => setFormEnd(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                rows={2}
+                placeholder="Instruções adicionais..."
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={createLoading || !formCaregiver || !formStart || !formEnd}>
+                {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Criar Turno
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

@@ -18,6 +18,7 @@ export async function fetchShiftsApi(
   const qs = new URLSearchParams();
   if (params.search) qs.set("search", params.search);
   if (params.status) qs.set("status", params.status);
+  if (params.patient_id) qs.set("patient_id", params.patient_id);
   qs.set("page", String(params.page ?? 1));
   qs.set("page_size", String(params.page_size ?? 20));
   const data = await apiFetchClient<ListResult<ShiftItem>>(`/shifts/?${qs}`);

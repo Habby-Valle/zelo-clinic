@@ -18,6 +18,10 @@ export function useShifts(params: ShiftFilters) {
   });
 }
 
+export function usePatientShifts(patientId: string) {
+  return useShifts({ patient_id: patientId, page_size: 10 });
+}
+
 export function useShift(id: string) {
   return useQuery({
     queryKey: ["shift", id],
