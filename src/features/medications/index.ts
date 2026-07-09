@@ -1,4 +1,5 @@
 export { MedicationSection } from "./components/medication-section";
+export { DeclaredMedications } from "./components/declared-medications";
 export { useMedications, useMedicationSuggestions } from "./hooks/use-medications";
 export type {
   Medication,

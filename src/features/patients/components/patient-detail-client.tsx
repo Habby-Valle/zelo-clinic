@@ -21,7 +21,7 @@ import {
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
-import { MedicationSection } from "@/features/medications";
+import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientAssessmentSection } from "@/features/patient-assessments/components/patient-assessment-section";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
@@ -248,7 +248,8 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                   <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
                 </div>
                 <div>
-                  <span className="font-medium">Medicamentos:</span> {patient.medications || "—"}
+                  <span className="font-medium">Medicamentos:</span>
+                  <DeclaredMedications text={patient.medications} />
                 </div>
                 <div>
                   <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
