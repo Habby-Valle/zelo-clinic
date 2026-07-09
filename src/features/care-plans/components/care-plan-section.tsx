@@ -31,7 +31,6 @@ import {
   useChecklistSuggestions,
   useSaveCarePlan,
 } from "../hooks/use-care-plans";
-import { usePatientAssessments } from "@/features/patient-assessments/hooks/use-patient-assessments";
 import type { CaregiverOption, CarePlanChecklistOverride, CarePlanChecklistItem, CarePlanGoal } from "../types";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
@@ -61,8 +60,6 @@ export function CarePlanSection({
   const { data: suggestions } = useChecklistSuggestions(patientId);
   const saveMutation = useSaveCarePlan(patientId, plan?.id);
   const submitMutation = useSubmitCarePlan(patientId);
-  const { data: assessments = [] } = usePatientAssessments(patientId);
-  const hasAssessment = assessments.length > 0;
 
   const [selected, setSelected] = useState<string[]>([]);
   const [responsibleName, setResponsibleName] = useState("");
@@ -241,7 +238,7 @@ export function CarePlanSection({
     })),
   });
 
-  const canSubmit = selected.length > 0 && hasAssessment;
+  const canSubmit = selected.length > 0;
 
   async function handleSave() {
     try {
@@ -289,13 +286,6 @@ export function CarePlanSection({
           <p className="text-sm text-muted-foreground">Carregando plano...</p>
         ) : (
           <>
-            {!hasAssessment && (
-              <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
-                Registre a avaliação clínica do paciente antes de ativar o
-                plano de cuidado.
-              </p>
-            )}
-
             {isActive && plan?.approved_by_name && (
               <p className="text-xs text-muted-foreground">
                 Aprovado por {plan.approved_by_name}

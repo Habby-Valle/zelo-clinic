@@ -23,7 +23,6 @@ import {
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientDocuments } from "./patient-documents";
-import { PatientAssessmentSection } from "@/features/patient-assessments/components/patient-assessment-section";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
@@ -358,16 +357,8 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
           )}
         </TabsContent>
 
-        {/* Clínico — avaliação, plano, medicações, alertas */}
+        {/* Clínico — plano, medicações, alertas (Avaliação Clínica adiada no MVP) */}
         <TabsContent value="clinical" className="mt-6 space-y-6">
-          {/* Avaliação Clínica — pré-requisito para ativar o plano de cuidado */}
-          {!isNurse && (
-            <PatientAssessmentSection
-              patientId={id}
-              declaredConditions={patient.health_conditions}
-            />
-          )}
-
           {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
           {!isNurse && (
             <CarePlanSection
