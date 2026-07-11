@@ -53,4 +53,6 @@ export interface ShiftFilters {
   page?: number;
   page_size?: number;
   patient_id?: string;
+  date_from?: string;
+  date_to?: string;
 }

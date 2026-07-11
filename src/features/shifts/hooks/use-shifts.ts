@@ -22,6 +22,25 @@ export function usePatientShifts(patientId: string) {
   return useShifts({ patient_id: patientId, page_size: 10 });
 }
 
+// Turnos de um paciente num intervalo de datas (para o calendário).
+export function usePatientShiftsRange(
+  patientId: string,
+  dateFrom: string,
+  dateTo: string
+) {
+  return useQuery({
+    queryKey: ["shifts", "range", patientId, dateFrom, dateTo],
+    queryFn: () =>
+      fetchShiftsApi({
+        patient_id: patientId,
+        date_from: dateFrom,
+        date_to: dateTo,
+        page_size: 100,
+      }),
+    enabled: !!patientId && !!dateFrom && !!dateTo,
+  });
+}
+
 export function useShift(id: string) {
   return useQuery({
     queryKey: ["shift", id],

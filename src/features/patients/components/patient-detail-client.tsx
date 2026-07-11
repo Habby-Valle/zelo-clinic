@@ -19,7 +19,6 @@ import { PatientDocuments } from "./patient-documents";
 import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
-import { usePatientShifts } from "@/features/shifts/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createShift, createRecurringShifts } from "@/app/(main)/shifts/actions";
@@ -28,7 +27,7 @@ import {
   shiftStartFromContract,
   WEEKDAY_LABELS,
 } from "@/features/shifts/lib/shift-time";
-import { ShiftWeekCalendar } from "@/features/shifts/components/shift-week-calendar";
+import { ShiftMonthCalendar } from "@/features/shifts/components/shift-month-calendar";
 import {
   Dialog,
   DialogContent,
@@ -372,8 +371,6 @@ function PatientShiftsSection({
   contractStartDate: string | null;
 }) {
   const queryClient = useQueryClient();
-  const { data, isLoading } = usePatientShifts(patientId);
-  const shifts = data?.shifts ?? [];
   const { data: allCaregivers = [] } = useClinicCaregivers();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -477,11 +474,7 @@ function PatientShiftsSection({
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <Skeleton className="h-40 w-full" />
-        ) : (
-          <ShiftWeekCalendar shifts={shifts} />
-        )}
+        <ShiftMonthCalendar patientId={patientId} />
       </CardContent>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
