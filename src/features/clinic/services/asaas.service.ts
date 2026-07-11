@@ -31,3 +31,58 @@ export async function testAsaasConnection(
     body: JSON.stringify({ api_key: apiKey }),
   });
 }
+
+export interface PlanSubscribeInput {
+  plan_id: string;
+  billing_type: "PIX" | "CREDIT_CARD";
+  billing_cycle: "MONTHLY" | "QUARTERLY" | "YEARLY";
+}
+
+export interface PlanSubscribeResult {
+  subscription_id: string;
+  pix_qr_code?: string;
+  pix_payload?: string;
+  checkout_url?: string;
+  billing_type: "PIX" | "CREDIT_CARD";
+}
+
+export async function subscribeToPlan(data: PlanSubscribeInput): Promise<PlanSubscribeResult> {
+  return apiFetchClient<PlanSubscribeResult>("/asaas/plans/subscribe/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function cancelPlanSubscription(): Promise<{ success: boolean }> {
+  return apiFetchClient<{ success: boolean }>("/asaas/plans/cancel/", {
+    method: "POST",
+  });
+}
+
+export interface AsaasPlanSubscriptionData {
+  subscription: {
+    id: string;
+    asaas_subscription_id: string;
+    billing_type: string;
+    status: string;
+    plan_name: string;
+    plan_price: string;
+    current_period_start: string;
+    current_period_end: string;
+    canceled_at: string | null;
+  } | null;
+  payments: {
+    id: string;
+    asaas_payment_id: string;
+    amount: string;
+    status: string;
+    payment_method: string;
+    paid_at: string | null;
+    due_date: string;
+    created_at: string;
+  }[];
+}
+
+export async function getPlanSubscription(): Promise<AsaasPlanSubscriptionData> {
+  return apiFetchClient<AsaasPlanSubscriptionData>("/asaas/plans/me/");
+}

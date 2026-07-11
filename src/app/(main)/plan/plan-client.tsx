@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, CreditCard, AlertCircle, Crown, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import {
+  Check, CreditCard, AlertCircle, Crown, CheckCircle, XCircle, Loader2,
+  QrCode, ShieldCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,10 +19,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { requestPlanChange, syncStripeSubscription, cancelSubscription } from "./actions";
+import { requestPlanChange, asaasSubscribe, cancelSubscription } from "./actions";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
 
 interface PlanCardProps {
@@ -284,6 +288,16 @@ export function PlanManagementClient({
   const [error, setError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [subscribeResult, setSubscribeResult] = useState<{
+    pixQrCode?: string;
+    pixPayload?: string;
+    checkoutUrl?: string;
+    billingType?: string;
+    error?: string;
+  } | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
   const currentStatus = currentPlan.clinicPlan?.status;
 
@@ -296,7 +310,6 @@ export function PlanManagementClient({
   useEffect(() => {
     const success = searchParams.get("success");
     const canceled = searchParams.get("canceled");
-    const portalReturn = searchParams.get("portal_return");
 
     if (success === "true") {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -311,45 +324,56 @@ export function PlanManagementClient({
         icon: <XCircle className="h-5 w-5 text-muted-foreground" />,
       });
       router.replace("/plan");
-    } else if (portalReturn === "true") {
-      router.replace("/plan");
-      syncStripeSubscription().then(({ synced }) => {
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        if (synced) {
-          toast.success("Assinatura cancelada com sucesso!", {
-            description: "Seu plano foi atualizado para Gratuito.",
-            icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          });
-        } else {
-          toast.info("Retorno do portal de pagamentos", {
-            description: "Suas alterações serão aplicadas em breve.",
-          });
-        }
-        router.refresh();
-      });
     }
   }, [searchParams, router, queryClient]);
 
   async function handleSubscribe(planId: string) {
-    setLoadingPlanId(planId);
-    setError(null);
-
     const result = await requestPlanChange(planId, "monthly");
-
-    if (result.success) {
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        toast.success("Plano ativado com sucesso!");
-        router.refresh();
-      }
-    } else {
-      setError(result.error ?? "Erro ao processar assinatura");
-      toast.error(result.error ?? "Erro ao processar assinatura");
+    if (!result.success) {
+      setError(result.error ?? "Erro ao processar");
+      toast.error(result.error ?? "Erro ao processar");
+      return;
     }
 
-    setLoadingPlanId(null);
+    // Plano gratuito
+    if (result.billingType === null) {
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success("Plano ativado com sucesso!");
+      router.refresh();
+      return;
+    }
+
+    // Plano pago: abre modal de escolha
+    setSelectedPlanId(planId);
+    setSubscribeResult(null);
+    setShowPaymentModal(true);
+  }
+
+  async function handlePaymentChoice(billingType: "PIX" | "CREDIT_CARD") {
+    if (!selectedPlanId) return;
+    setSubscribing(true);
+    setSubscribeResult(null);
+
+    const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
+
+    if (!result.success) {
+      setSubscribeResult({ error: result.error });
+      setSubscribing(false);
+      return;
+    }
+
+    setSubscribing(false);
+
+    if (result.billingType === "CREDIT_CARD" && result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+      return;
+    }
+
+    setSubscribeResult({
+      pixQrCode: result.pixQrCode,
+      pixPayload: result.pixPayload,
+      billingType: result.billingType,
+    });
   }
 
   async function handleCancelConfirm() {
@@ -390,7 +414,7 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? Sua assinatura Stripe será encerrada imediatamente e
+              Tem certeza que deseja cancelar? Sua assinatura será encerrada imediatamente e
               o plano será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser
               desfeita.
             </AlertDialogDescription>
@@ -406,6 +430,123 @@ export function PlanManagementClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Payment Method Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={(open) => { if (!open) { setShowPaymentModal(false); setSubscribeResult(null); }}}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Forma de Pagamento</DialogTitle>
+            <DialogDescription>
+              Escolha como deseja pagar sua assinatura.
+            </DialogDescription>
+          </DialogHeader>
+
+          {subscribeResult?.error && (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {subscribeResult.error}
+            </div>
+          )}
+
+          {subscribeResult?.pixQrCode ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
+                <QrCode className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">Pagamento via PIX</p>
+                  <p className="text-sm text-muted-foreground">
+                    Escaneie o QR Code ou copie o código abaixo.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src={`data:image/png;base64,${subscribeResult.pixQrCode}`}
+                  alt="QR Code PIX"
+                  className="h-48 w-48"
+                />
+              </div>
+              {subscribeResult.pixPayload && (
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg border bg-muted px-3 py-2 text-xs font-mono"
+                      value={subscribeResult.pixPayload}
+                      readOnly
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(subscribeResult.pixPayload!);
+                        toast.success("Código PIX copiado!");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <p className="text-center text-xs text-muted-foreground">
+                A assinatura será ativada automaticamente após a confirmação do pagamento.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                  router.refresh();
+                }}
+              >
+                Fechar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-14"
+                onClick={() => handlePaymentChoice("PIX")}
+                disabled={subscribing}
+              >
+                <QrCode className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">PIX</p>
+                  <p className="text-xs text-muted-foreground">Pagamento instantâneo via QR Code</p>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-14"
+                onClick={() => handlePaymentChoice("CREDIT_CARD")}
+                disabled={subscribing}
+              >
+                <CreditCard className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">Cartão de Crédito</p>
+                  <p className="text-xs text-muted-foreground">Pagamento via checkout seguro ASAAS</p>
+                </div>
+              </Button>
+              {subscribing && (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processando...
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => { setShowPaymentModal(false); setSubscribeResult(null); }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-4">
         <div>

@@ -134,10 +134,15 @@ export async function arePlansEnabled(): Promise<boolean> {
 export async function requestPlanChange(
   planId: string,
   billingCycle: "monthly" | "quarterly" | "annual" = "monthly"
-): Promise<{ success: boolean; error?: string; checkoutUrl?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  checkoutUrl?: string;
+  pixQrCode?: string;
+  pixPayload?: string;
+  billingType?: "PIX" | "CREDIT_CARD" | null;
+}> {
   const { user } = await requireClinicAdmin();
-  const clinicId = user.clinic_id;
-  if (!clinicId) return { success: false, error: "Clínica não encontrada." };
 
   let targetPlan: DjangoPlan | null = null;
   try {
@@ -157,53 +162,76 @@ export async function requestPlanChange(
       });
       revalidatePath("/plan");
       revalidatePath("/dashboard");
-      return { success: true };
+      return { success: true, billingType: null };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao ativar plano";
       return { success: false, error: msg };
     }
   }
 
-  const { cookies } = await import("next/headers");
-  const cookieStore = await cookies();
-  const token = cookieStore.get("ze_access")?.value;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
+  return { success: true };
+}
 
-  const stripeResponse = await fetch(`${baseUrl}/api/checkout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ planId, clinicId, billingCycle }),
-  });
-
-  const stripeData = await stripeResponse.json();
-
-  if (!stripeResponse.ok || !stripeData.url) {
+export async function asaasSubscribe(
+  planId: string,
+  billingType: "PIX" | "CREDIT_CARD",
+  billingCycle: "MONTHLY" | "QUARTERLY" | "YEARLY"
+): Promise<{
+  success: boolean;
+  error?: string;
+  checkoutUrl?: string;
+  pixQrCode?: string;
+  pixPayload?: string;
+  billingType?: "PIX" | "CREDIT_CARD";
+}> {
+  try {
+    const data = await apiFetchServer<{
+      subscription_id: string;
+      checkout_url?: string;
+      pix_qr_code?: string;
+      pix_payload?: string;
+      billing_type: "PIX" | "CREDIT_CARD";
+    }>("/asaas/plans/subscribe/", {
+      method: "POST",
+      body: JSON.stringify({ plan_id: planId, billing_type: billingType, billing_cycle: billingCycle }),
+    });
+    revalidatePath("/plan");
+    revalidatePath("/dashboard");
     return {
-      success: false,
-      error: stripeData.error ?? "Erro ao criar checkout",
+      success: true,
+      checkoutUrl: data.checkout_url,
+      pixQrCode: data.pix_qr_code,
+      pixPayload: data.pix_payload,
+      billingType: data.billing_type,
     };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Erro ao criar assinatura";
+    return { success: false, error: msg };
   }
-
-  return { success: true, checkoutUrl: stripeData.url };
 }
 
 export async function manageGetClinic(): Promise<{
   id: string;
   name: string;
-  stripe_customer_id: string | null;
+  subscription: {
+    asaas_subscription_id: string;
+    billing_type: string;
+    status: string;
+  } | null;
 } | null> {
   try {
-    const [clinicData, customerData] = await Promise.all([
-      apiFetchServer<{ id: string; name: string }>("/clinics/me/"),
-      apiFetchServer<{ stripe_customer_id: string | null }>("/payments/customer/me/"),
-    ]);
+    const clinicData = await apiFetchServer<{ id: string; name: string }>("/clinics/me/");
+    const subData = await apiFetchServer<{
+      subscription: {
+        asaas_subscription_id: string;
+        billing_type: string;
+        status: string;
+      } | null;
+    }>("/asaas/plans/me/");
     return {
       id: clinicData.id,
       name: clinicData.name,
-      stripe_customer_id: customerData.stripe_customer_id ?? null,
+      subscription: subData.subscription ?? null,
     };
   } catch {
     return null;
@@ -215,28 +243,12 @@ export async function cancelSubscription(): Promise<{
   error?: string;
 }> {
   try {
-    await apiFetchServer("/subscriptions/me/cancel/", { method: "POST", body: JSON.stringify({}) });
+    await apiFetchServer("/asaas/plans/cancel/", { method: "POST" });
     revalidatePath("/plan");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Erro ao cancelar assinatura";
     return { success: false, error: msg };
-  }
-}
-
-export async function syncStripeSubscription(): Promise<{ synced: boolean }> {
-  try {
-    const data = await apiFetchServer<{ status: string; synced: boolean }>(
-      "/subscriptions/me/sync-stripe/",
-      { method: "POST", body: JSON.stringify({}) }
-    );
-    if (data.synced) {
-      revalidatePath("/plan");
-      revalidatePath("/dashboard");
-    }
-    return { synced: data.synced ?? false };
-  } catch {
-    return { synced: false };
   }
 }
