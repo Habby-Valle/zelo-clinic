@@ -130,7 +130,6 @@ export function ShiftsClient() {
   const [createLoading, setCreateLoading] = useState(false);
   const [formPatient, setFormPatient] = useState("");
   const [formCaregiver, setFormCaregiver] = useState("");
-  const [formTemplate, setFormTemplate] = useState("");
   const [formStart, setFormStart] = useState("");
   const [formEnd, setFormEnd] = useState("");
   const [formNotes, setFormNotes] = useState("");
@@ -174,36 +173,12 @@ export function ShiftsClient() {
     setCreateOpen(true);
     setFormPatient("");
     setFormCaregiver("");
-    setFormTemplate("");
     setFormNotes("");
     const now = new Date();
     now.setSeconds(0, 0);
     const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
     setFormStart(now.toISOString().slice(0, 16));
     setFormEnd(later.toISOString().slice(0, 16));
-  }
-
-  function handleTemplateSelect(value: string | null) {
-    const v = value ?? "";
-    setFormTemplate(v);
-    const tpl = templates.find((t) => String(t.id) === v);
-    if (tpl) {
-      setFormNotes(tpl.instructions ?? "");
-      const now = new Date();
-      const [sh, sm] = tpl.start_time.split(":");
-      const [eh, em] = tpl.end_time.split(":");
-      now.setHours(parseInt(sh), parseInt(sm), 0, 0);
-      const startStr = now.toISOString().slice(0, 16);
-      now.setHours(parseInt(eh), parseInt(em), 0, 0);
-      const endStr = now.toISOString().slice(0, 16);
-      if (
-        parseInt(eh) > parseInt(sh) ||
-        (parseInt(eh) === parseInt(sh) && parseInt(em) > parseInt(sm))
-      ) {
-        setFormStart(startStr);
-        setFormEnd(endStr);
-      }
-    }
   }
 
   async function handleCreateShift(e: React.FormEvent) {
@@ -621,39 +596,6 @@ export function ShiftsClient() {
             <DialogDescription>Registre um novo turno de cuidados.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateShift} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Template (opcional)</Label>
-              <Select value={formTemplate} onValueChange={handleTemplateSelect}>
-                <SelectTrigger>
-                  <SelectValue>
-                    {(v: string | null) => {
-                      if (!v || v === "_empty") return "Selecione um template";
-                      const t = templates.find((t) => String(t.id) === v);
-                      return t?.name ?? v;
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.filter((t) => t.is_active).length === 0 ? (
-                    <SelectItem value="_empty" disabled>
-                      Nenhum template disponível
-                    </SelectItem>
-                  ) : (
-                    templates
-                      .filter((t) => t.is_active)
-                      .map((t) => (
-                        <SelectItem key={t.id} value={String(t.id)}>
-                          {t.name}
-                        </SelectItem>
-                      ))
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Preenche horário e observações automaticamente
-              </p>
-            </div>
-
             <div className="space-y-1.5">
               <Label>Cuidador *</Label>
               <Select
