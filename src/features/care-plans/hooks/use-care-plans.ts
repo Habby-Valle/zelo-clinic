@@ -17,7 +17,7 @@ import {
   updateCarePlan,
   updateCarePlanChecklists,
 } from "../services/care-plan.service";
-import type { SaveCarePlanInput } from "../types";
+import type { SaveCarePlanChecklist, SaveCarePlanInput } from "../types";
 
 export function useCarePlan(patientId: string) {
   return useQuery({
@@ -130,8 +130,13 @@ export function useReturnCarePlan() {
 export function useUpdateCarePlanChecklists() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ planId, checklistIds }: { planId: string; checklistIds: string[] }) =>
-      updateCarePlanChecklists(planId, checklistIds),
+    mutationFn: ({
+      planId,
+      checklists,
+    }: {
+      planId: string;
+      checklists: SaveCarePlanChecklist[];
+    }) => updateCarePlanChecklists(planId, checklists),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },

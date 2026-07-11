@@ -6,6 +6,7 @@ import type {
   CarePlanChecklistItem,
   CarePlanGoal,
   ChecklistOption,
+  SaveCarePlanChecklist,
   SaveCarePlanInput,
 } from "../types";
 
@@ -208,13 +209,11 @@ export async function submitCarePlan(id: string): Promise<CarePlan> {
 
 export async function updateCarePlanChecklists(
   id: string,
-  checklistIds: string[]
+  checklists: SaveCarePlanChecklist[]
 ): Promise<CarePlan> {
   const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/`, {
     method: "PATCH",
-    body: JSON.stringify({
-      checklists: checklistIds.map((cid) => ({ checklist_id: cid })),
-    }),
+    body: JSON.stringify({ checklists }),
   });
   return mapCarePlan(raw);
 }

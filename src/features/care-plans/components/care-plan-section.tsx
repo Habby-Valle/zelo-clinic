@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, startTransition, useCallback } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import {
   useCaregiverMatch,
   useSubmitCarePlan,
@@ -31,10 +30,11 @@ import {
   useChecklistSuggestions,
   useSaveCarePlan,
 } from "../hooks/use-care-plans";
-import type { CaregiverOption, CarePlanChecklistOverride, CarePlanChecklistItem, CarePlanGoal } from "../types";
+import type { CaregiverOption, CarePlanChecklistOverride, CarePlanGoal } from "../types";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 import { ChecklistDialog } from "@/features/checklists/components";
 import type { ChecklistDetail } from "@/features/checklists/types";
+import { ChecklistItemOverrideEditor } from "./checklist-item-override-editor";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "outline"> = {
   draft: "outline",
@@ -111,10 +111,6 @@ export function CarePlanSection({
       next[index] = { ...next[index], [field]: value };
       return next;
     });
-  }
-
-  function getChecklistItemOverrides(checklistId: string): Record<string, CarePlanChecklistOverride> {
-    return overridesByChecklist[checklistId] ?? {};
   }
 
   function setItemOverride(checklistId: string, itemId: string, override: CarePlanChecklistOverride) {
@@ -471,106 +467,15 @@ export function CarePlanSection({
 
                         {checked && expandedChecklist === cl.id && (
                           <div className="ml-6 mt-2 space-y-2 border-l-2 pl-3">
-                            {cl.items.map((item) => {
-                              const ov = itemOverrides[item.id];
-                              const isInactive = ov?.is_active === false;
-                              return (
-                                <div key={item.id} className="space-y-1.5 rounded-md border p-2 text-xs">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex-1">
-                                      <span className={cn("font-medium", isInactive && "text-muted-foreground line-through")}>
-                                        {item.name}
-                                      </span>
-                                      <div className="mt-0.5 flex flex-wrap gap-1">
-                                        <ItemMetaBadge item={item} />
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Label className="text-[10px] text-muted-foreground">Inativo</Label>
-                                      <Switch
-                                        checked={!isInactive}
-                                        onCheckedChange={(v) => {
-                                          if (v) {
-                                            removeItemOverride(cl.id, item.id);
-                                          } else {
-                                            setItemOverride(cl.id, item.id, {
-                                              item_id: item.id,
-                                              is_active: false,
-                                            });
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {!isInactive && item.type === "number" && (
-                                    <div className="mt-1 grid grid-cols-2 gap-2">
-                                      <div>
-                                        <Label className="text-[10px] text-muted-foreground">
-                                          Min. esperado {item.unit ? `(${item.unit})` : ""}
-                                        </Label>
-                                        <Input
-                                          className="h-7 text-xs"
-                                          type="number"
-                                          step="any"
-                                          placeholder={item.expected_min?.toString() ?? "—"}
-                                          value={ov?.expected_min?.toString() ?? ""}
-                                          onChange={(e) => {
-                                            const v = e.target.value;
-                                            setItemOverride(cl.id, item.id, {
-                                              item_id: item.id,
-                                              expected_min: v === "" ? null : Number(v),
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label className="text-[10px] text-muted-foreground">
-                                          Máx. esperado {item.unit ? `(${item.unit})` : ""}
-                                        </Label>
-                                        <Input
-                                          className="h-7 text-xs"
-                                          type="number"
-                                          step="any"
-                                          placeholder={item.expected_max?.toString() ?? "—"}
-                                          value={ov?.expected_max?.toString() ?? ""}
-                                          onChange={(e) => {
-                                            const v = e.target.value;
-                                            setItemOverride(cl.id, item.id, {
-                                              item_id: item.id,
-                                              expected_max: v === "" ? null : Number(v),
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {!isInactive && item.frequency === "fixed_times" && (
-                                    <div className="mt-1">
-                                      <Label className="text-[10px] text-muted-foreground">
-                                        Horários (separados por vírgula)
-                                      </Label>
-                                      <Input
-                                        className="h-7 text-xs"
-                                        value={(ov?.scheduled_times ?? item.scheduled_times).join(",")}
-                                        onChange={(e) => {
-                                          const times = e.target.value
-                                            .split(",")
-                                            .map((t) => t.trim())
-                                            .filter(Boolean);
-                                          setItemOverride(cl.id, item.id, {
-                                            item_id: item.id,
-                                            scheduled_times: times.length > 0 ? times : null,
-                                          });
-                                        }}
-                                        placeholder={item.scheduled_times.join(",") || "08:00,14:00"}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                            {cl.items.map((item) => (
+                              <ChecklistItemOverrideEditor
+                                key={item.id}
+                                item={item}
+                                override={itemOverrides[item.id]}
+                                onSetOverride={(o) => setItemOverride(cl.id, item.id, o)}
+                                onRemoveOverride={() => removeItemOverride(cl.id, item.id)}
+                              />
+                            ))}
                           </div>
                         )}
                       </div>
@@ -665,26 +570,6 @@ export function CarePlanSection({
         onCreated={handleChecklistCreated}
       />
     </Card>
-  );
-}
-
-function ItemMetaBadge({ item }: { item: CarePlanChecklistItem }) {
-  const labels: string[] = [];
-  if (item.criticality === "high") labels.push("Alta");
-  if (item.requires_photo) labels.push("Foto");
-  if (item.type === "number" && item.unit) labels.push(item.unit);
-  if (item.frequency === "fixed_times" && item.scheduled_times.length > 0) {
-    labels.push(`${item.scheduled_times.length} horários`);
-  }
-  if (labels.length === 0) return null;
-  return (
-    <>
-      {labels.map((l) => (
-        <Badge key={l} variant="outline" className="text-[10px]">
-          {l}
-        </Badge>
-      ))}
-    </>
   );
 }
 
