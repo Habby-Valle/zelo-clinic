@@ -17,7 +17,7 @@ export async function fetchMyFeedbacks(
 export async function uploadMediaApi(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
-  const data = await apiFetchClient<{ id: string }>("/media/", {
+  const data = await apiFetchClient<{ id: string }>("/media/upload/", {
     method: "POST",
     body: formData,
   });
