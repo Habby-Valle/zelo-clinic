@@ -5,10 +5,34 @@ import { Calendar, dateFnsLocalizer, type Event, type View } from "react-big-cal
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { usePatientShiftsRange } from "../hooks/use-shifts";
 import type { ShiftItem } from "../types";
 import { mondayOf, addDays, localDateKey } from "../lib/shift-time";
+
+const STATUS_LABEL: Record<ShiftItem["status"], string> = {
+  scheduled: "Agendado",
+  in_progress: "Em andamento",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+};
+
+const STATUS_BADGE: Record<ShiftItem["status"], "default" | "secondary" | "destructive" | "outline"> = {
+  scheduled: "outline",
+  in_progress: "default",
+  completed: "secondary",
+  cancelled: "destructive",
+};
 
 const localizer = dateFnsLocalizer({
   format,
@@ -27,6 +51,7 @@ const STATUS_COLOR: Record<ShiftItem["status"], string> = {
 
 interface ShiftEvent extends Event {
   status: ShiftItem["status"];
+  shift: ShiftItem;
 }
 
 // Lacuna = dia sem turno cujo MESMO dia da semana é coberto antes e depois
@@ -74,11 +99,13 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
         start: new Date(s.start),
         end: new Date(s.end),
         status: s.status,
+        shift: s,
       })),
     [shifts]
   );
 
   const gapDays = useMemo(() => computeGapDays(shifts, gridStart), [shifts, gridStart]);
+  const [selected, setSelected] = useState<ShiftItem | null>(null);
 
   return (
     <div className="space-y-2">
@@ -95,6 +122,7 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
             view={view}
             onView={(v) => setView(v)}
             views={["month", "week", "day", "agenda"]}
+            onSelectEvent={(e) => setSelected((e as ShiftEvent).shift)}
             popup
             eventPropGetter={(event) => {
               const e = event as ShiftEvent;
@@ -145,6 +173,57 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
           agendado — possível conflito de escala).
         </p>
       )}
+
+      <Dialog open={selected !== null} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Turno
+              {selected && (
+                <Badge variant={STATUS_BADGE[selected.status]}>
+                  {STATUS_LABEL[selected.status]}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium">Cuidador:</span> {selected.caregiver_name}
+              </div>
+              <div>
+                <span className="font-medium">Data:</span>{" "}
+                {new Date(selected.start).toLocaleDateString("pt-BR", {
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </div>
+              <div>
+                <span className="font-medium">Horário:</span>{" "}
+                {new Date(selected.start).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {" – "}
+                {new Date(selected.end).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            {selected && (
+              <Link href={`/shifts/${selected.id}`}>
+                <Button variant="outline">Abrir turno</Button>
+              </Link>
+            )}
+            <Button onClick={() => setSelected(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
