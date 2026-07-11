@@ -191,6 +191,7 @@ export function CarePlanSection({
   }, [caregivers, caregiverQuery]);
 
   function selectCaregiver(c: CaregiverOption) {
+    if (!c.id) return; // sem PK válida não dá para vincular o cuidador ao paciente
     setCaregiverId(c.id);
     setCaregiverQuery(c.name);
     setCaregiverFocused(false);
