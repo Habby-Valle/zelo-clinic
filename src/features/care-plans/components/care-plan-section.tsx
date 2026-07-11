@@ -48,14 +48,12 @@ interface CarePlanSectionProps {
   patientId: string;
   healthStatus: string;
   healthConditions: string;
-  medications: string;
 }
 
 export function CarePlanSection({
   patientId,
   healthStatus,
   healthConditions,
-  medications,
 }: CarePlanSectionProps) {
   const queryClient = useQueryClient();
   const { data: plan, isLoading } = useCarePlan(patientId);
@@ -174,8 +172,8 @@ export function CarePlanSection({
     if (suggestions && suggestions.suggestions.length > 0) {
       return suggestions.suggestions.map((cl) => cl.id);
     }
+    // Medicação não entra como checklist genérico: administração é via MAR.
     const wanted = new Set<string>(["vitals", "hygiene"]);
-    if (medications.trim()) wanted.add("medication");
     const conditions = healthConditions.toLowerCase();
     const mobilityKw = [
       "acamad",
@@ -190,7 +188,7 @@ export function CarePlanSection({
     ];
     if (mobilityKw.some((k) => conditions.includes(k))) wanted.add("mobility");
     return checklistOptions.filter((c) => wanted.has(c.category)).map((c) => c.id);
-  }, [checklistOptions, medications, healthConditions, suggestions]);
+  }, [checklistOptions, healthConditions, suggestions]);
 
   const caregiverSuggestions = useMemo(() => {
     const q = caregiverQuery.trim().toLowerCase();

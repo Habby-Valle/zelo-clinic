@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Loader2, Trash2, Pill } from "lucide-react";
+import { Plus, Loader2, Trash2, Pill, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -16,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PatientDocuments } from "@/features/patients/components/patient-documents";
+import type { PatientDocument } from "@/features/patients/types";
 import {
   useMedications,
   useMedicationSuggestions,
@@ -26,10 +35,23 @@ import {
 import type { Medication, MedicationSuggestion, SaveMedicationInput } from "../types";
 import { MEDICATION_ROUTE_LABELS, type MedicationRoute } from "../types";
 import { parseDeclaredMedications } from "../lib/parse-declared";
+import { parseDeclaredMedicationDetails } from "../lib/parse-declared-detail";
 
 interface MedicationSectionProps {
   patientId: string;
   declaredMedications?: string;
+  prescriptions?: PatientDocument[];
+}
+
+// Horário-padrão sugerido quando a família declara só o turno (sem HH:MM).
+const TURN_DEFAULT_TIME: Record<string, string> = {
+  Manhã: "08:00",
+  Tarde: "14:00",
+  Noite: "20:00",
+};
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function emptyForm(): SaveMedicationInput {
@@ -41,10 +63,16 @@ function emptyForm(): SaveMedicationInput {
     prescribed_by: "",
     notes: "",
     is_active: true,
+    start_date: today(),
+    end_date: null,
   };
 }
 
-export function MedicationSection({ patientId, declaredMedications }: MedicationSectionProps) {
+export function MedicationSection({
+  patientId,
+  declaredMedications,
+  prescriptions = [],
+}: MedicationSectionProps) {
   const { data: medications = [], isLoading } = useMedications(patientId);
   const createMutation = useCreateMedication(patientId);
   const updateMutation = useUpdateMedication(patientId);
@@ -53,6 +81,9 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<SaveMedicationInput>(emptyForm());
   const [timesCsv, setTimesCsv] = useState("");
+  // Uso contínuo = sem data de término (end_date nulo).
+  const [continuous, setContinuous] = useState(true);
+  const [showReceita, setShowReceita] = useState(false);
 
   const busy = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
@@ -68,19 +99,32 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
     : [];
 
   function applySuggestion(s: MedicationSuggestion) {
-    // Só o nome é pré-preenchido. Dose, via e horários vêm da receita — manuais.
+    // Pré-preenche com o que a família declarou (nome, dose, horários) como
+    // rascunho — a enfermeira confere/ajusta na receita antes de salvar.
+    const detail = parseDeclaredMedicationDetails(declaredMedications ?? "").find(
+      (d) => d.name.toLowerCase() === s.name.toLowerCase()
+    );
+    const times = detail?.times.length
+      ? detail.times
+      : (detail?.turns ?? [])
+          .map((t) => TURN_DEFAULT_TIME[t])
+          .filter(Boolean);
     setForm({
       ...emptyForm(),
       name: s.name,
-      notes: `Declarado pela família: "${s.source_text}" — conferir dose e via na receita.`,
+      dose: detail?.dose ?? "",
+      schedule_times: times,
+      notes: `Declarado pela família: "${s.source_text}" — validar dose e via na receita.`,
     });
-    setTimesCsv("");
+    setTimesCsv(times.join(","));
+    setContinuous(true);
     setShowForm(true);
   }
 
   function resetForm() {
     setForm(emptyForm());
     setTimesCsv("");
+    setContinuous(true);
     setShowForm(false);
   }
 
@@ -92,6 +136,7 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
     try {
       await createMutation.mutateAsync({
         ...form,
+        end_date: continuous ? null : form.end_date,
         schedule_times: timesCsv
           .split(",")
           .map((t) => t.trim())
@@ -128,11 +173,23 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Pill className="h-5 w-5 text-muted-foreground" />
-          Medicações
-        </CardTitle>
-        <CardDescription>Medicações prescritas e horários de administração (MAR).</CardDescription>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Pill className="h-5 w-5 text-muted-foreground" />
+              Medicações
+            </CardTitle>
+            <CardDescription>
+              Medicações prescritas e horários de administração (MAR).
+            </CardDescription>
+          </div>
+          {prescriptions.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setShowReceita(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Consultar receita
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
@@ -224,7 +281,7 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Prescrito por</Label>
+                <Label className="text-xs">Prescrito por (da receita, se houver)</Label>
                 <Input
                   className="h-8 text-xs"
                   value={form.prescribed_by}
@@ -242,22 +299,37 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Data início</Label>
+                <Label className="text-xs">Início da administração</Label>
                 <Input
                   className="h-8 text-xs"
                   type="date"
                   value={form.start_date ?? ""}
                   onChange={(e) => setForm({ ...form, start_date: e.target.value || null })}
                 />
+                <p className="text-[10px] text-muted-foreground">
+                  Quando os cuidadores começam a administrar (não gera doses no passado).
+                </p>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Data fim</Label>
+                <Label className="text-xs">Término</Label>
                 <Input
                   className="h-8 text-xs"
                   type="date"
                   value={form.end_date ?? ""}
+                  disabled={continuous}
                   onChange={(e) => setForm({ ...form, end_date: e.target.value || null })}
                 />
+                <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <Checkbox
+                    checked={continuous}
+                    onCheckedChange={(v) => {
+                      const on = v === true;
+                      setContinuous(on);
+                      if (on) setForm((f) => ({ ...f, end_date: null }));
+                    }}
+                  />
+                  Uso contínuo (sem data de término)
+                </label>
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <Label className="text-xs">Observações</Label>
@@ -284,8 +356,8 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
         {!showForm && suggestions.length > 0 && (
           <div className="rounded-lg border border-dashed p-3">
             <p className="mb-2 text-xs text-muted-foreground">
-              Nomes citados pela família. Dose, via e horários devem ser preenchidos a partir da
-              receita médica.
+              Declarados pela família. Ao aplicar, nome, dose e horários vêm como rascunho —
+              valide na receita antes de salvar.
             </p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s, i) => (
@@ -312,6 +384,18 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
           </Button>
         )}
       </CardContent>
+
+      <Dialog open={showReceita} onOpenChange={setShowReceita}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Receita médica
+            </DialogTitle>
+          </DialogHeader>
+          <PatientDocuments documents={prescriptions} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

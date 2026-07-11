@@ -329,13 +329,16 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
               patientId={id}
               healthStatus={patient.health_status}
               healthConditions={patient.health_conditions}
-              medications={patient.medications}
             />
           )}
 
           {/* Medicações (MAR) */}
           {!isNurse && (
-            <MedicationSection patientId={id} declaredMedications={patient.medications} />
+            <MedicationSection
+              patientId={id}
+              declaredMedications={patient.medications}
+              prescriptions={patient.documents.filter((d) => d.kind === "prescription")}
+            />
           )}
 
           {/* Alertas de Saúde */}
