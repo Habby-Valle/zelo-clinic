@@ -47,6 +47,51 @@ export async function createShift(data: {
   }
 }
 
+export async function createRecurringShifts(data: {
+  caregiver_id: string;
+  patient_id: string;
+  start_date: string;
+  end_date: string;
+  weekdays: number[];
+  start_time: string;
+  end_time: string;
+  notes?: string;
+}): Promise<{
+  success: boolean;
+  error?: string;
+  created?: number;
+  skipped?: number;
+}> {
+  try {
+    await requireClinicAdmin();
+
+    if (
+      !data.caregiver_id ||
+      !data.patient_id ||
+      !data.start_date ||
+      !data.end_date ||
+      data.weekdays.length === 0 ||
+      !data.start_time ||
+      !data.end_time
+    ) {
+      return { success: false, error: "Preencha cuidador, paciente, período, dias e horário." };
+    }
+
+    const result = await apiFetchServer<{ created: number; skipped: number }>(
+      "/shifts/recurring/",
+      { method: "POST", body: JSON.stringify(data) }
+    );
+
+    revalidatePath("/shifts");
+    return { success: true, created: result.created, skipped: result.skipped };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Erro ao criar turnos recorrentes",
+    };
+  }
+}
+
 export async function finishShift(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();

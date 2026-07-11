@@ -60,6 +60,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useShifts, useShiftTemplates, useClinicPatients, useClinicCaregivers } from "../hooks";
 import {
   createShift,
+  createRecurringShifts,
   finishShift,
   cancelShift,
   deleteShift,
@@ -133,6 +134,10 @@ export function ShiftsClient() {
   const [formStart, setFormStart] = useState("");
   const [formEnd, setFormEnd] = useState("");
   const [formNotes, setFormNotes] = useState("");
+  // Recorrência: repete o turno nos dias da semana marcados até a data final.
+  const [formRepeat, setFormRepeat] = useState(false);
+  const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
+  const [formRecurEnd, setFormRecurEnd] = useState("");
 
   const caregiverPatients = formCaregiver
     ? patients.filter((p) => p.caregiver_ids.includes(formCaregiver))
@@ -174,6 +179,9 @@ export function ShiftsClient() {
     setFormPatient("");
     setFormCaregiver("");
     setFormNotes("");
+    setFormRepeat(false);
+    setFormWeekdays([]);
+    setFormRecurEnd("");
     const now = new Date();
     now.setSeconds(0, 0);
     const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
@@ -184,6 +192,41 @@ export function ShiftsClient() {
   async function handleCreateShift(e: React.FormEvent) {
     e.preventDefault();
     if (!formCaregiver || !formStart || !formEnd) return;
+
+    if (formRepeat) {
+      if (!formPatient) {
+        toast.error("Selecione o paciente para o turno recorrente.");
+        return;
+      }
+      if (formWeekdays.length === 0 || !formRecurEnd) {
+        toast.error("Marque os dias da semana e a data final da recorrência.");
+        return;
+      }
+      setCreateLoading(true);
+      const result = await createRecurringShifts({
+        caregiver_id: formCaregiver,
+        patient_id: formPatient,
+        start_date: formStart.slice(0, 10),
+        end_date: formRecurEnd,
+        weekdays: formWeekdays,
+        start_time: formStart.slice(11, 16),
+        end_time: formEnd.slice(11, 16),
+        notes: formNotes || undefined,
+      });
+      if (result.success) {
+        setCreateOpen(false);
+        invalidateShifts();
+        toast.success(
+          `${result.created} turno(s) criado(s).` +
+            (result.skipped ? ` ${result.skipped} pulado(s) por conflito.` : "")
+        );
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+      setCreateLoading(false);
+      return;
+    }
+
     setCreateLoading(true);
     const result = await createShift({
       caregiver_id: formCaregiver,
@@ -702,6 +745,59 @@ export function ShiftsClient() {
               </div>
             </div>
 
+            <div className="space-y-2 rounded-lg border p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => setFormRepeat(v === true)}
+                />
+                Repetir (turno recorrente)
+              </label>
+              {formRepeat && (
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Usa o <strong>horário</strong> de Início/Fim acima e a <strong>data</strong> de
+                    Início como primeiro dia; repete nos dias marcados até a data final.
+                  </p>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Dias da semana</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((d, i) => {
+                        const on = formWeekdays.includes(i);
+                        return (
+                          <Button
+                            key={i}
+                            type="button"
+                            size="sm"
+                            variant={on ? "default" : "outline"}
+                            className="h-8 w-11 px-0 text-xs"
+                            onClick={() =>
+                              setFormWeekdays((prev) =>
+                                on ? prev.filter((w) => w !== i) : [...prev, i]
+                              )
+                            }
+                          >
+                            {d}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="shift-recur-end" className="text-xs">
+                      Repetir até
+                    </Label>
+                    <Input
+                      id="shift-recur-end"
+                      type="date"
+                      value={formRecurEnd}
+                      onChange={(e) => setFormRecurEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="shift-notes">Observações</Label>
               <Textarea
@@ -726,10 +822,16 @@ export function ShiftsClient() {
               </Button>
               <Button
                 type="submit"
-                disabled={createLoading || !formCaregiver || !formStart || !formEnd}
+                disabled={
+                  createLoading ||
+                  !formCaregiver ||
+                  !formStart ||
+                  !formEnd ||
+                  (formRepeat && (!formPatient || formWeekdays.length === 0 || !formRecurEnd))
+                }
               >
                 {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Criar Turno
+                {formRepeat ? "Criar Turnos" : "Criar Turno"}
               </Button>
             </div>
           </form>
