@@ -101,9 +101,15 @@ export function MedicationSection({
   function applySuggestion(s: MedicationSuggestion) {
     // Pré-preenche com o que a família declarou (nome, dose, horários) como
     // rascunho — a enfermeira confere/ajusta na receita antes de salvar.
-    const detail = parseDeclaredMedicationDetails(declaredMedications ?? "").find(
-      (d) => d.name.toLowerCase() === s.name.toLowerCase()
-    );
+    // Match tolerante: a sugestão pode carregar a dose no nome ("Nome (50mg)"),
+    // então normaliza removendo parênteses; cai para o trecho de origem.
+    const norm = (x: string) =>
+      x.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    const details = parseDeclaredMedicationDetails(declaredMedications ?? "");
+    const target = norm(s.name);
+    const detail =
+      details.find((d) => norm(d.name) === target) ??
+      details.find((d) => (s.source_text ?? "").toLowerCase().includes(d.name.toLowerCase()));
     const times = detail?.times.length
       ? detail.times
       : (detail?.turns ?? [])
