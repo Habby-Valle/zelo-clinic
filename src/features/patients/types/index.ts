@@ -27,7 +27,6 @@ export interface PatientDocument {
 export interface ClinicPatient {
   id: string;
   clinic_id: string | null;
-  guardian_id: string | null;
   name: string;
   birth_date: string;
   gender: "M" | "F" | "O";

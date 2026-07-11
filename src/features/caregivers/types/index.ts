@@ -23,7 +23,6 @@ export interface CaregiverInvite {
   status: "pending" | "accepted" | "expired" | "cancelled";
   created_by_name: string;
   clinic_id: string;
-  guardian_id: string | null;
   patient_id: string | null;
   created_at: string;
   expires_at: string;

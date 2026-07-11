@@ -15,7 +15,6 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
   return {
     id: String(r.id ?? ""),
     clinic_id: r.clinic_id != null ? String(r.clinic_id) : null,
-    guardian_id: r.guardian_id != null ? String(r.guardian_id) : null,
     name: String(r.name ?? ""),
     birth_date: String(r.birth_date ?? ""),
     gender: (r.gender as ClinicPatient["gender"]) ?? "O",
