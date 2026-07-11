@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireClinicUser } from "@/lib/auth";
-import { CarePlansListClient } from "@/features/care-plans/components/care-plans-list-client";
+import { CarePlansEntryClient } from "@/features/care-plans/components/care-plans-entry-client";
 
 export default async function CarePlansPage() {
   const { user } = await requireClinicUser();
@@ -8,5 +8,6 @@ export default async function CarePlansPage() {
   if (user.role !== "clinic_nurse" && user.role !== "super_admin") {
     redirect("/dashboard");
   }
-  return <CarePlansListClient />;
+  // Havendo plano pendente, o enfermeiro cai direto na curadoria; senão, listagem.
+  return <CarePlansEntryClient />;
 }
