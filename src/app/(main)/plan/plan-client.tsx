@@ -29,6 +29,7 @@ import type { Plan, ClinicPlan } from "@/features/plan/types";
 interface PlanCardProps {
   plan: Plan;
   isCurrentPlan: boolean;
+  hasActivePaidPlan: boolean;
   onSubscribe: (planId: string) => void;
   loadingPlanId: string | null;
   disabled?: boolean;
@@ -45,6 +46,7 @@ function formatPrice(price: number): string {
 function PlanCard({
   plan,
   isCurrentPlan,
+  hasActivePaidPlan,
   onSubscribe,
   loadingPlanId,
   disabled,
@@ -105,7 +107,7 @@ function PlanCard({
         {!isCurrentPlan && (
           <Button
             className="w-full"
-            variant="outline"
+            variant={hasActivePaidPlan ? "default" : "outline"}
             onClick={() => onSubscribe(plan.id)}
             disabled={isLoading || disabled}
           >
@@ -117,7 +119,9 @@ function PlanCard({
             ) : disabled ? (
               (disabledReason ?? "Indisponível")
             ) : plan.monthly_price === 0 ? (
-              "Selecionar plano gratuito"
+              hasActivePaidPlan ? "Mudar para gratuito" : "Selecionar plano gratuito"
+            ) : hasActivePaidPlan ? (
+              "Alterar para este plano"
             ) : (
               "Assinar agora"
             )}
@@ -289,6 +293,8 @@ export function PlanManagementClient({
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showChangeDialog, setShowChangeDialog] = useState(false);
+  const [changeTargetPlanId, setChangeTargetPlanId] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [subscribeResult, setSubscribeResult] = useState<{
     pixQrCode?: string;
@@ -327,6 +333,9 @@ export function PlanManagementClient({
     }
   }, [searchParams, router, queryClient]);
 
+  const hasPaidPlan = currentPlan.clinicPlan?.status === "active"
+    && (currentPlan.plan?.monthly_price ?? 0) > 0;
+
   async function handleSubscribe(planId: string) {
     const result = await requestPlanChange(planId, "monthly");
     if (!result.success) {
@@ -335,15 +344,26 @@ export function PlanManagementClient({
       return;
     }
 
-    // Plano gratuito
     if (result.billingType === null) {
+      // Plano gratuito: se tiver plano pago, pede confirmacao
+      if (hasPaidPlan) {
+        setChangeTargetPlanId(planId);
+        setShowChangeDialog(true);
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Plano ativado com sucesso!");
       router.refresh();
       return;
     }
 
-    // Plano pago: abre modal de escolha
+    // Plano pago: se ja tem outro plano pago, pede confirmacao
+    if (hasPaidPlan) {
+      setChangeTargetPlanId(planId);
+      setShowChangeDialog(true);
+      return;
+    }
+
     setSelectedPlanId(planId);
     setSubscribeResult(null);
     setShowPaymentModal(true);
@@ -548,6 +568,49 @@ export function PlanManagementClient({
         </DialogContent>
       </Dialog>
 
+      {/* Change plan confirmation */}
+      <AlertDialog open={showChangeDialog} onOpenChange={setShowChangeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar plano</AlertDialogTitle>
+            <AlertDialogDescription>
+              {hasPaidPlan
+                ? "Você já possui um plano pago ativo. Ao alterar, sua assinatura atual será cancelada e uma nova será criada. Deseja continuar?"
+                : "Deseja alterar para este plano?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowChangeDialog(false);
+                const pid = changeTargetPlanId;
+                if (!pid) return;
+                const resultPromise = requestPlanChange(pid, "monthly");
+                resultPromise.then((result) => {
+                  if (!result.success) {
+                    setError(result.error ?? "Erro ao processar");
+                    toast.error(result.error ?? "Erro ao processar");
+                    return;
+                  }
+                  if (result.billingType === null) {
+                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                    toast.success("Plano alterado com sucesso!");
+                    router.refresh();
+                  } else {
+                    setSelectedPlanId(pid);
+                    setSubscribeResult(null);
+                    setShowPaymentModal(true);
+                  }
+                });
+              }}
+            >
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold">Planos Disponíveis</h2>
@@ -578,6 +641,7 @@ export function PlanManagementClient({
                 key={plan.id}
                 plan={plan}
                 isCurrentPlan={plan.id === currentPlanId}
+                hasActivePaidPlan={hasPaidPlan}
                 onSubscribe={handleSubscribe}
                 loadingPlanId={loadingPlanId}
                 disabled={disabled}
