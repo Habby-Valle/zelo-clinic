@@ -429,6 +429,11 @@ export function CarePlanSection({
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6"
+                              aria-label={
+                                expandedChecklist === cl.id
+                                  ? "Ocultar ajustes"
+                                  : "Ajustar itens"
+                              }
                               onClick={() => toggleChecklistExpanded(cl.id)}
                             >
                               {expandedChecklist === cl.id ? (
@@ -439,6 +444,30 @@ export function CarePlanSection({
                             </Button>
                           )}
                         </div>
+
+                        {checked && expandedChecklist !== cl.id && cl.items.length > 0 && (
+                          <ul className="ml-6 mt-2 space-y-1 border-l-2 pl-3">
+                            {cl.items.map((item) => {
+                              const isInactive = itemOverrides[item.id]?.is_active === false;
+                              return (
+                                <li
+                                  key={item.id}
+                                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                                >
+                                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                                  <span className={cn(isInactive && "line-through")}>
+                                    {item.name}
+                                  </span>
+                                  {item.required && !isInactive && (
+                                    <span className="text-[10px] text-destructive">
+                                      obrigatório
+                                    </span>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
 
                         {checked && expandedChecklist === cl.id && (
                           <div className="ml-6 mt-2 space-y-2 border-l-2 pl-3">
