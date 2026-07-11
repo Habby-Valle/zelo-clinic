@@ -44,6 +44,7 @@ export interface ClinicPatient {
   media: { id: string; url: string } | null;
   clinic_name: string | null;
   is_active: boolean;
+  contract_start_date: string | null;
   emergency_contacts: EmergencyContactInfo[];
   caregiver_assignments: CaregiverAssignment[];
   documents: PatientDocument[];

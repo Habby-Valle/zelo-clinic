@@ -30,7 +30,12 @@ import { HealthAlertsSection } from "@/features/health-alerts/components/health-
 import { usePatientShifts } from "@/features/shifts/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createShift } from "@/app/(main)/shifts/actions";
+import { createShift, createRecurringShifts } from "@/app/(main)/shifts/actions";
+import {
+  shiftDateTimes,
+  shiftStartFromContract,
+  WEEKDAY_LABELS,
+} from "@/features/shifts/lib/shift-time";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +54,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -352,14 +358,26 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
         {/* Turnos */}
         <TabsContent value="shifts" className="mt-6 space-y-6">
-          <PatientShiftsSection patientId={id} isNurse={isNurse} />
+          <PatientShiftsSection
+            patientId={id}
+            isNurse={isNurse}
+            contractStartDate={patient.contract_start_date}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNurse: boolean }) {
+function PatientShiftsSection({
+  patientId,
+  isNurse,
+  contractStartDate,
+}: {
+  patientId: string;
+  isNurse: boolean;
+  contractStartDate: string | null;
+}) {
   const queryClient = useQueryClient();
   const { data, isLoading } = usePatientShifts(patientId);
   const shifts = data?.shifts ?? [];
@@ -368,9 +386,13 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [formCaregiver, setFormCaregiver] = useState("");
-  const [formStart, setFormStart] = useState("");
-  const [formEnd, setFormEnd] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formStartTime, setFormStartTime] = useState("08:00");
+  const [formEndTime, setFormEndTime] = useState("20:00");
   const [formNotes, setFormNotes] = useState("");
+  const [formRepeat, setFormRepeat] = useState(false);
+  const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
+  const [formRecurEnd, setFormRecurEnd] = useState("");
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["shifts"] });
@@ -380,21 +402,55 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
     setCreateOpen(true);
     setFormCaregiver("");
     setFormNotes("");
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    setFormStart(now.toISOString().slice(0, 16));
-    setFormEnd(later.toISOString().slice(0, 16));
+    setFormRepeat(false);
+    setFormWeekdays([]);
+    setFormRecurEnd("");
+    setFormStartTime("08:00");
+    setFormEndTime("20:00");
+    // Início do cuidado vem do contrato (o que a família pediu).
+    setFormDate(shiftStartFromContract(contractStartDate));
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!formCaregiver || !formStart || !formEnd) return;
+    if (!formCaregiver || !formDate || !formStartTime || !formEndTime) return;
+
+    if (formRepeat) {
+      if (formWeekdays.length === 0 || !formRecurEnd) {
+        toast.error("Marque os dias da semana e a data final da recorrência.");
+        return;
+      }
+      setCreateLoading(true);
+      const result = await createRecurringShifts({
+        caregiver_id: formCaregiver,
+        patient_id: patientId,
+        start_date: formDate,
+        end_date: formRecurEnd,
+        weekdays: formWeekdays,
+        start_time: formStartTime,
+        end_time: formEndTime,
+        notes: formNotes || undefined,
+      });
+      if (result.success) {
+        setCreateOpen(false);
+        invalidate();
+        toast.success(
+          `${result.created} turno(s) criado(s).` +
+            (result.skipped ? ` ${result.skipped} pulado(s) por conflito.` : "")
+        );
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+      setCreateLoading(false);
+      return;
+    }
+
     setCreateLoading(true);
+    const { start, end } = shiftDateTimes(formDate, formStartTime, formEndTime);
     const result = await createShift({
       caregiver_id: formCaregiver,
-      start: new Date(formStart).toISOString(),
-      end: new Date(formEnd).toISOString(),
+      start,
+      end,
       notes: formNotes || undefined,
       patient_id: patientId,
     });
@@ -534,22 +590,85 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="start">Início</Label>
+              <Label htmlFor="shift-date">{formRepeat ? "Data de início" : "Data"}</Label>
               <Input
-                id="start"
-                type="datetime-local"
-                value={formStart}
-                onChange={(e) => setFormStart(e.target.value)}
+                id="shift-date"
+                type="date"
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Preenchida com o início do cuidado do contrato; ajuste se necessário.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="end">Término</Label>
-              <Input
-                id="end"
-                type="datetime-local"
-                value={formEnd}
-                onChange={(e) => setFormEnd(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start">Horário início</Label>
+                <Input
+                  id="start"
+                  type="time"
+                  value={formStartTime}
+                  onChange={(e) => setFormStartTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end">Horário fim</Label>
+                <Input
+                  id="end"
+                  type="time"
+                  value={formEndTime}
+                  onChange={(e) => setFormEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => setFormRepeat(v === true)}
+                />
+                Repetir (turno recorrente)
+              </label>
+              {formRepeat && (
+                <div className="space-y-3 pt-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Dias da semana</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {WEEKDAY_LABELS.map((d, i) => {
+                        const on = formWeekdays.includes(i);
+                        return (
+                          <Button
+                            key={i}
+                            type="button"
+                            size="sm"
+                            variant={on ? "default" : "outline"}
+                            className="h-8 w-11 px-0 text-xs"
+                            onClick={() =>
+                              setFormWeekdays((prev) =>
+                                on ? prev.filter((w) => w !== i) : [...prev, i]
+                              )
+                            }
+                          >
+                            {d}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="shift-recur-end" className="text-xs">
+                      Repetir até
+                    </Label>
+                    <Input
+                      id="shift-recur-end"
+                      type="date"
+                      value={formRecurEnd}
+                      onChange={(e) => setFormRecurEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Observações</Label>
@@ -567,10 +686,17 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
               </Button>
               <Button
                 type="submit"
-                disabled={createLoading || !formCaregiver || !formStart || !formEnd}
+                disabled={
+                  createLoading ||
+                  !formCaregiver ||
+                  !formDate ||
+                  !formStartTime ||
+                  !formEndTime ||
+                  (formRepeat && (formWeekdays.length === 0 || !formRecurEnd))
+                }
               >
                 {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Criar Turno
+                {formRepeat ? "Criar Turnos" : "Criar Turno"}
               </Button>
             </DialogFooter>
           </form>

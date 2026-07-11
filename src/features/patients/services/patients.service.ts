@@ -32,6 +32,7 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     media: r.media_url ? { id: String(r.media_id ?? ""), url: String(r.media_url) } : null,
     clinic_name: r.clinic_name != null ? String(r.clinic_name) : null,
     is_active: r.is_active !== false,
+    contract_start_date: r.contract_start_date != null ? String(r.contract_start_date) : null,
     emergency_contacts: Array.isArray(r.emergency_contacts)
       ? (r.emergency_contacts as ClinicPatient["emergency_contacts"])
       : [],

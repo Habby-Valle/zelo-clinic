@@ -69,6 +69,12 @@ import {
   deleteShiftTemplate,
 } from "@/app/(main)/shifts/actions";
 import type { ShiftTemplateItem, ShiftFilters } from "../types";
+import {
+  todayISO,
+  shiftDateTimes,
+  shiftStartFromContract,
+  WEEKDAY_LABELS,
+} from "../lib/shift-time";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
@@ -102,19 +108,6 @@ function formatDuration(start: string, end: string): string {
   const minutes = totalMinutes % 60;
   if (hours === 0) return `${minutes}min`;
   return `${hours}h ${minutes}min`;
-}
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-// Combina data (YYYY-MM-DD) + hora (HH:MM) em ISO; se o fim for <= início,
-// entende como turno que vira o dia (fim no dia seguinte).
-function shiftDateTimes(date: string, startTime: string, endTime: string) {
-  const start = new Date(`${date}T${startTime}`);
-  const end = new Date(`${date}T${endTime}`);
-  if (end <= start) end.setDate(end.getDate() + 1);
-  return { start: start.toISOString(), end: end.toISOString() };
 }
 
 export function ShiftsClient() {
@@ -701,8 +694,9 @@ export function ShiftsClient() {
                   setFormPatient(val);
                   // Início do cuidado vem do contrato (o que a família pediu);
                   // se já passou, usa hoje — não agenda no passado.
-                  const start = patients.find((p) => p.id === val)?.contract_start_date;
-                  if (start) setFormDate(start < todayISO() ? todayISO() : start);
+                  const start =
+                    patients.find((p) => p.id === val)?.contract_start_date ?? null;
+                  setFormDate(shiftStartFromContract(start));
                 }}
               >
                 <SelectTrigger>
@@ -799,7 +793,7 @@ export function ShiftsClient() {
                   <div className="space-y-1.5">
                     <Label className="text-xs">Dias da semana</Label>
                     <div className="flex flex-wrap gap-1">
-                      {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((d, i) => {
+                      {WEEKDAY_LABELS.map((d, i) => {
                         const on = formWeekdays.includes(i);
                         return (
                           <Button
