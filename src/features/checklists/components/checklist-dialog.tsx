@@ -9,9 +9,10 @@ interface ChecklistDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   checklist?: ChecklistDetail;
+  onCreated?: (created: ChecklistDetail) => void;
 }
 
-export function ChecklistDialog({ open, onOpenChange, checklist }: ChecklistDialogProps) {
+export function ChecklistDialog({ open, onOpenChange, checklist, onCreated }: ChecklistDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
@@ -22,7 +23,13 @@ export function ChecklistDialog({ open, onOpenChange, checklist }: ChecklistDial
           </DialogTitle>
         </DialogHeader>
 
-        <ChecklistForm checklist={checklist} onSuccess={() => onOpenChange(false)} />
+        <ChecklistForm
+          checklist={checklist}
+          onSuccess={(created) => {
+            if (created) onCreated?.(created);
+            onOpenChange(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

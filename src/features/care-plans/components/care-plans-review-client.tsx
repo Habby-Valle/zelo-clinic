@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, ClipboardList, Loader2, Plus, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ChecklistDialog } from "@/features/checklists/components/checklist-dialog";
+import type { ChecklistDetail } from "@/features/checklists/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,14 +41,19 @@ export function CarePlansReviewClient() {
   const [returnFor, setReturnFor] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [edits, setEdits] = useState<Record<string, string[]>>({});
-  const [newChecklistOpen, setNewChecklistOpen] = useState(false);
+  // Guarda o plano para o qual o checklist está sendo criado, para já marcá-lo.
+  const [newChecklistFor, setNewChecklistFor] = useState<string | null>(null);
 
-  function handleChecklistDialogChange(open: boolean) {
-    setNewChecklistOpen(open);
-    // Ao fechar (após criar), recarrega as opções para o novo checklist aparecer.
-    if (!open) {
-      queryClient.invalidateQueries({ queryKey: ["checklist-options-plan"] });
-    }
+  function handleChecklistCreated(created: ChecklistDetail) {
+    queryClient.invalidateQueries({ queryKey: ["checklist-options-plan"] });
+    const planId = newChecklistFor;
+    if (!planId) return;
+    const plan = plans.find((p) => p.id === planId);
+    setEdits((prev) => {
+      const current = prev[planId] ?? plan?.checklists.map((c) => c.checklist_id) ?? [];
+      if (current.includes(created.id)) return prev;
+      return { ...prev, [planId]: [...current, created.id] };
+    });
   }
 
   const busy = approve.isPending || returnPlan.isPending || updateChecklists.isPending;
@@ -128,10 +134,9 @@ export function CarePlansReviewClient() {
                     {plan.patient_name}
                     <Badge variant="secondary">Em revisão</Badge>
                   </CardTitle>
-                  {plan.responsible_name && (
+                  {plan.caregiver_name && (
                     <p className="text-sm text-muted-foreground">
-                      Responsável indicado: {plan.responsible_name}
-                      {plan.responsible_register ? ` (${plan.responsible_register})` : ""}
+                      Cuidador designado: {plan.caregiver_name}
                     </p>
                   )}
                 </CardHeader>
@@ -190,7 +195,7 @@ export function CarePlansReviewClient() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setNewChecklistOpen(true)}
+                      onClick={() => setNewChecklistFor(plan.id)}
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Novo checklist
@@ -258,7 +263,11 @@ export function CarePlansReviewClient() {
         </DialogContent>
       </Dialog>
 
-      <ChecklistDialog open={newChecklistOpen} onOpenChange={handleChecklistDialogChange} />
+      <ChecklistDialog
+        open={!!newChecklistFor}
+        onOpenChange={(o) => !o && setNewChecklistFor(null)}
+        onCreated={handleChecklistCreated}
+      />
     </div>
   );
 }

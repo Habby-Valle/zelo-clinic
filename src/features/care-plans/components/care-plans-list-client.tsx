@@ -152,7 +152,7 @@ export function CarePlansListClient() {
               <TableRow>
                 <TableHead>Paciente</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Responsável</TableHead>
+                <TableHead>Cuidador</TableHead>
                 <TableHead>Checklists</TableHead>
                 <TableHead>Criado em</TableHead>
                 <TableHead className="w-[180px]"></TableHead>
@@ -198,7 +198,7 @@ export function CarePlansListClient() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {plan.responsible_name || "—"}
+                        {plan.caregiver_name || "—"}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {plan.checklists.length}

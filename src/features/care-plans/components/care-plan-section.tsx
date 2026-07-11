@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, startTransition, useCallback } from "react";
-import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
@@ -16,7 +16,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ import {
 } from "../hooks/use-care-plans";
 import type { CaregiverOption, CarePlanChecklistOverride, CarePlanChecklistItem, CarePlanGoal } from "../types";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
+import { ChecklistDialog } from "@/features/checklists/components";
+import type { ChecklistDetail } from "@/features/checklists/types";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "outline"> = {
   draft: "outline",
@@ -54,6 +56,7 @@ export function CarePlanSection({
   healthConditions,
   medications,
 }: CarePlanSectionProps) {
+  const queryClient = useQueryClient();
   const { data: plan, isLoading } = useCarePlan(patientId);
   const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const { data: caregivers = [] } = useCaregiverOptionsForPlan();
@@ -62,11 +65,12 @@ export function CarePlanSection({
   const submitMutation = useSubmitCarePlan(patientId);
 
   const [selected, setSelected] = useState<string[]>([]);
-  const [responsibleName, setResponsibleName] = useState("");
-  const [responsibleRegister, setResponsibleRegister] = useState("");
-  const [respFocused, setRespFocused] = useState(false);
+  const [caregiverId, setCaregiverId] = useState<string | null>(null);
+  const [caregiverQuery, setCaregiverQuery] = useState("");
+  const [caregiverFocused, setCaregiverFocused] = useState(false);
   const [suggestionsApplied, setSuggestionsApplied] = useState(false);
   const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
+  const [checklistDialogOpen, setChecklistDialogOpen] = useState(false);
   const [goals, setGoals] = useState<CarePlanGoal[]>([]);
   // overridesByChecklist[checklistId][itemId] = CarePlanChecklistOverride
   const [overridesByChecklist, setOverridesByChecklist] = useState<
@@ -134,6 +138,15 @@ export function CarePlanSection({
     setExpandedChecklist((prev) => (prev === id ? null : id));
   }
 
+  // Checklist criado inline no plano: recarrega as opções e já o marca.
+  function handleChecklistCreated(created: ChecklistDetail) {
+    queryClient.invalidateQueries({ queryKey: ["checklist-options-plan"] });
+    setSelected((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
+    setOverridesByChecklist((prev) =>
+      prev[created.id] ? prev : { ...prev, [created.id]: {} }
+    );
+  }
+
   function handleSelectChecklist(checklistId: string, checked: boolean) {
     setSelected((prev) => {
       const next = checked ? [...prev, checklistId] : prev.filter((x) => x !== checklistId);
@@ -173,26 +186,26 @@ export function CarePlanSection({
     return checklistOptions.filter((c) => wanted.has(c.category)).map((c) => c.id);
   }, [checklistOptions, medications, healthConditions, suggestions]);
 
-  const respSuggestions = useMemo(() => {
-    const q = responsibleName.trim().toLowerCase();
-    if (!q) return [];
+  const caregiverSuggestions = useMemo(() => {
+    const q = caregiverQuery.trim().toLowerCase();
+    if (!q) return caregivers.slice(0, 6);
     const matches = caregivers.filter((c) => c.name.toLowerCase().includes(q));
     if (matches.length === 1 && matches[0].name.toLowerCase() === q) return [];
     return matches.slice(0, 6);
-  }, [caregivers, responsibleName]);
+  }, [caregivers, caregiverQuery]);
 
   function selectCaregiver(c: CaregiverOption) {
-    setResponsibleName(c.name);
-    setResponsibleRegister(c.register);
-    setRespFocused(false);
+    setCaregiverId(c.id);
+    setCaregiverQuery(c.name);
+    setCaregiverFocused(false);
   }
 
   useEffect(() => {
     if (plan) {
       startTransition(() => {
         setSelected(plan.checklists.map((c) => c.checklist_id));
-        setResponsibleName(plan.responsible_name);
-        setResponsibleRegister(plan.responsible_register);
+        setCaregiverId(plan.caregiver_id);
+        setCaregiverQuery(plan.caregiver_name ?? "");
         setSuggestionsApplied(true);
       });
     }
@@ -215,8 +228,7 @@ export function CarePlanSection({
 
   const buildInput = () => ({
     patient_id: patientId,
-    responsible_name: responsibleName.trim(),
-    responsible_register: responsibleRegister.trim(),
+    caregiver_id: caregiverId,
     checklists: selected.map((id) => {
       const itemOverrides = overridesByChecklist[id] ?? {};
       const overrideList = Object.values(itemOverrides).filter((ov) => {
@@ -311,52 +323,59 @@ export function CarePlanSection({
 
             <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="relative space-y-1.5">
-                <Label htmlFor="resp-name">Profissional responsável</Label>
-                <Input
-                  id="resp-name"
-                  value={responsibleName}
-                  onChange={(e) => setResponsibleName(e.target.value)}
-                  onFocus={() => setRespFocused(true)}
-                  onBlur={() => setRespFocused(false)}
-                  placeholder="Buscar cuidador pelo nome"
-                  autoComplete="off"
-                />
-                {respFocused && respSuggestions.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
-                    {respSuggestions.map((c) => (
-                      <button
-                        type="button"
-                        key={c.id}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectCaregiver(c);
-                        }}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
-                      >
-                        <span>{c.name}</span>
-                        {c.register && (
-                          <span className="text-xs text-muted-foreground">{c.register}</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="resp-register">Registro (ex.: COREN)</Label>
-                <Input
-                  id="resp-register"
-                  value={responsibleRegister}
-                  onChange={(e) => setResponsibleRegister(e.target.value)}
-                  placeholder="COREN-000000"
-                />
-              </div>
+            <div className="relative space-y-1.5">
+              <Label htmlFor="plan-caregiver">Cuidador responsável</Label>
+              <Input
+                id="plan-caregiver"
+                value={caregiverQuery}
+                onChange={(e) => {
+                  setCaregiverQuery(e.target.value);
+                  setCaregiverId(null);
+                }}
+                onFocus={() => setCaregiverFocused(true)}
+                onBlur={() => setCaregiverFocused(false)}
+                placeholder="Buscar cuidador pelo nome"
+                autoComplete="off"
+              />
+              <p className="text-xs text-muted-foreground">
+                O cuidador escolhido será vinculado ao paciente quando o plano for
+                aprovado pelo enfermeiro.
+              </p>
+              {caregiverFocused && caregiverSuggestions.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                  {caregiverSuggestions.map((c) => (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        selectCaregiver(c);
+                      }}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      <span>{c.name}</span>
+                      {c.register && (
+                        <span className="text-xs text-muted-foreground">{c.register}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label>Checklists do plano</Label>
+              <div className="flex items-center justify-between">
+                <Label>Checklists do plano</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setChecklistDialogOpen(true)}
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Criar checklist
+                </Button>
+              </div>
               {showSuggestionHint && (
                 <p className="text-xs text-muted-foreground">
                   Pré-selecionados com base {suggestionCategories.length > 0 ? `nos diagnósticos (${suggestionCategories.join(", ")})` : "no perfil do paciente"}
@@ -368,13 +387,15 @@ export function CarePlanSection({
                   <p className="text-xs text-muted-foreground">
                     Nenhum checklist disponível ainda. Crie um checklist para montar o plano.
                   </p>
-                  <Link
-                    href="/checklists"
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setChecklistDialogOpen(true)}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Criar checklist
-                  </Link>
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-1.5 rounded-lg border p-3">
@@ -609,6 +630,11 @@ export function CarePlanSection({
           </>
         )}
       </CardContent>
+      <ChecklistDialog
+        open={checklistDialogOpen}
+        onOpenChange={setChecklistDialogOpen}
+        onCreated={handleChecklistCreated}
+      />
     </Card>
   );
 }

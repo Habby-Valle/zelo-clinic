@@ -51,6 +51,8 @@ export interface CarePlan {
   patient_health_status: string;
   status: CarePlanStatus;
   status_display: string;
+  caregiver_id: string | null;
+  caregiver_name: string | null;
   responsible_name: string;
   responsible_register: string;
   approved_by_name: string | null;
@@ -104,8 +106,9 @@ export interface CarePlanGoal {
 
 export interface SaveCarePlanInput {
   patient_id: string;
-  responsible_name: string;
-  responsible_register: string;
+  caregiver_id: string | null;
+  responsible_name?: string;
+  responsible_register?: string;
   notes?: string;
   checklists: SaveCarePlanChecklist[];
   goals?: CarePlanGoal[];

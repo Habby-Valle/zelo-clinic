@@ -72,7 +72,7 @@ interface FormItem {
 
 interface Props {
   checklist?: ChecklistDetail;
-  onSuccess: () => void;
+  onSuccess: (created?: ChecklistDetail) => void;
 }
 
 export function ChecklistForm({ checklist, onSuccess }: Props) {
@@ -251,11 +251,12 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
       if (checklist) {
         await updateChecklist.mutateAsync(body);
         toast.success("Checklist atualizado");
+        onSuccess();
       } else {
-        await createChecklist.mutateAsync(body);
+        const created = await createChecklist.mutateAsync(body);
         toast.success("Checklist criado");
+        onSuccess(created);
       }
-      onSuccess();
     } catch {
       toast.error("Erro ao salvar checklist");
     }
