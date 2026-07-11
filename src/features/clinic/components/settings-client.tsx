@@ -11,6 +11,10 @@ import {
   Star,
   QrCode,
   Wifi,
+  Building2,
+  Bell,
+  CreditCard,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -23,6 +27,7 @@ import {
   useUpdateAsaasConfig,
   useTestAsaasConnection,
 } from "@/features/clinic/hooks/use-asaas-config";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -260,416 +265,352 @@ export function SettingsClient() {
     );
   }
 
+  const [tab, setTab] = useState("geral");
+
   return (
-    <div className="space-y-6">
-      {/* Clinic Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Dados da Clínica</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Logo */}
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <Avatar size="lg">
-                <AvatarImage src={clinicLogo ?? undefined} alt={clinicName} />
-                <AvatarFallback className="text-base">
-                  {clinicName ? getInitials(clinicName) : "ZC"}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs"
-              >
-                <Camera className="h-3 w-3" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleLogoChange}
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium">{clinicName}</p>
-              <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
-            </div>
-          </div>
+    <Tabs value={tab} onValueChange={setTab}>
+      <TabsList className="mb-6">
+        <TabsTrigger value="geral">
+          <Building2 className="h-4 w-4" />
+          Geral
+        </TabsTrigger>
+        <TabsTrigger value="notificacoes">
+          <Bell className="h-4 w-4" />
+          Notificações
+        </TabsTrigger>
+        <TabsTrigger value="pagamentos">
+          <CreditCard className="h-4 w-4" />
+          Pagamentos
+        </TabsTrigger>
+        <TabsTrigger value="seguranca">
+          <Shield className="h-4 w-4" />
+          Segurança
+        </TabsTrigger>
+      </TabsList>
 
-          {/* Document & Phone */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="document">CNPJ</Label>
-              <Input
-                id="document"
-                placeholder="00.000.000/0000-00"
-                value={formatCnpj(document)}
-                onChange={(e) => setDocument(unformat(e.target.value))}
-                maxLength={18}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                placeholder="(00) 00000-0000"
-                value={formatPhone(phone)}
-                onChange={(e) => setPhone(unformat(e.target.value))}
-                maxLength={15}
-              />
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-foreground">Endereço</h3>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="zipCode">CEP</Label>
-                <Input
-                  id="zipCode"
-                  placeholder="00000-000"
-                  value={formatCep(zipCode)}
-                  onChange={(e) => setZipCode(unformat(e.target.value))}
-                  maxLength={9}
+      {/* ───── Geral ───── */}
+      <TabsContent value="geral" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dados da Clínica</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <Avatar size="lg">
+                  <AvatarImage src={clinicLogo ?? undefined} alt={clinicName} />
+                  <AvatarFallback className="text-base">
+                    {clinicName ? getInitials(clinicName) : "ZC"}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs"
+                >
+                  <Camera className="h-3 w-3" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
                 />
               </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="street">Logradouro</Label>
+              <div className="space-y-1">
+                <p className="font-medium">{clinicName}</p>
+                <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="document">CNPJ</Label>
                 <Input
-                  id="street"
-                  placeholder="Rua, Avenida..."
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
+                  id="document"
+                  placeholder="00.000.000/0000-00"
+                  value={formatCnpj(document)}
+                  onChange={(e) => setDocument(unformat(e.target.value))}
+                  maxLength={18}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  placeholder="(00) 00000-0000"
+                  value={formatPhone(phone)}
+                  onChange={(e) => setPhone(unformat(e.target.value))}
+                  maxLength={15}
                 />
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="number">Número</Label>
-                <Input
-                  id="number"
-                  placeholder="S/N"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="complement">Complemento</Label>
-                <Input
-                  id="complement"
-                  placeholder="Sala, bloco..."
-                  value={complement}
-                  onChange={(e) => setComplement(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="neighborhood">Bairro</Label>
-                <Input
-                  id="neighborhood"
-                  placeholder="Centro"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="city">Cidade</Label>
-                <Input
-                  id="city"
-                  placeholder="São Paulo"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="state">Estado</Label>
-                <Input
-                  id="state"
-                  placeholder="SP"
-                  value={state}
-                  onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
-                  maxLength={2}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="country">País</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSaveClinic} disabled={saving || !hasClinicChanges}>
-              {saving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Salvar alterações
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Daily Report */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Relatório diário para familiares
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="daily-report" className="text-sm font-medium">
-                Enviar resumo diário automático
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Todas as noites, familiares e responsáveis recebem por push e e-mail um resumo do
-                dia de cada paciente — cuidados realizados e ocorrências registradas.
-              </p>
-            </div>
-            <Switch
-              id="daily-report"
-              checked={clinic?.daily_report_enabled ?? true}
-              onCheckedChange={handleToggleDailyReport}
-              disabled={updateClinic.isPending}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Visit Notification */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarCheck className="h-4 w-4" />
-            Notificação de visita agendada
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="visit-notification" className="text-sm font-medium">
-                Avisar familiares ao agendar uma visita
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Quando um turno é agendado, familiares e responsáveis recebem por push e e-mail a
-                confirmação da visita (data, horário e cuidador).
-              </p>
-            </div>
-            <Switch
-              id="visit-notification"
-              checked={clinic?.visit_notification_enabled ?? true}
-              onCheckedChange={handleToggleVisitNotification}
-              disabled={updateClinic.isPending}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Satisfaction Survey */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-4 w-4" />
-            Pesquisa de satisfação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="satisfaction-survey" className="text-sm font-medium">
-                Pedir avaliação após cada turno
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Quando um turno é concluído, os familiares recebem por push e e-mail um convite para
-                avaliar o atendimento (nota de 1 a 5 e comentário).
-              </p>
-            </div>
-            <Switch
-              id="satisfaction-survey"
-              checked={clinic?.satisfaction_survey_enabled ?? true}
-              onCheckedChange={handleToggleSatisfactionSurvey}
-              disabled={updateClinic.isPending}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ASAAS PIX */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="h-4 w-4" />
-            Integração ASAAS (PIX)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Configure a chave de API do ASAAS para receber pagamentos via PIX dos familiares.
-          </p>
-
-          {asaasLoading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : (
-            <>
-              {testResult && (
-                <Alert variant={testResult.success ? "default" : "destructive"}>
-                  <AlertDescription>{testResult.message}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-1.5">
-                <Label htmlFor="asaas-api-key">Chave de API (sandbox/produção)</Label>
-                <div className="flex gap-2">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Endereço</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="zipCode">CEP</Label>
                   <Input
-                    id="asaas-api-key"
-                    type="password"
-                    placeholder={
-                      asaasConfig?.has_api_key
-                        ? "Chave já configurada — digite para substituir"
-                        : "asaas_api_key_..."
-                    }
-                    value={asaasApiKey}
-                    onChange={(e) => setAsaasApiKey(e.target.value)}
-                    className="flex-1"
+                    id="zipCode"
+                    placeholder="00000-000"
+                    value={formatCep(zipCode)}
+                    onChange={(e) => setZipCode(unformat(e.target.value))}
+                    maxLength={9}
                   />
-                  {asaasConfig?.has_api_key && (
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
-                    >
-                      Configurada
-                    </Badge>
-                  )}
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="street">Logradouro</Label>
+                  <Input
+                    id="street"
+                    placeholder="Rua, Avenida..."
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                  />
                 </div>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="asaas-wallet-id">Wallet ID (opcional)</Label>
-                <Input
-                  id="asaas-wallet-id"
-                  placeholder="wallet_id_..."
-                  value={asaasWalletId}
-                  onChange={(e) => setAsaasWalletId(e.target.value)}
-                />
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="number">Número</Label>
+                  <Input id="number" placeholder="S/N" value={number} onChange={(e) => setNumber(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="complement">Complemento</Label>
+                  <Input id="complement" placeholder="Sala, bloco..." value={complement} onChange={(e) => setComplement(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="neighborhood">Bairro</Label>
+                  <Input id="neighborhood" placeholder="Centro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+                </div>
               </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleTestAsaas}
-                  disabled={!asaasApiKey || testAsaas.isPending}
-                >
-                  {testAsaas.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wifi className="mr-2 h-4 w-4" />
-                  )}
-                  Testar conexão
-                </Button>
-                <Button onClick={handleSaveAsaas} disabled={updateAsaas.isPending}>
-                  {updateAsaas.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  Salvar
-                </Button>
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input id="city" placeholder="São Paulo" value={city} onChange={(e) => setCity(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="state">Estado</Label>
+                  <Input id="state" placeholder="SP" value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="country">País</Label>
+                  <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                </div>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* Change Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            Alterar Senha
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={passwordForm.handleSubmit(handlePasswordChange)}
-            className="space-y-4"
-            noValidate
-          >
-            {passwordResult && (
-              <Alert variant={passwordResult.success ? "default" : "destructive"}>
-                <AlertDescription>{passwordResult.message}</AlertDescription>
-              </Alert>
+            <div className="flex justify-end">
+              <Button onClick={handleSaveClinic} disabled={saving || !hasClinicChanges}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Salvar alterações
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ───── Notificações ───── */}
+      <TabsContent value="notificacoes" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Relatório diário para familiares
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="daily-report" className="text-sm font-medium">
+                  Enviar resumo diário automático
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Todas as noites, familiares e responsáveis recebem por push e e-mail um resumo do
+                  dia de cada paciente — cuidados realizados e ocorrências registradas.
+                </p>
+              </div>
+              <Switch
+                id="daily-report"
+                checked={clinic?.daily_report_enabled ?? true}
+                onCheckedChange={handleToggleDailyReport}
+                disabled={updateClinic.isPending}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarCheck className="h-4 w-4" />
+              Notificação de visita agendada
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="visit-notification" className="text-sm font-medium">
+                  Avisar familiares ao agendar uma visita
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Quando um turno é agendado, familiares e responsáveis recebem por push e e-mail a
+                  confirmação da visita (data, horário e cuidador).
+                </p>
+              </div>
+              <Switch
+                id="visit-notification"
+                checked={clinic?.visit_notification_enabled ?? true}
+                onCheckedChange={handleToggleVisitNotification}
+                disabled={updateClinic.isPending}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Pesquisa de satisfação
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="satisfaction-survey" className="text-sm font-medium">
+                  Pedir avaliação após cada turno
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Quando um turno é concluído, os familiares recebem por push e e-mail um convite para
+                  avaliar o atendimento (nota de 1 a 5 e comentário).
+                </p>
+              </div>
+              <Switch
+                id="satisfaction-survey"
+                checked={clinic?.satisfaction_survey_enabled ?? true}
+                onCheckedChange={handleToggleSatisfactionSurvey}
+                disabled={updateClinic.isPending}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ───── Pagamentos ───── */}
+      <TabsContent value="pagamentos" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              Integração ASAAS (PIX)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Configure a chave de API do ASAAS para receber pagamentos via PIX dos familiares.
+            </p>
+            {asaasLoading ? (
+              <Skeleton className="h-24 w-full" />
+            ) : (
+              <>
+                {testResult && (
+                  <Alert variant={testResult.success ? "default" : "destructive"}>
+                    <AlertDescription>{testResult.message}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="asaas-api-key">Chave de API (sandbox/produção)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="asaas-api-key"
+                      type="password"
+                      placeholder={
+                        asaasConfig?.has_api_key
+                          ? "Chave já configurada — digite para substituir"
+                          : "asaas_api_key_..."
+                      }
+                      value={asaasApiKey}
+                      onChange={(e) => setAsaasApiKey(e.target.value)}
+                      className="flex-1"
+                    />
+                    {asaasConfig?.has_api_key && (
+                      <Badge variant="outline" className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700">
+                        Configurada
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="asaas-wallet-id">Wallet ID (opcional)</Label>
+                  <Input
+                    id="asaas-wallet-id"
+                    placeholder="wallet_id_..."
+                    value={asaasWalletId}
+                    onChange={(e) => setAsaasWalletId(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleTestAsaas} disabled={!asaasApiKey || testAsaas.isPending}>
+                    {testAsaas.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2 h-4 w-4" />}
+                    Testar conexão
+                  </Button>
+                  <Button onClick={handleSaveAsaas} disabled={updateAsaas.isPending}>
+                    {updateAsaas.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Salvar
+                  </Button>
+                </div>
+              </>
             )}
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="current_password">Senha atual</Label>
-              <Input
-                id="current_password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                {...passwordForm.register("current_password")}
-              />
-              {passwordForm.formState.errors.current_password && (
-                <p className="text-xs text-destructive">
-                  {passwordForm.formState.errors.current_password.message}
-                </p>
+      {/* ───── Segurança ───── */}
+      <TabsContent value="seguranca" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Alterar Senha
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)} className="space-y-4" noValidate>
+              {passwordResult && (
+                <Alert variant={passwordResult.success ? "default" : "destructive"}>
+                  <AlertDescription>{passwordResult.message}</AlertDescription>
+                </Alert>
               )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="new_password">Nova senha</Label>
-              <Input
-                id="new_password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="new-password"
-                {...passwordForm.register("new_password")}
-              />
-              {passwordForm.formState.errors.new_password && (
-                <p className="text-xs text-destructive">
-                  {passwordForm.formState.errors.new_password.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm_password">Confirmar nova senha</Label>
-              <Input
-                id="confirm_password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="new-password"
-                {...passwordForm.register("confirm_password")}
-              />
-              {passwordForm.formState.errors.confirm_password && (
-                <p className="text-xs text-destructive">
-                  {passwordForm.formState.errors.confirm_password.message}
-                </p>
-              )}
-            </div>
-
-            <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
-              {passwordForm.formState.isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Lock className="mr-2 h-4 w-4" />
-              )}
-              Alterar senha
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="current_password">Senha atual</Label>
+                <Input id="current_password" type="password" placeholder="••••••••" autoComplete="current-password" {...passwordForm.register("current_password")} />
+                {passwordForm.formState.errors.current_password && (
+                  <p className="text-xs text-destructive">{passwordForm.formState.errors.current_password.message}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="new_password">Nova senha</Label>
+                <Input id="new_password" type="password" placeholder="••••••••" autoComplete="new-password" {...passwordForm.register("new_password")} />
+                {passwordForm.formState.errors.new_password && (
+                  <p className="text-xs text-destructive">{passwordForm.formState.errors.new_password.message}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm_password">Confirmar nova senha</Label>
+                <Input id="confirm_password" type="password" placeholder="••••••••" autoComplete="new-password" {...passwordForm.register("confirm_password")} />
+                {passwordForm.formState.errors.confirm_password && (
+                  <p className="text-xs text-destructive">{passwordForm.formState.errors.confirm_password.message}</p>
+                )}
+              </div>
+              <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
+                {passwordForm.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
+                Alterar senha
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
