@@ -483,7 +483,7 @@ function PatientShiftsSection({
         </div>
       </CardHeader>
       <CardContent>
-        <ShiftCalendar patientId={patientId} />
+        <ShiftCalendar patientId={patientId} showGaps />
       </CardContent>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

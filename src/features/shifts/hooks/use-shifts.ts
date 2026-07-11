@@ -22,23 +22,36 @@ export function usePatientShifts(patientId: string) {
   return useShifts({ patient_id: patientId, page_size: 10 });
 }
 
-// Turnos de um paciente num intervalo de datas (para o calendário).
+// Turnos num intervalo de datas (para o calendário). Filtros opcionais:
+// paciente (visão do paciente) ou status (visão da clínica).
+export function useShiftsRange(
+  dateFrom: string,
+  dateTo: string,
+  filters?: { patient_id?: string; status?: string }
+) {
+  return useQuery({
+    queryKey: ["shifts", "range", dateFrom, dateTo, filters ?? {}],
+    queryFn: () =>
+      fetchShiftsApi({
+        ...filters,
+        date_from: dateFrom,
+        date_to: dateTo,
+        page_size: 500,
+      }),
+    enabled: !!dateFrom && !!dateTo,
+  });
+}
+
 export function usePatientShiftsRange(
   patientId: string,
   dateFrom: string,
   dateTo: string
 ) {
-  return useQuery({
-    queryKey: ["shifts", "range", patientId, dateFrom, dateTo],
-    queryFn: () =>
-      fetchShiftsApi({
-        patient_id: patientId,
-        date_from: dateFrom,
-        date_to: dateTo,
-        page_size: 100,
-      }),
-    enabled: !!patientId && !!dateFrom && !!dateTo,
-  });
+  return useShiftsRange(
+    patientId ? dateFrom : "",
+    patientId ? dateTo : "",
+    { patient_id: patientId }
+  );
 }
 
 export function useShift(id: string) {

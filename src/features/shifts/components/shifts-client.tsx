@@ -76,6 +76,7 @@ import {
   WEEKDAY_LABELS,
 } from "../lib/shift-time";
 import { SkippedShiftsDialog, type SkippedShiftInfo } from "./skipped-shifts-dialog";
+import { ShiftCalendar } from "./shift-calendar";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
@@ -116,6 +117,7 @@ export function ShiftsClient() {
   // Enfermeiro tem acesso somente leitura aos turnos.
   const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
   const [tab, setTab] = useState("shifts");
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -375,16 +377,38 @@ export function ShiftsClient() {
 
         {/* Turnos tab */}
         <TabsContent value="shifts" className="mt-4 space-y-4">
-          <div className="flex flex-wrap gap-3">
-            <Input
-              placeholder="Buscar cuidador..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="max-w-xs"
-            />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-md border p-0.5">
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                className="h-7"
+                onClick={() => setViewMode("calendar")}
+              >
+                Calendário
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "list" ? "default" : "ghost"}
+                className="h-7"
+                onClick={() => setViewMode("list")}
+              >
+                Lista
+              </Button>
+            </div>
+            {viewMode === "list" && (
+              <Input
+                placeholder="Buscar cuidador..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="max-w-xs"
+              />
+            )}
             <Select
               value={statusFilter || "all"}
               onValueChange={(v) => {
@@ -416,6 +440,14 @@ export function ShiftsClient() {
             </Select>
           </div>
 
+          {viewMode === "calendar" ? (
+            <Card>
+              <CardContent className="pt-6">
+                <ShiftCalendar status={statusFilter} showPatient />
+              </CardContent>
+            </Card>
+          ) : (
+          <>
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -547,6 +579,8 @@ export function ShiftsClient() {
             onPageChange={setPage}
             label="turnos"
           />
+          </>
+          )}
         </TabsContent>
 
         {/* Templates tab */}

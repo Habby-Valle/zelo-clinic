@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { usePatientShiftsRange } from "../hooks/use-shifts";
+import { useShiftsRange } from "../hooks/use-shifts";
 import type { ShiftItem } from "../types";
 import { mondayOf, addDays, localDateKey } from "../lib/shift-time";
 
@@ -74,17 +74,33 @@ function computeGapDays(shifts: ShiftItem[], gridStart: Date): Set<string> {
   return gaps;
 }
 
-export function ShiftCalendar({ patientId }: { patientId: string }) {
+interface ShiftCalendarProps {
+  /** Visão de um paciente (habilita marcação de lacunas). */
+  patientId?: string;
+  /** Filtro de status (visão da clínica). */
+  status?: string;
+  /** Marca dias sem cobertura (só faz sentido por paciente). */
+  showGaps?: boolean;
+  /** Inclui o nome do paciente no evento (visão da clínica). */
+  showPatient?: boolean;
+}
+
+export function ShiftCalendar({
+  patientId,
+  status,
+  showGaps = false,
+  showPatient = false,
+}: ShiftCalendarProps) {
   const [date, setDate] = useState(() => new Date());
   const [view, setView] = useState<View>("month");
 
   const monthAnchor = new Date(date.getFullYear(), date.getMonth(), 1);
   const gridStart = mondayOf(monthAnchor);
 
-  const { data, isLoading } = usePatientShiftsRange(
-    patientId,
+  const { data, isLoading } = useShiftsRange(
     localDateKey(gridStart),
-    localDateKey(addDays(gridStart, 41))
+    localDateKey(addDays(gridStart, 41)),
+    { patient_id: patientId, status: status || undefined }
   );
 
   const shifts = useMemo(() => data?.shifts ?? [], [data]);
@@ -92,19 +108,26 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
   const events = useMemo<ShiftEvent[]>(
     () =>
       shifts.map((s) => ({
-        title: `${new Date(s.start).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })} ${s.caregiver_name}`,
+        title:
+          `${new Date(s.start).toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} ${s.caregiver_name}` +
+          (showPatient && s.shift_patients.length
+            ? ` · ${s.shift_patients.map((p) => p.patient_name).join(", ")}`
+            : ""),
         start: new Date(s.start),
         end: new Date(s.end),
         status: s.status,
         shift: s,
       })),
-    [shifts]
+    [shifts, showPatient]
   );
 
-  const gapDays = useMemo(() => computeGapDays(shifts, gridStart), [shifts, gridStart]);
+  const gapDays = useMemo(
+    () => (showGaps ? computeGapDays(shifts, gridStart) : new Set<string>()),
+    [shifts, gridStart, showGaps]
+  );
   const [selected, setSelected] = useState<ShiftItem | null>(null);
 
   return (
@@ -188,6 +211,12 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
           </DialogHeader>
           {selected && (
             <div className="space-y-2 text-sm">
+              {showPatient && (
+                <div>
+                  <span className="font-medium">Paciente:</span>{" "}
+                  {selected.shift_patients.map((p) => p.patient_name).join(", ")}
+                </div>
+              )}
               <div>
                 <span className="font-medium">Cuidador:</span> {selected.caregiver_name}
               </div>
