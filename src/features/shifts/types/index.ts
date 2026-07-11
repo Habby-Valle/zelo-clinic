@@ -38,6 +38,7 @@ export interface PatientOption {
   name: string;
   caregiver_ids: string[];
   has_active_contract: boolean;
+  contract_start_date: string | null;
 }
 
 export interface CaregiverOption {

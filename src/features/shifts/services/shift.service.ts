@@ -48,6 +48,7 @@ export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
         (a) => a.caregiver_id as string
       ) ?? [],
     has_active_contract: Boolean(p.has_active_contract),
+    contract_start_date: (p.contract_start_date as string | null) ?? null,
   }));
 }
 

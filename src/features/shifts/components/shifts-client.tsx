@@ -104,6 +104,19 @@ function formatDuration(start: string, end: string): string {
   return `${hours}h ${minutes}min`;
 }
 
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Combina data (YYYY-MM-DD) + hora (HH:MM) em ISO; se o fim for <= início,
+// entende como turno que vira o dia (fim no dia seguinte).
+function shiftDateTimes(date: string, startTime: string, endTime: string) {
+  const start = new Date(`${date}T${startTime}`);
+  const end = new Date(`${date}T${endTime}`);
+  if (end <= start) end.setDate(end.getDate() + 1);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
 export function ShiftsClient() {
   const queryClient = useQueryClient();
   // Enfermeiro tem acesso somente leitura aos turnos.
@@ -131,8 +144,9 @@ export function ShiftsClient() {
   const [createLoading, setCreateLoading] = useState(false);
   const [formPatient, setFormPatient] = useState("");
   const [formCaregiver, setFormCaregiver] = useState("");
-  const [formStart, setFormStart] = useState("");
-  const [formEnd, setFormEnd] = useState("");
+  const [formDate, setFormDate] = useState(""); // YYYY-MM-DD — início (do contrato)
+  const [formStartTime, setFormStartTime] = useState("08:00");
+  const [formEndTime, setFormEndTime] = useState("20:00");
   const [formNotes, setFormNotes] = useState("");
   // Recorrência: repete o turno nos dias da semana marcados até a data final.
   const [formRepeat, setFormRepeat] = useState(false);
@@ -182,16 +196,14 @@ export function ShiftsClient() {
     setFormRepeat(false);
     setFormWeekdays([]);
     setFormRecurEnd("");
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    setFormStart(now.toISOString().slice(0, 16));
-    setFormEnd(later.toISOString().slice(0, 16));
+    setFormDate(todayISO());
+    setFormStartTime("08:00");
+    setFormEndTime("20:00");
   }
 
   async function handleCreateShift(e: React.FormEvent) {
     e.preventDefault();
-    if (!formCaregiver || !formStart || !formEnd) return;
+    if (!formCaregiver || !formDate || !formStartTime || !formEndTime) return;
 
     if (formRepeat) {
       if (!formPatient) {
@@ -206,11 +218,11 @@ export function ShiftsClient() {
       const result = await createRecurringShifts({
         caregiver_id: formCaregiver,
         patient_id: formPatient,
-        start_date: formStart.slice(0, 10),
+        start_date: formDate,
         end_date: formRecurEnd,
         weekdays: formWeekdays,
-        start_time: formStart.slice(11, 16),
-        end_time: formEnd.slice(11, 16),
+        start_time: formStartTime,
+        end_time: formEndTime,
         notes: formNotes || undefined,
       });
       if (result.success) {
@@ -228,10 +240,11 @@ export function ShiftsClient() {
     }
 
     setCreateLoading(true);
+    const { start, end } = shiftDateTimes(formDate, formStartTime, formEndTime);
     const result = await createShift({
       caregiver_id: formCaregiver,
-      start: new Date(formStart).toISOString(),
-      end: new Date(formEnd).toISOString(),
+      start,
+      end,
       notes: formNotes || undefined,
       patient_id: formPatient || undefined,
     });
@@ -681,7 +694,17 @@ export function ShiftsClient() {
 
             <div className="space-y-1.5">
               <Label>Paciente</Label>
-              <Select value={formPatient} onValueChange={(v) => setFormPatient(v ?? "")}>
+              <Select
+                value={formPatient}
+                onValueChange={(v) => {
+                  const val = v ?? "";
+                  setFormPatient(val);
+                  // Início do cuidado vem do contrato (o que a família pediu);
+                  // se já passou, usa hoje — não agenda no passado.
+                  const start = patients.find((p) => p.id === val)?.contract_start_date;
+                  if (start) setFormDate(start < todayISO() ? todayISO() : start);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue>
                     {(v: string | null) => {
@@ -724,23 +747,37 @@ export function ShiftsClient() {
               )}
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="shift-date">
+                {formRepeat ? "Data de início" : "Data"} *
+              </Label>
+              <Input
+                id="shift-date"
+                type="date"
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Preenchida com o início do cuidado do contrato; ajuste se necessário.
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="shift-start">Início *</Label>
+                <Label htmlFor="shift-start">Horário início *</Label>
                 <Input
                   id="shift-start"
-                  type="datetime-local"
-                  value={formStart}
-                  onChange={(e) => setFormStart(e.target.value)}
+                  type="time"
+                  value={formStartTime}
+                  onChange={(e) => setFormStartTime(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="shift-end">Fim *</Label>
+                <Label htmlFor="shift-end">Horário fim *</Label>
                 <Input
                   id="shift-end"
-                  type="datetime-local"
-                  value={formEnd}
-                  onChange={(e) => setFormEnd(e.target.value)}
+                  type="time"
+                  value={formEndTime}
+                  onChange={(e) => setFormEndTime(e.target.value)}
                 />
               </div>
             </div>
@@ -756,8 +793,8 @@ export function ShiftsClient() {
               {formRepeat && (
                 <div className="space-y-3 pt-1">
                   <p className="text-xs text-muted-foreground">
-                    Usa o <strong>horário</strong> de Início/Fim acima e a <strong>data</strong> de
-                    Início como primeiro dia; repete nos dias marcados até a data final.
+                    Usa o <strong>horário</strong> acima e a <strong>data de início</strong> como
+                    primeiro dia; repete nos dias marcados até a data final.
                   </p>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Dias da semana</Label>
@@ -825,8 +862,9 @@ export function ShiftsClient() {
                 disabled={
                   createLoading ||
                   !formCaregiver ||
-                  !formStart ||
-                  !formEnd ||
+                  !formDate ||
+                  !formStartTime ||
+                  !formEndTime ||
                   (formRepeat && (!formPatient || formWeekdays.length === 0 || !formRecurEnd))
                 }
               >
