@@ -75,6 +75,7 @@ import {
   shiftStartFromContract,
   WEEKDAY_LABELS,
 } from "../lib/shift-time";
+import { SkippedShiftsDialog, type SkippedShiftInfo } from "./skipped-shifts-dialog";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
@@ -145,6 +146,7 @@ export function ShiftsClient() {
   const [formRepeat, setFormRepeat] = useState(false);
   const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
   const [formRecurEnd, setFormRecurEnd] = useState("");
+  const [skippedInfo, setSkippedInfo] = useState<SkippedShiftInfo | null>(null);
 
   const caregiverPatients = formCaregiver
     ? patients.filter((p) => p.caregiver_ids.includes(formCaregiver))
@@ -221,10 +223,14 @@ export function ShiftsClient() {
       if (result.success) {
         setCreateOpen(false);
         invalidateShifts();
-        toast.success(
-          `${result.created} turno(s) criado(s).` +
-            (result.skipped ? ` ${result.skipped} pulado(s) por conflito.` : "")
-        );
+        if (result.skipped && result.skipped > 0) {
+          setSkippedInfo({
+            created: result.created ?? 0,
+            skipped: result.skipped_details ?? [],
+          });
+        } else {
+          toast.success(`${result.created} turno(s) criado(s).`);
+        }
       } else if (result.error) {
         toast.error(result.error);
       }
@@ -869,6 +875,8 @@ export function ShiftsClient() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <SkippedShiftsDialog info={skippedInfo} onClose={() => setSkippedInfo(null)} />
 
       {/* Template CRUD Dialog */}
       <Dialog

@@ -61,6 +61,7 @@ export async function createRecurringShifts(data: {
   error?: string;
   created?: number;
   skipped?: number;
+  skipped_details?: { date: string; reason: string }[];
 }> {
   try {
     await requireClinicAdmin();
@@ -77,13 +78,19 @@ export async function createRecurringShifts(data: {
       return { success: false, error: "Preencha cuidador, paciente, período, dias e horário." };
     }
 
-    const result = await apiFetchServer<{ created: number; skipped: number }>(
-      "/shifts/recurring/",
-      { method: "POST", body: JSON.stringify(data) }
-    );
+    const result = await apiFetchServer<{
+      created: number;
+      skipped: number;
+      skipped_details?: { date: string; reason: string }[];
+    }>("/shifts/recurring/", { method: "POST", body: JSON.stringify(data) });
 
     revalidatePath("/shifts");
-    return { success: true, created: result.created, skipped: result.skipped };
+    return {
+      success: true,
+      created: result.created,
+      skipped: result.skipped,
+      skipped_details: result.skipped_details ?? [],
+    };
   } catch (err) {
     return {
       success: false,

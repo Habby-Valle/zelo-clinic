@@ -27,7 +27,11 @@ import {
   shiftStartFromContract,
   WEEKDAY_LABELS,
 } from "@/features/shifts/lib/shift-time";
-import { ShiftMonthCalendar } from "@/features/shifts/components/shift-month-calendar";
+import { ShiftCalendar } from "@/features/shifts/components/shift-calendar";
+import {
+  SkippedShiftsDialog,
+  type SkippedShiftInfo,
+} from "@/features/shifts/components/skipped-shifts-dialog";
 import {
   Dialog,
   DialogContent,
@@ -383,6 +387,7 @@ function PatientShiftsSection({
   const [formRepeat, setFormRepeat] = useState(false);
   const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
   const [formRecurEnd, setFormRecurEnd] = useState("");
+  const [skippedInfo, setSkippedInfo] = useState<SkippedShiftInfo | null>(null);
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["shifts"] });
@@ -424,10 +429,14 @@ function PatientShiftsSection({
       if (result.success) {
         setCreateOpen(false);
         invalidate();
-        toast.success(
-          `${result.created} turno(s) criado(s).` +
-            (result.skipped ? ` ${result.skipped} pulado(s) por conflito.` : "")
-        );
+        if (result.skipped && result.skipped > 0) {
+          setSkippedInfo({
+            created: result.created ?? 0,
+            skipped: result.skipped_details ?? [],
+          });
+        } else {
+          toast.success(`${result.created} turno(s) criado(s).`);
+        }
       } else if (result.error) {
         toast.error(result.error);
       }
@@ -474,7 +483,7 @@ function PatientShiftsSection({
         </div>
       </CardHeader>
       <CardContent>
-        <ShiftMonthCalendar patientId={patientId} />
+        <ShiftCalendar patientId={patientId} />
       </CardContent>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -617,6 +626,8 @@ function PatientShiftsSection({
           </form>
         </DialogContent>
       </Dialog>
+
+      <SkippedShiftsDialog info={skippedInfo} onClose={() => setSkippedInfo(null)} />
     </Card>
   );
 }
