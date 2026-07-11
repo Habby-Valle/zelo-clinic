@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Calendar, dateFnsLocalizer, type Event } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, type Event, type View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -51,6 +51,7 @@ function computeGapDays(shifts: ShiftItem[], gridStart: Date): Set<string> {
 
 export function ShiftCalendar({ patientId }: { patientId: string }) {
   const [date, setDate] = useState(() => new Date());
+  const [view, setView] = useState<View>("month");
 
   const monthAnchor = new Date(date.getFullYear(), date.getMonth(), 1);
   const gridStart = mondayOf(monthAnchor);
@@ -91,8 +92,9 @@ export function ShiftCalendar({ patientId }: { patientId: string }) {
             events={events}
             date={date}
             onNavigate={(d) => setDate(d)}
+            view={view}
+            onView={(v) => setView(v)}
             views={["month", "week", "day", "agenda"]}
-            defaultView="month"
             popup
             eventPropGetter={(event) => {
               const e = event as ShiftEvent;
