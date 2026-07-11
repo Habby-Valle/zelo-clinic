@@ -10,14 +10,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePatient, useClinicCaregivers, useTogglePatientStatus } from "../hooks";
@@ -36,6 +28,7 @@ import {
   shiftStartFromContract,
   WEEKDAY_LABELS,
 } from "@/features/shifts/lib/shift-time";
+import { ShiftWeekCalendar } from "@/features/shifts/components/shift-week-calendar";
 import {
   Dialog,
   DialogContent,
@@ -464,29 +457,6 @@ function PatientShiftsSection({
     setCreateLoading(false);
   }
 
-  function formatDateTime(dateStr: string) {
-    const d = new Date(dateStr);
-    return (
-      d.toLocaleDateString("pt-BR") +
-      " " +
-      d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-    );
-  }
-
-  const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-    scheduled: "outline",
-    in_progress: "default",
-    completed: "secondary",
-    cancelled: "destructive",
-  };
-
-  const STATUS_LABELS: Record<string, string> = {
-    scheduled: "Agendado",
-    in_progress: "Em andamento",
-    completed: "Concluído",
-    cancelled: "Cancelado",
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -506,60 +476,12 @@ function PatientShiftsSection({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cuidador</TableHead>
-              <TableHead>Início</TableHead>
-              <TableHead>Término</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-36" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-36" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : shifts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                  Nenhum turno encontrado para este paciente.
-                </TableCell>
-              </TableRow>
-            ) : (
-              shifts.map((shift) => (
-                <TableRow key={shift.id}>
-                  <TableCell className="font-medium">{shift.caregiver_name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(shift.start)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(shift.end)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANTS[shift.status]}>
-                      {STATUS_LABELS[shift.status]}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <ShiftWeekCalendar shifts={shifts} />
+        )}
       </CardContent>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
