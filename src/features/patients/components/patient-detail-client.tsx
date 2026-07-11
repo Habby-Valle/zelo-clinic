@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, startTransition, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { ArrowLeft, Loader2, Check, Users, Calendar, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Calendar, Plus } from "lucide-react";
 import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -21,11 +20,9 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   usePatient,
   useClinicCaregivers,
-  useAssignCaregivers,
   useTogglePatientStatus,
 } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
@@ -93,9 +90,7 @@ interface PatientDetailClientProps {
 
 export function PatientDetailClient({ id }: PatientDetailClientProps) {
   const { data: patient, isLoading: patientLoading } = usePatient(id);
-  const { data: allCaregivers = [] } = useClinicCaregivers();
 
-  const assignCaregivers = useAssignCaregivers(id);
   const toggleStatus = useTogglePatientStatus(id);
   // Enfermeiro: acesso somente leitura ao cadastro do paciente.
   const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
@@ -112,38 +107,6 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
     else params.set("tab", value);
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname);
-  }
-
-  const [selectedCaregivers, setSelectedCaregivers] = useState<string[]>([]);
-  const [caregiverMsg, setCaregiverMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (patient?.caregiver_assignments) {
-      startTransition(() => {
-        setSelectedCaregivers(patient.caregiver_assignments.map((a) => String(a.caregiver_id)));
-      });
-    }
-  }, [patient]);
-
-  function toggleCaregiver(cgId: string) {
-    setSelectedCaregivers((prev) =>
-      prev.includes(cgId) ? prev.filter((c) => c !== cgId) : [...prev, cgId]
-    );
-  }
-
-  function handleSaveCaregivers() {
-    if (!patient) return;
-    setCaregiverMsg(null);
-    assignCaregivers.mutate(
-      {
-        caregiverIds: selectedCaregivers,
-        currentAssignments: patient.caregiver_assignments,
-      },
-      {
-        onSuccess: () => setCaregiverMsg("Vínculos salvos com sucesso!"),
-        onError: (err) => setCaregiverMsg(err instanceof Error ? err.message : "Erro ao salvar"),
-      }
-    );
   }
 
   if (patientLoading) {
@@ -327,7 +290,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
             </CardContent>
           </Card>
 
-          {/* Cuidadores — atribuição é ação do admin */}
+          {/* Cuidadores — vínculo definido na aprovação do plano de cuidado */}
           {!isNurse && (
             <Card>
               <CardHeader>
@@ -335,54 +298,30 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                   <Users className="h-5 w-5" />
                   Cuidadores
                 </CardTitle>
-                <CardDescription>Cuidadores atribuídos a este paciente.</CardDescription>
+                <CardDescription>
+                  Cuidadores vinculados a este paciente. O vínculo é definido no plano de
+                  cuidado.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {allCaregivers.length === 0 ? (
+              <CardContent>
+                {patient.caregiver_assignments.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Nenhum cuidador cadastrado na clínica.
+                    Nenhum cuidador vinculado. Defina o cuidador responsável no plano de
+                    cuidado.
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {allCaregivers.map((cg) => {
-                      const isSelected = selectedCaregivers.includes(cg.id);
-                      return (
-                        <label
-                          key={cg.id}
-                          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
-                            isSelected ? "border-primary bg-primary/5" : ""
-                          }`}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleCaregiver(cg.id)}
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{cg.name}</p>
-                            <p className="text-xs text-muted-foreground">{cg.email}</p>
-                          </div>
-                          {isSelected && <Check className="h-4 w-4 text-primary" />}
-                        </label>
-                      );
-                    })}
+                    {patient.caregiver_assignments.map((a) => (
+                      <div
+                        key={a.caregiver_id}
+                        className="flex items-center gap-3 rounded-lg border p-3"
+                      >
+                        <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <p className="text-sm font-medium">{a.caregiver_name}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div className="flex items-center gap-3">
-                  <Button onClick={handleSaveCaregivers} disabled={assignCaregivers.isPending}>
-                    {assignCaregivers.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Salvar vínculos
-                  </Button>
-                  {caregiverMsg && (
-                    <Alert
-                      variant={caregiverMsg.includes("sucesso") ? "default" : "destructive"}
-                      className="flex-1 py-2"
-                    >
-                      <AlertDescription>{caregiverMsg}</AlertDescription>
-                    </Alert>
-                  )}
-                </div>
               </CardContent>
             </Card>
           )}
