@@ -14,6 +14,7 @@ import { useChecklist } from "@/features/checklists/hooks";
 import type { Checklist, ChecklistDetail } from "@/features/checklists/types";
 import { ChecklistDialog } from "./checklist-dialog";
 import { MaterialIcon } from "@/components/shared/material-icon";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +88,6 @@ export function ChecklistsPageClient() {
 
   const checklists = data?.checklists ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -294,31 +294,13 @@ export function ChecklistsPageClient() {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page >= totalPages}
-            >
-              Próxima
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={setPage}
+        label="checklists"
+      />
 
       {editingId === null && <ChecklistDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
       {editingId !== null && (

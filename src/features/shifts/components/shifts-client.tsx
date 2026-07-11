@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -309,8 +310,6 @@ export function ShiftsClient() {
     invalidateTemplates();
   }
 
-  const shiftsTotalPages = Math.ceil(shiftsTotal / pageSize);
-
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -511,32 +510,13 @@ export function ShiftsClient() {
             </CardContent>
           </Card>
 
-          {shiftsTotalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, shiftsTotal)} de{" "}
-                {shiftsTotal} turnos
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= shiftsTotalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={shiftsTotal}
+            onPageChange={setPage}
+            label="turnos"
+          />
         </TabsContent>
 
         {/* Templates tab */}

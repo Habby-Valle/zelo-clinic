@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -91,7 +92,6 @@ export function PatientsClient() {
 
   const patients = data?.patients ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
 
   function updateParams(updates: Record<string, string>) {
     const current = new URLSearchParams(searchParams.toString());
@@ -272,32 +272,13 @@ export function PatientsClient() {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
-            pacientes
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page - 1) })}
-              disabled={page <= 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page + 1) })}
-              disabled={page >= totalPages}
-            >
-              Próxima
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(p) => updateParams({ page: String(p) })}
+        label="pacientes"
+      />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

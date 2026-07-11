@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Filter,
 } from "lucide-react";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -148,10 +149,6 @@ export function CaregiversClient() {
   const nursesTotal = nursesData?.total ?? 0;
   const invites = invitesData?.invites ?? [];
   const invitesTotal = invitesData?.total ?? 0;
-
-  const currentTotal =
-    tab === "caregivers" ? caregiversTotal : tab === "nurses" ? nursesTotal : invitesTotal;
-  const totalPages = Math.ceil(currentTotal / pageSize);
 
   function onTabChange(value: string | null) {
     if (!value) return;
@@ -379,32 +376,13 @@ export function CaregiversClient() {
             </CardContent>
           </Card>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, caregiversTotal)}{" "}
-                de {caregiversTotal} cuidadores
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={caregiversTotal}
+            onPageChange={setPage}
+            label="cuidadores"
+          />
         </TabsContent>
 
         {/* ── Enfermeiros ── */}
@@ -523,32 +501,13 @@ export function CaregiversClient() {
             </CardContent>
           </Card>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, nursesTotal)} de{" "}
-                {nursesTotal} enfermeiros
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={nursesTotal}
+            onPageChange={setPage}
+            label="enfermeiros"
+          />
         </TabsContent>
 
         {/* ── Convites ── */}
@@ -717,32 +676,13 @@ export function CaregiversClient() {
             </CardContent>
           </Card>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, invitesTotal)} de{" "}
-                {invitesTotal} convites
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={invitesTotal}
+            onPageChange={setPage}
+            label="convites"
+          />
         </TabsContent>
       </Tabs>
 

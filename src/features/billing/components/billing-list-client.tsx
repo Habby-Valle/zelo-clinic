@@ -3,7 +3,6 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Receipt } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,7 +60,6 @@ export function BillingListClient() {
 
   const invoices = data?.invoices ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
 
   function updateParams(updates: Record<string, string>) {
     const current = new URLSearchParams(searchParams.toString());
@@ -212,32 +211,13 @@ export function BillingListClient() {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
-            faturas
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page - 1) })}
-              disabled={page <= 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page + 1) })}
-              disabled={page >= totalPages}
-            >
-              Pr&oacute;xima
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(p) => updateParams({ page: String(p) })}
+        label="faturas"
+      />
     </div>
   );
 }
