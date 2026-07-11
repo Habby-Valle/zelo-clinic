@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { ChecklistDialog } from "@/features/checklists/components/checklist-dialog";
 import type { ChecklistDetail } from "@/features/checklists/types";
 import { ChecklistItemOverrideEditor } from "./checklist-item-override-editor";
+import { PatientClinicalSummary } from "./patient-clinical-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -221,6 +222,8 @@ export function CarePlansReviewClient() {
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <PatientClinicalSummary patientId={plan.patient_id} />
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Checklists do plano</p>
                     <p className="text-xs text-muted-foreground">
