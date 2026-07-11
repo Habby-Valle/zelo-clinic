@@ -54,6 +54,19 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Remove a dose entre parênteses do nome ("Losartana (50mg)" → "Losartana").
+function stripDose(name: string): string {
+  return name.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+}
+
+// Normaliza horário declarado para HH:MM ("8:00" → "08:00", "20" → "20:00").
+// Deixa passar valores que não parecem horário (a validação do backend acusa).
+function normalizeTime(t: string): string {
+  const m = t.trim().match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!m) return t.trim();
+  return `${m[1].padStart(2, "0")}:${(m[2] ?? "0").padStart(2, "0")}`;
+}
+
 function emptyForm(): SaveMedicationInput {
   return {
     name: "",
@@ -103,21 +116,20 @@ export function MedicationSection({
     // rascunho — a enfermeira confere/ajusta na receita antes de salvar.
     // Match tolerante: a sugestão pode carregar a dose no nome ("Nome (50mg)"),
     // então normaliza removendo parênteses; cai para o trecho de origem.
-    const norm = (x: string) =>
-      x.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    const target = stripDose(s.name).toLowerCase();
     const details = parseDeclaredMedicationDetails(declaredMedications ?? "");
-    const target = norm(s.name);
     const detail =
-      details.find((d) => norm(d.name) === target) ??
+      details.find((d) => stripDose(d.name).toLowerCase() === target) ??
       details.find((d) => (s.source_text ?? "").toLowerCase().includes(d.name.toLowerCase()));
-    const times = detail?.times.length
+    const rawTimes = detail?.times.length
       ? detail.times
       : (detail?.turns ?? [])
           .map((t) => TURN_DEFAULT_TIME[t])
           .filter(Boolean);
+    const times = rawTimes.map(normalizeTime);
     setForm({
       ...emptyForm(),
-      name: s.name,
+      name: stripDose(s.name),
       dose: detail?.dose ?? "",
       schedule_times: times,
       notes: `Declarado pela família: "${s.source_text}" — validar dose e via na receita.`,
@@ -146,7 +158,8 @@ export function MedicationSection({
         schedule_times: timesCsv
           .split(",")
           .map((t) => t.trim())
-          .filter(Boolean),
+          .filter(Boolean)
+          .map(normalizeTime),
       });
       toast.success("Medicação adicionada.");
       resetForm();
@@ -376,7 +389,7 @@ export function MedicationSection({
                   onClick={() => applySuggestion(s)}
                 >
                   <Plus className="mr-1 h-3 w-3" />
-                  {s.name}
+                  {stripDose(s.name)}
                 </Button>
               ))}
             </div>
