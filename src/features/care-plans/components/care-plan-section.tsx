@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, startTransition } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   Loader2,
@@ -338,6 +339,18 @@ export function CarePlanSection({
                 O cuidador escolhido será vinculado ao paciente quando o plano for
                 aprovado pelo enfermeiro.
               </p>
+              {caregiverId ? (
+                <p className="flex items-center gap-1 text-xs text-green-600">
+                  <CheckCircle className="h-3 w-3" />
+                  Cuidador vinculado ao plano.
+                </p>
+              ) : caregiverQuery.trim() ? (
+                <p className="flex items-center gap-1 text-xs text-amber-600">
+                  <AlertTriangle className="h-3 w-3" />
+                  Selecione o cuidador na lista para vincular (só o nome digitado não
+                  cria o vínculo).
+                </p>
+              ) : null}
               {caregiverFocused && caregiverSuggestions.length > 0 && (
                 <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
                   {caregiverSuggestions.map((c) => (
