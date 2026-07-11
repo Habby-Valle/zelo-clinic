@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   CheckCircle,
   ChevronDown,
   ChevronRight,
@@ -38,13 +39,19 @@ import {
   useReturnCarePlan,
   useUpdateCarePlanChecklists,
 } from "../hooks/use-care-plans";
-import type { CarePlan, CarePlanChecklistOverride } from "../types";
+import type { CarePlan, CarePlanChecklistOverride, ChecklistOption } from "../types";
 
 // overrides[planId][checklistId][itemId] = override do item
 type OverridesState = Record<
   string,
   Record<string, Record<string, CarePlanChecklistOverride>>
 >;
+
+// Guard: checklist com item de seleção sem opções cadastradas é inválido — o
+// cuidador não teria o que responder. Bloqueia a aprovação se estiver marcado.
+function hasMissingSelectOptions(opt: ChecklistOption): boolean {
+  return opt.items.some((it) => it.type === "select" && it.options.length === 0);
+}
 
 export function CarePlansReviewClient() {
   const queryClient = useQueryClient();
@@ -143,9 +150,25 @@ export function CarePlansReviewClient() {
     });
   }
 
+  function invalidSelectedFor(plan: CarePlan): ChecklistOption[] {
+    const selected = selectedFor(plan);
+    return checklistOptions.filter(
+      (opt) => selected.includes(opt.id) && hasMissingSelectOptions(opt)
+    );
+  }
+
   async function handleApprove(plan: CarePlan) {
     const selected = selectedFor(plan);
     if (selected.length === 0) return;
+    const invalid = invalidSelectedFor(plan);
+    if (invalid.length > 0) {
+      toast.error(
+        `Complete as opções dos itens de seleção em: ${invalid
+          .map((o) => o.name)
+          .join(", ")}.`
+      );
+      return;
+    }
     const checklists = selected.map((cid) => {
       const byItem = overrides[plan.id]?.[cid] ?? {};
       const overrideList = Object.values(byItem).filter(
@@ -208,6 +231,7 @@ export function CarePlansReviewClient() {
         <div className="space-y-4">
           {plans.map((plan) => {
             const selected = selectedFor(plan);
+            const invalidSelected = invalidSelectedFor(plan);
             return (
               <Card key={plan.id}>
                 <CardHeader>
@@ -240,8 +264,16 @@ export function CarePlansReviewClient() {
                           const checked = selected.includes(opt.id);
                           const isExpanded = expanded[plan.id] === opt.id;
                           const byItem = itemOverridesFor(plan.id, opt.id);
+                          const missingOptions = hasMissingSelectOptions(opt);
                           return (
-                            <div key={opt.id} className="rounded-lg border p-3">
+                            <div
+                              key={opt.id}
+                              className={
+                                missingOptions && checked
+                                  ? "rounded-lg border border-destructive/50 p-3"
+                                  : "rounded-lg border p-3"
+                              }
+                            >
                               <div className="flex items-center gap-2">
                                 <label className="flex flex-1 items-center gap-2">
                                   <Checkbox
@@ -272,6 +304,14 @@ export function CarePlansReviewClient() {
                                   </Button>
                                 )}
                               </div>
+
+                              {missingOptions && (
+                                <p className="mt-2 flex items-center gap-1.5 pl-6 text-xs text-destructive">
+                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                  Há item de seleção sem opções cadastradas. Edite o
+                                  checklist antes de aprovar.
+                                </p>
+                              )}
 
                               {!isExpanded && opt.items.length > 0 && (
                                 <ul className="mt-2 space-y-1 pl-6">
@@ -341,7 +381,10 @@ export function CarePlansReviewClient() {
                       <XCircle className="mr-2 h-4 w-4" />
                       Devolver
                     </Button>
-                    <Button onClick={() => handleApprove(plan)} disabled={busy || selected.length === 0}>
+                    <Button
+                      onClick={() => handleApprove(plan)}
+                      disabled={busy || selected.length === 0 || invalidSelected.length > 0}
+                    >
                       {(approve.isPending || updateChecklists.isPending) && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}

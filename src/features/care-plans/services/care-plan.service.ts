@@ -38,6 +38,12 @@ function mapChecklistItem(item: Record<string, unknown>): CarePlanChecklistItem 
     requires_photo: Boolean(item.requires_photo ?? false),
     frequency: String(item.frequency ?? "per_shift"),
     scheduled_times: Array.isArray(item.scheduled_times) ? item.scheduled_times : [],
+    options: Array.isArray(item.options)
+      ? (item.options as { value: unknown; label: unknown }[]).map((o) => ({
+          value: String(o.value),
+          label: String(o.label),
+        }))
+      : [],
   };
 }
 

@@ -23,6 +23,7 @@ export interface CarePlanChecklistItem {
   requires_photo: boolean;
   frequency: string;
   scheduled_times: string[];
+  options: { value: string; label: string }[];
 }
 
 export interface CarePlanChecklistOverride {
