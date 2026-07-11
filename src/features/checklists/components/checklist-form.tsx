@@ -7,7 +7,13 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-ki
 import { toast } from "sonner";
 
 import { useCreateChecklist, useUpdateChecklist } from "@/features/checklists/hooks";
-import type { ChecklistDetail, ChecklistItemType, AlertSeverity, Criticality, FrequencyType } from "@/features/checklists/types";
+import type {
+  ChecklistDetail,
+  ChecklistItemType,
+  AlertSeverity,
+  Criticality,
+  FrequencyType,
+} from "@/features/checklists/types";
 import { SortableItem } from "./sortable-item";
 import { MaterialIconPicker } from "@/components/shared/material-icon-picker";
 import { Button } from "@/components/ui/button";
@@ -174,9 +180,7 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
   function addScheduledTime(tempId: string) {
     setItems((prev) =>
       prev.map((i) =>
-        i.tempId === tempId
-          ? { ...i, scheduled_times: [...i.scheduled_times, "08:00"] }
-          : i
+        i.tempId === tempId ? { ...i, scheduled_times: [...i.scheduled_times, "08:00"] } : i
       )
     );
   }
@@ -402,7 +406,9 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                         </SelectTrigger>
                         <SelectContent>
                           {CRITICALITY_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -416,7 +422,10 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                             updateItem(item.tempId, { requires_photo: v === true })
                           }
                         />
-                        <Label htmlFor={`photo-${item.tempId}`} className="cursor-pointer text-xs font-normal">
+                        <Label
+                          htmlFor={`photo-${item.tempId}`}
+                          className="cursor-pointer text-xs font-normal"
+                        >
                           Requer foto
                         </Label>
                       </div>
@@ -456,7 +465,9 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                             step="any"
                             placeholder="0"
                             value={item.expected_min}
-                            onChange={(e) => updateItem(item.tempId, { expected_min: e.target.value })}
+                            onChange={(e) =>
+                              updateItem(item.tempId, { expected_min: e.target.value })
+                            }
                             className="h-8 text-sm"
                           />
                         </div>
@@ -467,7 +478,9 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                             step="any"
                             placeholder="0"
                             value={item.expected_max}
-                            onChange={(e) => updateItem(item.tempId, { expected_max: e.target.value })}
+                            onChange={(e) =>
+                              updateItem(item.tempId, { expected_max: e.target.value })
+                            }
                             className="h-8 text-sm"
                           />
                         </div>
@@ -476,17 +489,24 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                           <Select
                             value={item.alert_severity}
                             onValueChange={(v) =>
-                              updateItem(item.tempId, { alert_severity: (v ?? "") as AlertSeverity })
+                              updateItem(item.tempId, {
+                                alert_severity: (v ?? "") as AlertSeverity,
+                              })
                             }
                           >
                             <SelectTrigger className="h-8">
                               <SelectValue>
-                                {SEVERITY_OPTIONS.find((o) => o.value === item.alert_severity)?.label}
+                                {
+                                  SEVERITY_OPTIONS.find((o) => o.value === item.alert_severity)
+                                    ?.label
+                                }
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {SEVERITY_OPTIONS.map((o) => (
-                                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                <SelectItem key={o.value} value={o.value}>
+                                  {o.label}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -502,7 +522,9 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                       <Select
                         value={item.frequency}
                         onValueChange={(v) =>
-                          updateItem(item.tempId, { frequency: (v ?? "per_shift") as FrequencyType })
+                          updateItem(item.tempId, {
+                            frequency: (v ?? "per_shift") as FrequencyType,
+                          })
                         }
                       >
                         <SelectTrigger>
@@ -512,7 +534,9 @@ export function ChecklistForm({ checklist, onSuccess }: Props) {
                         </SelectTrigger>
                         <SelectContent>
                           {FREQUENCY_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

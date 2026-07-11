@@ -42,10 +42,7 @@ import {
 import type { CarePlan, CarePlanChecklistOverride, ChecklistOption } from "../types";
 
 // overrides[planId][checklistId][itemId] = override do item
-type OverridesState = Record<
-  string,
-  Record<string, Record<string, CarePlanChecklistOverride>>
->;
+type OverridesState = Record<string, Record<string, Record<string, CarePlanChecklistOverride>>>;
 
 // Guard: checklist com item de seleção sem opções cadastradas é inválido — o
 // cuidador não teria o que responder. Bloqueia a aprovação se estiver marcado.
@@ -143,9 +140,7 @@ export function CarePlansReviewClient() {
   function toggle(plan: CarePlan, checklistId: string, checked: boolean) {
     setEdits((prev) => {
       const current = prev[plan.id] ?? plan.checklists.map((c) => c.checklist_id);
-      const next = checked
-        ? [...current, checklistId]
-        : current.filter((id) => id !== checklistId);
+      const next = checked ? [...current, checklistId] : current.filter((id) => id !== checklistId);
       return { ...prev, [plan.id]: next };
     });
   }
@@ -163,9 +158,7 @@ export function CarePlansReviewClient() {
     const invalid = invalidSelectedFor(plan);
     if (invalid.length > 0) {
       toast.error(
-        `Complete as opções dos itens de seleção em: ${invalid
-          .map((o) => o.name)
-          .join(", ")}.`
+        `Complete as opções dos itens de seleção em: ${invalid.map((o) => o.name).join(", ")}.`
       );
       return;
     }
@@ -255,9 +248,7 @@ export function CarePlansReviewClient() {
                       Checklists.
                     </p>
                     {checklistOptions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        Nenhum checklist disponível.
-                      </p>
+                      <p className="text-sm text-muted-foreground">Nenhum checklist disponível.</p>
                     ) : (
                       <div className="space-y-2">
                         {checklistOptions.map((opt) => {
@@ -308,8 +299,8 @@ export function CarePlansReviewClient() {
                               {missingOptions && (
                                 <p className="mt-2 flex items-center gap-1.5 pl-6 text-xs text-destructive">
                                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                  Há item de seleção sem opções cadastradas. Edite o
-                                  checklist antes de aprovar.
+                                  Há item de seleção sem opções cadastradas. Edite o checklist antes
+                                  de aprovar.
                                 </p>
                               )}
 
@@ -359,11 +350,7 @@ export function CarePlansReviewClient() {
                         })}
                       </div>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setNewChecklistFor(plan.id)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setNewChecklistFor(plan.id)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Novo checklist
                     </Button>

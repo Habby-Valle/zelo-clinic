@@ -110,7 +110,13 @@ export default function InvitePage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Button size="lg" className="min-w-[260px] text-base" onClick={() => { window.location.href = appUrl; }}>
+        <Button
+          size="lg"
+          className="min-w-[260px] text-base"
+          onClick={() => {
+            window.location.href = appUrl;
+          }}
+        >
           Abrir no App
         </Button>
 

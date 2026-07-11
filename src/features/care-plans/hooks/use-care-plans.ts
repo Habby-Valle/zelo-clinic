@@ -130,13 +130,8 @@ export function useReturnCarePlan() {
 export function useUpdateCarePlanChecklists() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      planId,
-      checklists,
-    }: {
-      planId: string;
-      checklists: SaveCarePlanChecklist[];
-    }) => updateCarePlanChecklists(planId, checklists),
+    mutationFn: ({ planId, checklists }: { planId: string; checklists: SaveCarePlanChecklist[] }) =>
+      updateCarePlanChecklists(planId, checklists),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },

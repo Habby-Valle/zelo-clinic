@@ -138,19 +138,18 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : medications.length === 0 && !showForm ? (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma medicação cadastrada.
-          </p>
+          <p className="text-sm text-muted-foreground">Nenhuma medicação cadastrada.</p>
         ) : (
           <div className="space-y-2">
             {medications.map((med) => (
-              <div
-                key={med.id}
-                className="flex items-start gap-3 rounded-lg border p-3"
-              >
+              <div key={med.id} className="flex items-start gap-3 rounded-lg border p-3">
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className={med.is_active ? "font-medium" : "text-muted-foreground line-through"}>
+                    <span
+                      className={
+                        med.is_active ? "font-medium" : "text-muted-foreground line-through"
+                      }
+                    >
                       {med.name}
                     </span>
                     {med.dose && (
@@ -163,24 +162,13 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
-                    {med.schedule_times.length > 0 && (
-                      <span>
-                        {med.schedule_times.join(", ")}
-                      </span>
-                    )}
-                    {med.prescribed_by && (
-                      <span>· {med.prescribed_by}</span>
-                    )}
+                    {med.schedule_times.length > 0 && <span>{med.schedule_times.join(", ")}</span>}
+                    {med.prescribed_by && <span>· {med.prescribed_by}</span>}
                   </div>
-                  {med.notes && (
-                    <p className="text-xs text-muted-foreground">{med.notes}</p>
-                  )}
+                  {med.notes && <p className="text-xs text-muted-foreground">{med.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch
-                    checked={med.is_active}
-                    onCheckedChange={() => handleToggleActive(med)}
-                  />
+                  <Switch checked={med.is_active} onCheckedChange={() => handleToggleActive(med)} />
                   <Button
                     type="button"
                     variant="ghost"
@@ -296,8 +284,8 @@ export function MedicationSection({ patientId, declaredMedications }: Medication
         {!showForm && suggestions.length > 0 && (
           <div className="rounded-lg border border-dashed p-3">
             <p className="mb-2 text-xs text-muted-foreground">
-              Nomes citados pela família. Dose, via e horários devem ser preenchidos a
-              partir da receita médica.
+              Nomes citados pela família. Dose, via e horários devem ser preenchidos a partir da
+              receita médica.
             </p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s, i) => (

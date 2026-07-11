@@ -23,7 +23,9 @@ export async function updateAsaasConfig(data: UpdateAsaasConfigData): Promise<As
   });
 }
 
-export async function testAsaasConnection(apiKey?: string): Promise<{ success: boolean; message: string }> {
+export async function testAsaasConnection(
+  apiKey?: string
+): Promise<{ success: boolean; message: string }> {
   return apiFetchClient<{ success: boolean; message: string }>("/asaas/config/test/", {
     method: "POST",
     body: JSON.stringify({ api_key: apiKey }),

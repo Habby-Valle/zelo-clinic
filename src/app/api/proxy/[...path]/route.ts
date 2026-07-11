@@ -21,7 +21,7 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
     headers["Content-Type"] = contentType;
   }
 
-    const body = isFormData ? await request.formData() : await request.text().catch(() => undefined);
+  const body = isFormData ? await request.formData() : await request.text().catch(() => undefined);
 
   try {
     const res = await fetch(url, {
@@ -38,11 +38,8 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
     });
 
     const isBinary = res.headers.get("content-type") === "application/pdf";
-    const responseBody = res.status === 204
-      ? null
-      : isBinary
-        ? await res.arrayBuffer()
-        : await res.text();
+    const responseBody =
+      res.status === 204 ? null : isBinary ? await res.arrayBuffer() : await res.text();
 
     return new NextResponse(responseBody, {
       status: res.status,

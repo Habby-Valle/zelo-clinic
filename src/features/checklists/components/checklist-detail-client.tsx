@@ -252,9 +252,11 @@ export function ChecklistDetailClient({ id }: Props) {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs">
-                          {item.type === "number" && (item.expected_min != null || item.expected_max != null) ? (
+                          {item.type === "number" &&
+                          (item.expected_min != null || item.expected_max != null) ? (
                             <span>
-                              {item.expected_min ?? "—"} {item.unit} — {item.expected_max ?? "—"} {item.unit}
+                              {item.expected_min ?? "—"} {item.unit} — {item.expected_max ?? "—"}{" "}
+                              {item.unit}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>

@@ -3,14 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  ClipboardList,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Search,
-} from "lucide-react";
+import { ClipboardList, Eye, CheckCircle, XCircle, Loader2, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,12 +28,13 @@ import {
 } from "../hooks/use-care-plans";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
-const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  draft: "outline",
-  pending_review: "secondary",
-  active: "default",
-  archived: "outline",
-};
+const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "destructive" | "outline"> =
+  {
+    draft: "outline",
+    pending_review: "secondary",
+    active: "default",
+    archived: "outline",
+  };
 
 const STATUS_TABS = [
   { value: "", label: "Todos" },
@@ -69,7 +63,12 @@ export function CarePlansListClient() {
   const [returnFor, setReturnFor] = useState<string | null>(null);
   const [returnNote, setReturnNote] = useState("");
 
-  const { data, isLoading } = useCarePlans({ status: status || undefined, search: search || undefined, page, pageSize });
+  const { data, isLoading } = useCarePlans({
+    status: status || undefined,
+    search: search || undefined,
+    page,
+    pageSize,
+  });
   const approve = useApproveCarePlan();
   const returnPlan = useReturnCarePlan();
   const updateChecklists = useUpdateCarePlanChecklists();
@@ -120,10 +119,7 @@ export function CarePlansListClient() {
         </p>
       </div>
 
-      <Tabs
-        value={status}
-        onValueChange={(v) => updateParams({ status: v, page: "" })}
-      >
+      <Tabs value={status} onValueChange={(v) => updateParams({ status: v, page: "" })}>
         <TabsList>
           {STATUS_TABS.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
@@ -162,11 +158,21 @@ export function CarePlansListClient() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
                     <TableCell />
                   </TableRow>
                 ))
@@ -185,10 +191,7 @@ export function CarePlansListClient() {
                   return (
                     <TableRow key={plan.id}>
                       <TableCell className="font-medium">
-                        <Link
-                          href={`/patients/${plan.patient_id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/patients/${plan.patient_id}`} className="hover:underline">
                           {plan.patient_name}
                         </Link>
                       </TableCell>
@@ -259,7 +262,8 @@ export function CarePlansListClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total} planos
+            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
+            planos
           </p>
           <div className="flex gap-2">
             <Button

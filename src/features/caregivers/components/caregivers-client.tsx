@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2, RefreshCw, Filter } from "lucide-react";
+import {
+  Plus,
+  Mail,
+  XCircle,
+  Clock,
+  Users,
+  CheckCircle2,
+  XOctagon,
+  Loader2,
+  RefreshCw,
+  Filter,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,12 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -143,7 +149,8 @@ export function CaregiversClient() {
   const invites = invitesData?.invites ?? [];
   const invitesTotal = invitesData?.total ?? 0;
 
-  const currentTotal = tab === "caregivers" ? caregiversTotal : tab === "nurses" ? nursesTotal : invitesTotal;
+  const currentTotal =
+    tab === "caregivers" ? caregiversTotal : tab === "nurses" ? nursesTotal : invitesTotal;
   const totalPages = Math.ceil(currentTotal / pageSize);
 
   function onTabChange(value: string | null) {
@@ -259,11 +266,18 @@ export function CaregiversClient() {
             />
             <Select
               value={isActiveFilter}
-              onValueChange={(v) => { setIsActiveFilter(v ?? ""); setPage(1); }}
+              onValueChange={(v) => {
+                setIsActiveFilter(v ?? "");
+                setPage(1);
+              }}
             >
               <SelectTrigger className="w-[150px]">
                 <Filter className="mr-1 h-3 w-3" />
-                {isActiveFilter === "true" ? "Ativo" : isActiveFilter === "false" ? "Inativo" : "Status"}
+                {isActiveFilter === "true"
+                  ? "Ativo"
+                  : isActiveFilter === "false"
+                    ? "Inativo"
+                    : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
@@ -407,11 +421,18 @@ export function CaregiversClient() {
             />
             <Select
               value={isActiveFilter}
-              onValueChange={(v) => { setIsActiveFilter(v ?? ""); setPage(1); }}
+              onValueChange={(v) => {
+                setIsActiveFilter(v ?? "");
+                setPage(1);
+              }}
             >
               <SelectTrigger className="w-[150px]">
                 <Filter className="mr-1 h-3 w-3" />
-                {isActiveFilter === "true" ? "Ativo" : isActiveFilter === "false" ? "Inativo" : "Status"}
+                {isActiveFilter === "true"
+                  ? "Ativo"
+                  : isActiveFilter === "false"
+                    ? "Inativo"
+                    : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
@@ -437,11 +458,21 @@ export function CaregiversClient() {
                   {loadingNurses ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-36" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-48" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : nurses.length === 0 ? (
@@ -465,7 +496,9 @@ export function CaregiversClient() {
                       >
                         <TableCell className="font-medium">{nurse.name}</TableCell>
                         <TableCell className="text-muted-foreground">{nurse.email}</TableCell>
-                        <TableCell className="text-muted-foreground">{nurse.professional_register ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {nurse.professional_register ?? "—"}
+                        </TableCell>
                         <TableCell>
                           {nurse.is_active ? (
                             <Badge variant="secondary" className="gap-1">
@@ -532,11 +565,18 @@ export function CaregiversClient() {
             />
             <Select
               value={inviteRoleFilter ?? ""}
-              onValueChange={(v) => { setInviteRoleFilter(v); setPage(1); }}
+              onValueChange={(v) => {
+                setInviteRoleFilter(v);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-1 h-3 w-3" />
-                {inviteRoleFilter === "caregiver" ? "Cuidador" : inviteRoleFilter === "clinic_nurse" ? "Enfermeiro(a)" : "Tipo"}
+                {inviteRoleFilter === "caregiver"
+                  ? "Cuidador"
+                  : inviteRoleFilter === "clinic_nurse"
+                    ? "Enfermeiro(a)"
+                    : "Tipo"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>
@@ -546,11 +586,22 @@ export function CaregiversClient() {
             </Select>
             <Select
               value={inviteStatusFilter}
-              onValueChange={(v) => { setInviteStatusFilter(v ?? ""); setPage(1); }}
+              onValueChange={(v) => {
+                setInviteStatusFilter(v ?? "");
+                setPage(1);
+              }}
             >
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-1 h-3 w-3" />
-                {inviteStatusFilter === "pending" ? "Pendente" : inviteStatusFilter === "accepted" ? "Aceito" : inviteStatusFilter === "expired" ? "Expirado" : inviteStatusFilter === "cancelled" ? "Cancelado" : "Status"}
+                {inviteStatusFilter === "pending"
+                  ? "Pendente"
+                  : inviteStatusFilter === "accepted"
+                    ? "Aceito"
+                    : inviteStatusFilter === "expired"
+                      ? "Expirado"
+                      : inviteStatusFilter === "cancelled"
+                        ? "Cancelado"
+                        : "Status"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>

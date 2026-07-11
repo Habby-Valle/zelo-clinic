@@ -52,12 +52,10 @@ export async function fetchCarePlanByPatient(patientId: string): Promise<CarePla
     `/care-plans/?patient_id=${patientId}`
   );
   const plans = data.results ?? [];
-  const raw = (
-    plans.find((p) => p.status === "active") ??
+  const raw = (plans.find((p) => p.status === "active") ??
     plans.find((p) => p.status === "draft") ??
     plans[0] ??
-    null
-  ) as Record<string, unknown> | null;
+    null) as Record<string, unknown> | null;
   if (!raw) return null;
   return {
     id: String(raw.id),
@@ -79,7 +77,9 @@ export async function fetchCarePlanByPatient(patientId: string): Promise<CarePla
       checklist_id: String(cl.checklist_id),
       checklist_name: String(cl.checklist_name ?? ""),
       checklist_category: String(cl.checklist_category ?? ""),
-      checklist_items: ((cl.checklist_items as Record<string, unknown>[]) ?? []).map(mapChecklistItem),
+      checklist_items: ((cl.checklist_items as Record<string, unknown>[]) ?? []).map(
+        mapChecklistItem
+      ),
       frequency: String(cl.frequency ?? ""),
       order: Number(cl.order ?? 0),
       overrides: ((cl.overrides as Record<string, unknown>[]) ?? []).map((ov) => ({
@@ -160,7 +160,9 @@ function mapCarePlan(raw: Record<string, unknown>): CarePlan {
       checklist_id: String(cl.checklist_id),
       checklist_name: String(cl.checklist_name ?? ""),
       checklist_category: String(cl.checklist_category ?? ""),
-      checklist_items: ((cl.checklist_items as Record<string, unknown>[]) ?? []).map(mapChecklistItem),
+      checklist_items: ((cl.checklist_items as Record<string, unknown>[]) ?? []).map(
+        mapChecklistItem
+      ),
       frequency: String(cl.frequency ?? ""),
       order: Number(cl.order ?? 0),
       overrides: ((cl.overrides as Record<string, unknown>[]) ?? []).map((ov) => ({
@@ -199,17 +201,23 @@ export async function fetchCarePlans(params?: {
 }
 
 export async function fetchCarePlansForReview(): Promise<CarePlan[]> {
-  const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(`/care-plans/?status=pending_review`);
+  const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(
+    `/care-plans/?status=pending_review`
+  );
   return (data.results ?? []).map(mapCarePlan);
 }
 
 export async function fetchActiveCarePlans(): Promise<CarePlan[]> {
-  const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(`/care-plans/?status=active`);
+  const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(
+    `/care-plans/?status=active`
+  );
   return (data.results ?? []).map(mapCarePlan);
 }
 
 export async function submitCarePlan(id: string): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/submit/`, { method: "POST" });
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/submit/`, {
+    method: "POST",
+  });
   return mapCarePlan(raw);
 }
 
@@ -249,7 +257,9 @@ export async function fetchCaregiverMatch(patientId: string): Promise<CaregiverM
 }
 
 export async function approveCarePlan(id: string): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/approve/`, { method: "POST" });
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/approve/`, {
+    method: "POST",
+  });
   return mapCarePlan(raw);
 }
 

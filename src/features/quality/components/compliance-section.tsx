@@ -39,12 +39,15 @@ function ComplianceBadge({ pct }: { pct: number }) {
 export function ComplianceSection() {
   const { data: stats, isLoading } = useComplianceStats();
 
-  const totalShifts = stats?.reduce((acc: number, s: ComplianceStatsType) => acc + s.total_shifts, 0) ?? 0;
+  const totalShifts =
+    stats?.reduce((acc: number, s: ComplianceStatsType) => acc + s.total_shifts, 0) ?? 0;
   const avgCompliance =
     stats && stats.length > 0
-      ? stats.reduce((acc: number, s: ComplianceStatsType) => acc + s.avg_compliance_pct, 0) / stats.length
+      ? stats.reduce((acc: number, s: ComplianceStatsType) => acc + s.avg_compliance_pct, 0) /
+        stats.length
       : null;
-  const lowCaregivers = stats?.filter((s: ComplianceStatsType) => s.avg_compliance_pct < 70).length ?? 0;
+  const lowCaregivers =
+    stats?.filter((s: ComplianceStatsType) => s.avg_compliance_pct < 70).length ?? 0;
 
   return (
     <Card>
@@ -68,7 +71,13 @@ export function ComplianceSection() {
           </div>
           <div className="rounded-lg border p-3">
             <p className="text-sm text-muted-foreground">Abaixo do Ideal</p>
-            <p className={lowCaregivers > 0 ? "mt-1 text-2xl font-bold text-amber-600" : "mt-1 text-2xl font-bold"}>
+            <p
+              className={
+                lowCaregivers > 0
+                  ? "mt-1 text-2xl font-bold text-amber-600"
+                  : "mt-1 text-2xl font-bold"
+              }
+            >
               {lowCaregivers}
             </p>
           </div>

@@ -96,10 +96,7 @@ export function CarePlanSection({
   }, [plan]);
 
   function addGoal() {
-    setGoals((prev) => [
-      ...prev,
-      { description: "", target_metric: "", order: prev.length },
-    ]);
+    setGoals((prev) => [...prev, { description: "", target_metric: "", order: prev.length }]);
   }
 
   function removeGoal(index: number) {
@@ -114,7 +111,11 @@ export function CarePlanSection({
     });
   }
 
-  function setItemOverride(checklistId: string, itemId: string, override: CarePlanChecklistOverride) {
+  function setItemOverride(
+    checklistId: string,
+    itemId: string,
+    override: CarePlanChecklistOverride
+  ) {
     setOverridesByChecklist((prev) => {
       const checklist = { ...(prev[checklistId] ?? {}) };
       const existing = checklist[itemId] ?? { item_id: itemId };
@@ -139,9 +140,7 @@ export function CarePlanSection({
   function handleChecklistCreated(created: ChecklistDetail) {
     queryClient.invalidateQueries({ queryKey: ["checklist-options-plan"] });
     setSelected((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
-    setOverridesByChecklist((prev) =>
-      prev[created.id] ? prev : { ...prev, [created.id]: {} }
-    );
+    setOverridesByChecklist((prev) => (prev[created.id] ? prev : { ...prev, [created.id]: {} }));
   }
 
   function handleSelectChecklist(checklistId: string, checked: boolean) {
@@ -178,7 +177,17 @@ export function CarePlanSection({
     const wanted = new Set<string>(["vitals", "hygiene"]);
     if (medications.trim()) wanted.add("medication");
     const conditions = healthConditions.toLowerCase();
-    const mobilityKw = ["acamad", "mobilidad", "avc", "cadeira", "deambul", "locomo", "fratura", "prótese", "protese"];
+    const mobilityKw = [
+      "acamad",
+      "mobilidad",
+      "avc",
+      "cadeira",
+      "deambul",
+      "locomo",
+      "fratura",
+      "prótese",
+      "protese",
+    ];
     if (mobilityKw.some((k) => conditions.includes(k))) wanted.add("mobility");
     return checklistOptions.filter((c) => wanted.has(c.category)).map((c) => c.id);
   }, [checklistOptions, medications, healthConditions, suggestions]);
@@ -336,8 +345,8 @@ export function CarePlanSection({
                 autoComplete="off"
               />
               <p className="text-xs text-muted-foreground">
-                O cuidador escolhido será vinculado ao paciente quando o plano for
-                aprovado pelo enfermeiro.
+                O cuidador escolhido será vinculado ao paciente quando o plano for aprovado pelo
+                enfermeiro.
               </p>
               {caregiverId ? (
                 <p className="flex items-center gap-1 text-xs text-green-600">
@@ -347,8 +356,8 @@ export function CarePlanSection({
               ) : caregiverQuery.trim() ? (
                 <p className="flex items-center gap-1 text-xs text-amber-600">
                   <AlertTriangle className="h-3 w-3" />
-                  Selecione o cuidador na lista para vincular (só o nome digitado não
-                  cria o vínculo).
+                  Selecione o cuidador na lista para vincular (só o nome digitado não cria o
+                  vínculo).
                 </p>
               ) : null}
               {caregiverFocused && caregiverSuggestions.length > 0 && (
@@ -388,7 +397,10 @@ export function CarePlanSection({
               </div>
               {showSuggestionHint && (
                 <p className="text-xs text-muted-foreground">
-                  Pré-selecionados com base {suggestionCategories.length > 0 ? `nos diagnósticos (${suggestionCategories.join(", ")})` : "no perfil do paciente"}
+                  Pré-selecionados com base{" "}
+                  {suggestionCategories.length > 0
+                    ? `nos diagnósticos (${suggestionCategories.join(", ")})`
+                    : "no perfil do paciente"}
                   . Ajuste se necessário.
                 </p>
               )}
@@ -418,9 +430,7 @@ export function CarePlanSection({
                           <Checkbox
                             id={`plan-cl-${cl.id}`}
                             checked={checked}
-                            onCheckedChange={(v) =>
-                              handleSelectChecklist(cl.id, v === true)
-                            }
+                            onCheckedChange={(v) => handleSelectChecklist(cl.id, v === true)}
                           />
                           <Label
                             htmlFor={`plan-cl-${cl.id}`}
@@ -440,9 +450,7 @@ export function CarePlanSection({
                               size="icon"
                               className="h-6 w-6"
                               aria-label={
-                                expandedChecklist === cl.id
-                                  ? "Ocultar ajustes"
-                                  : "Ajustar itens"
+                                expandedChecklist === cl.id ? "Ocultar ajustes" : "Ajustar itens"
                               }
                               onClick={() => toggleChecklistExpanded(cl.id)}
                             >
@@ -456,7 +464,7 @@ export function CarePlanSection({
                         </div>
 
                         {checked && expandedChecklist !== cl.id && cl.items.length > 0 && (
-                          <ul className="ml-6 mt-2 space-y-1 border-l-2 pl-3">
+                          <ul className="mt-2 ml-6 space-y-1 border-l-2 pl-3">
                             {cl.items.map((item) => {
                               const isInactive = itemOverrides[item.id]?.is_active === false;
                               return (
@@ -480,7 +488,7 @@ export function CarePlanSection({
                         )}
 
                         {checked && expandedChecklist === cl.id && (
-                          <div className="ml-6 mt-2 space-y-2 border-l-2 pl-3">
+                          <div className="mt-2 ml-6 space-y-2 border-l-2 pl-3">
                             {cl.items.map((item) => (
                               <ChecklistItemOverrideEditor
                                 key={item.id}

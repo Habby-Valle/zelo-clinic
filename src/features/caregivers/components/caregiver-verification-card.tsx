@@ -13,7 +13,11 @@ import type { VerificationStatus } from "../types";
 
 const STATUS_META: Record<
   VerificationStatus,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof Clock }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: typeof Clock;
+  }
 > = {
   pending: { label: "Aguardando aprovação", variant: "outline", icon: Clock },
   approved: { label: "Aprovado", variant: "secondary", icon: CheckCircle2 },
@@ -99,7 +103,9 @@ export function CaregiverVerificationCard({ caregiverId }: Props) {
 
         {status !== "approved" && (
           <div className="space-y-2">
-            <Label htmlFor="verify-note">Observação {status === "pending" ? "(obrigatória p/ rejeitar)" : ""}</Label>
+            <Label htmlFor="verify-note">
+              Observação {status === "pending" ? "(obrigatória p/ rejeitar)" : ""}
+            </Label>
             <Textarea
               id="verify-note"
               placeholder="Ex.: falta enviar o ASO / registro profissional vencido."

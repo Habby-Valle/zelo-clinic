@@ -70,9 +70,7 @@ export function PatientAssessmentSection({
       toast.success("Avaliação registrada!");
       setShowForm(false);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Erro ao registrar avaliação"
-      );
+      toast.error(err instanceof Error ? err.message : "Erro ao registrar avaliação");
     }
   }
 
@@ -80,9 +78,7 @@ export function PatientAssessmentSection({
     return (
       <Card>
         <CardContent className="py-6">
-          <p className="text-sm text-muted-foreground">
-            Carregando avaliações...
-          </p>
+          <p className="text-sm text-muted-foreground">Carregando avaliações...</p>
         </CardContent>
       </Card>
     );
@@ -101,8 +97,7 @@ export function PatientAssessmentSection({
           )}
         </CardTitle>
         <CardDescription>
-          Avaliação clínica estruturada do paciente (Mobilidade, Riscos,
-          Diagnósticos).
+          Avaliação clínica estruturada do paciente (Mobilidade, Riscos, Diagnósticos).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -110,35 +105,21 @@ export function PatientAssessmentSection({
           <div className="space-y-3 rounded-lg border p-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Mobilidade
-                </p>
-                <p className="text-sm font-medium">
-                  {latest.mobility_display || "—"}
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Mobilidade</p>
+                <p className="text-sm font-medium">{latest.mobility_display || "—"}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Risco de Queda (Morse)
-                </p>
-                <p className="text-sm font-medium">
-                  {latest.fall_risk_score ?? "—"}
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Risco de Queda (Morse)</p>
+                <p className="text-sm font-medium">{latest.fall_risk_score ?? "—"}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Risco de Lesão (Braden)
-                </p>
-                <p className="text-sm font-medium">
-                  {latest.pressure_ulcer_risk ?? "—"}
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Risco de Lesão (Braden)</p>
+                <p className="text-sm font-medium">{latest.pressure_ulcer_risk ?? "—"}</p>
               </div>
             </div>
             {latest.diagnoses.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Diagnósticos
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Diagnósticos</p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {latest.diagnoses.map((d, i) => (
                     <Badge key={i} variant="secondary" className="text-xs">
@@ -150,22 +131,14 @@ export function PatientAssessmentSection({
             )}
             {latest.notes && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Observações
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Observações</p>
                 <p className="text-sm text-muted-foreground">{latest.notes}</p>
               </div>
             )}
             {latest.performed_by_name && (
-              <p className="text-xs text-muted-foreground">
-                por {latest.performed_by_name}
-              </p>
+              <p className="text-xs text-muted-foreground">por {latest.performed_by_name}</p>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
               Nova avaliação
             </Button>
           </div>
@@ -177,24 +150,19 @@ export function PatientAssessmentSection({
               <Label>Nível de Mobilidade</Label>
               <Select
                 value={mobilityLevel}
-                onValueChange={(v) =>
-                  setMobilityLevel(v as MobilityLevel | "")
-                }
+                onValueChange={(v) => setMobilityLevel(v as MobilityLevel | "")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {(
-                    Object.entries(MOBILITY_LABELS) as [
-                      MobilityLevel,
-                      string
-                    ][]
-                  ).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
+                  {(Object.entries(MOBILITY_LABELS) as [MobilityLevel, string][]).map(
+                    ([key, label]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -254,13 +222,8 @@ export function PatientAssessmentSection({
                   Cancelar
                 </Button>
               )}
-              <Button
-                onClick={handleSubmit}
-                disabled={createAssessment.isPending}
-              >
-                {createAssessment.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+              <Button onClick={handleSubmit} disabled={createAssessment.isPending}>
+                {createAssessment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Plus className="mr-2 h-4 w-4" />
                 {latest ? "Nova avaliação" : "Registrar avaliação"}
               </Button>
@@ -271,14 +234,10 @@ export function PatientAssessmentSection({
         {!latest && !showForm && (
           <div className="space-y-2 rounded-lg border border-dashed p-4">
             <p className="text-sm text-muted-foreground">
-              Nenhuma avaliação registrada. A avaliação clínica é necessária
-              antes de ativar o plano de cuidado.
+              Nenhuma avaliação registrada. A avaliação clínica é necessária antes de ativar o plano
+              de cuidado.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Registrar avaliação
             </Button>

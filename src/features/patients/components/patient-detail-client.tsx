@@ -20,11 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  usePatient,
-  useClinicCaregivers,
-  useTogglePatientStatus,
-} from "../hooks";
+import { usePatient, useClinicCaregivers, useTogglePatientStatus } from "../hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientDocuments } from "./patient-documents";
@@ -299,15 +295,13 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                   Cuidadores
                 </CardTitle>
                 <CardDescription>
-                  Cuidadores vinculados a este paciente. O vínculo é definido no plano de
-                  cuidado.
+                  Cuidadores vinculados a este paciente. O vínculo é definido no plano de cuidado.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {patient.caregiver_assignments.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Nenhum cuidador vinculado. Defina o cuidador responsável no plano de
-                    cuidado.
+                    Nenhum cuidador vinculado. Defina o cuidador responsável no plano de cuidado.
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -413,7 +407,11 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
 
   function formatDateTime(dateStr: string) {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return (
+      d.toLocaleDateString("pt-BR") +
+      " " +
+      d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    );
   }
 
   const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -463,10 +461,18 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-36" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-36" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : shifts.length === 0 ? (
@@ -501,9 +507,7 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Novo Turno</DialogTitle>
-            <DialogDescription>
-              Agende um turno para este paciente.
-            </DialogDescription>
+            <DialogDescription>Agende um turno para este paciente.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4 py-2">
             <div className="space-y-2">
@@ -558,7 +562,10 @@ function PatientShiftsSection({ patientId, isNurse }: { patientId: string; isNur
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createLoading || !formCaregiver || !formStart || !formEnd}>
+              <Button
+                type="submit"
+                disabled={createLoading || !formCaregiver || !formStart || !formEnd}
+              >
                 {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Criar Turno
               </Button>

@@ -181,10 +181,19 @@ export function BillingListClient() {
                       </TableCell>
                       <TableCell>
                         {invoice.due_date ? (
-                          <span className={new Date(invoice.due_date) < new Date() && invoice.status === "pending" ? "text-destructive font-medium text-sm" : "text-sm"}>
+                          <span
+                            className={
+                              new Date(invoice.due_date) < new Date() &&
+                              invoice.status === "pending"
+                                ? "text-sm font-medium text-destructive"
+                                : "text-sm"
+                            }
+                          >
                             {formatDate(invoice.due_date)}
                           </span>
-                        ) : "—"}
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANTS[statusKey]}>

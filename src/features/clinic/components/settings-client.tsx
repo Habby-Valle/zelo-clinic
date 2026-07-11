@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect, startTransition } from "react";
-import { Camera, Loader2, Save, Lock, FileText, CalendarCheck, Star, QrCode, Wifi } from "lucide-react";
+import {
+  Camera,
+  Loader2,
+  Save,
+  Lock,
+  FileText,
+  CalendarCheck,
+  Star,
+  QrCode,
+  Wifi,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -534,7 +544,10 @@ export function SettingsClient() {
                     className="flex-1"
                   />
                   {asaasConfig?.has_api_key && (
-                    <Badge variant="outline" className="shrink-0 self-center border-emerald-300 text-emerald-700 text-xs">
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
+                    >
                       Configurada
                     </Badge>
                   )}

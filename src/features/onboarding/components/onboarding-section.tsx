@@ -31,9 +31,12 @@ function formatPct(value: number, total: number): string {
 export function OnboardingSection() {
   const { data: stats, isLoading } = useOnboardingStats();
 
-  const totalProfiles = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_profiles, 0) ?? 0;
-  const totalSteps = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_steps, 0) ?? 0;
-  const totalCompleted = stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.completed_steps, 0) ?? 0;
+  const totalProfiles =
+    stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_profiles, 0) ?? 0;
+  const totalSteps =
+    stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.total_steps, 0) ?? 0;
+  const totalCompleted =
+    stats?.reduce((acc: number, r: RoleOnboardingStats) => acc + r.completed_steps, 0) ?? 0;
 
   return (
     <Card>
@@ -80,22 +83,20 @@ export function OnboardingSection() {
         ) : stats && stats.length > 0 ? (
           <div className="space-y-2">
             {stats.map((r: RoleOnboardingStats) => {
-              const pct = r.total_steps > 0
-                ? Math.round((r.completed_steps / r.total_steps) * 100)
-                : 0;
+              const pct =
+                r.total_steps > 0 ? Math.round((r.completed_steps / r.total_steps) * 100) : 0;
               return (
-                <div
-                  key={r.role}
-                  className="flex items-center gap-4 rounded-lg border p-3"
-                >
-                  <div className={`h-3 w-3 shrink-0 rounded-full ${ROLE_COLORS[r.role] ?? "bg-gray-400"}`} />
+                <div key={r.role} className="flex items-center gap-4 rounded-lg border p-3">
+                  <div
+                    className={`h-3 w-3 shrink-0 rounded-full ${ROLE_COLORS[r.role] ?? "bg-gray-400"}`}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{ROLE_LABELS[r.role] ?? r.role}</p>
                     <p className="text-xs text-muted-foreground">
                       {r.total_profiles} perfil(is) · {r.total_steps} etapa(s)
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex shrink-0 items-center gap-3">
                     <span className="flex items-center gap-1 text-xs text-emerald-600">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       {r.completed_steps}

@@ -326,8 +326,7 @@ export function ContractDetailClient() {
             {patient && (
               <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
                 <div>
-                  <span className="font-medium">Condições:</span>{" "}
-                  {patient.health_conditions || "—"}
+                  <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
                 </div>
                 <div>
                   <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
@@ -373,10 +372,7 @@ export function ContractDetailClient() {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Paciente</span>
-              <Link
-                href={`/patients/${contract.patient}`}
-                className="font-medium hover:underline"
-              >
+              <Link href={`/patients/${contract.patient}`} className="font-medium hover:underline">
                 {contract.patient_name}
               </Link>
             </div>
@@ -481,9 +477,7 @@ export function ContractDetailClient() {
             <>
               <DialogHeader>
                 <DialogTitle>{LIFECYCLE_COPY[lifecycleAction].title}</DialogTitle>
-                <DialogDescription>
-                  {LIFECYCLE_COPY[lifecycleAction].description}
-                </DialogDescription>
+                <DialogDescription>{LIFECYCLE_COPY[lifecycleAction].description}</DialogDescription>
               </DialogHeader>
               {lifecycleAction !== "reactivate" && (
                 <div className="space-y-2 py-2">
@@ -518,7 +512,9 @@ export function ContractDetailClient() {
                     (LIFECYCLE_COPY[lifecycleAction].reasonRequired && !lifecycleReason.trim())
                   }
                 >
-                  {transitionContract.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {transitionContract.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {LIFECYCLE_COPY[lifecycleAction].confirm}
                 </Button>
               </DialogFooter>
@@ -591,7 +587,7 @@ export function ContractDetailClient() {
                     </Badge>
                   </div>
                   {pricingSuggestion.explanation && (
-                    <p className="mt-1 text-xs italic text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground italic">
                       {pricingSuggestion.explanation}
                     </p>
                   )}

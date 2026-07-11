@@ -19,8 +19,7 @@ export function usePatientAssessments(patientId: string) {
 export function useCreatePatientAssessment(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: SavePatientAssessmentInput) =>
-      createPatientAssessment(patientId, input),
+    mutationFn: (input: SavePatientAssessmentInput) => createPatientAssessment(patientId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-assessments", patientId],
@@ -29,10 +28,7 @@ export function useCreatePatientAssessment(patientId: string) {
   });
 }
 
-export function useUpdatePatientAssessment(
-  patientId: string,
-  assessmentId: string
-) {
+export function useUpdatePatientAssessment(patientId: string, assessmentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: SavePatientAssessmentInput) =>

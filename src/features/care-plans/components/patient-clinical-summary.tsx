@@ -44,8 +44,7 @@ export function PatientClinicalSummary({ patientId }: { patientId: string }) {
         Quadro clínico
       </div>
       <p className="text-xs text-muted-foreground">
-        {calculateAge(patient.birth_date)} anos ·{" "}
-        {GENDER_LABELS[patient.gender] ?? patient.gender}
+        {calculateAge(patient.birth_date)} anos · {GENDER_LABELS[patient.gender] ?? patient.gender}
         {patient.blood_type ? ` · ${patient.blood_type}` : ""}
       </p>
       <div>
@@ -63,9 +62,7 @@ export function PatientClinicalSummary({ patientId }: { patientId: string }) {
       </div>
       <div>
         <span className="font-medium">Receita médica:</span>
-        <PatientDocuments
-          documents={patient.documents.filter((d) => d.kind === "prescription")}
-        />
+        <PatientDocuments documents={patient.documents.filter((d) => d.kind === "prescription")} />
       </div>
     </div>
   );

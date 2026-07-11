@@ -12,7 +12,12 @@ interface ChecklistDialogProps {
   onCreated?: (created: ChecklistDetail) => void;
 }
 
-export function ChecklistDialog({ open, onOpenChange, checklist, onCreated }: ChecklistDialogProps) {
+export function ChecklistDialog({
+  open,
+  onOpenChange,
+  checklist,
+  onCreated,
+}: ChecklistDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">

@@ -106,9 +106,7 @@ export async function validateHealthApi(id: string): Promise<void> {
 }
 
 export async function fetchPricingSuggestion(contractId: string): Promise<PricingSuggestion> {
-  return apiFetchClient<PricingSuggestion>(
-    `/api/ai/pricing-suggestion/?contract_id=${contractId}`
-  );
+  return apiFetchClient<PricingSuggestion>(`/api/ai/pricing-suggestion/?contract_id=${contractId}`);
 }
 
 export async function updateContractApi(

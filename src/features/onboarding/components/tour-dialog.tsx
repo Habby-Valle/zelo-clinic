@@ -18,12 +18,7 @@ import {
   Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTour } from "../hooks/use-tour";
@@ -174,22 +169,14 @@ const tourSteps: TourStep[] = [
     icon: "HeartPulse",
     title: "Planos de Cuidado",
     description: "Revisão e aprovação de planos de cuidado.",
-    details: [
-      "Planos elaborados por enfermeiros",
-      "Fluxo de aprovação",
-      "Histórico de versões",
-    ],
+    details: ["Planos elaborados por enfermeiros", "Fluxo de aprovação", "Histórico de versões"],
   },
   {
     id: "plan",
     icon: "CreditCard",
     title: "Plano",
     description: "Assinatura e gestão do plano da clínica.",
-    details: [
-      "Plano atual com limites",
-      "Upgrade e downgrade",
-      "Histórico de pagamentos",
-    ],
+    details: ["Plano atual com limites", "Upgrade e downgrade", "Histórico de pagamentos"],
   },
   {
     id: "audit",
@@ -221,8 +208,9 @@ interface TourDialogProps {
 }
 
 export function TourDialog({ open, onOpenChange }: TourDialogProps) {
-  const { currentStep, isFirstStep, isLastStep, next, previous, skip, finish } =
-    useTour(tourSteps.length);
+  const { currentStep, isFirstStep, isLastStep, next, previous, skip, finish } = useTour(
+    tourSteps.length
+  );
 
   const step = tourSteps[currentStep];
   const Icon = iconMap[step?.icon];

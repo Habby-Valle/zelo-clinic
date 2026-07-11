@@ -213,8 +213,12 @@ export function CaregiverHoursClient() {
                       <TableCell>{w.caregiver_name}</TableCell>
                       <TableCell className="text-right">{formatHours(w.total_hours)}</TableCell>
                       <TableCell className="text-right">{w.shift_count}</TableCell>
-                      <TableCell className="text-right text-green-600">{w.completed_shift_count}</TableCell>
-                      <TableCell className="text-right text-red-600">{w.cancelled_shift_count}</TableCell>
+                      <TableCell className="text-right text-green-600">
+                        {w.completed_shift_count}
+                      </TableCell>
+                      <TableCell className="text-right text-red-600">
+                        {w.cancelled_shift_count}
+                      </TableCell>
                       <TableCell className="text-center">
                         {w.overnight ? (
                           <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
