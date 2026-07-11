@@ -8,3 +8,5 @@ export { FamilyMembersGrowthReport } from "./family-members-growth-report";
 export { SosReport } from "./sos-report";
 export { CaregiversReport } from "./caregivers-report";
 export { SatisfactionReport } from "./satisfaction-report";
+export { ContractsReport } from "./contracts-report";
+export { BillingReport } from "./billing-report";
