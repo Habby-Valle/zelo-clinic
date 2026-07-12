@@ -18,8 +18,11 @@ function mapContract(r: Record<string, unknown>): ServiceContract {
     status: (r.status as ContractStatus) ?? "draft",
     start_date: String(r.start_date ?? ""),
     end_date: r.end_date != null ? String(r.end_date) : null,
+    billing_mode: (r.billing_mode as ServiceContract["billing_mode"]) ?? "per_shift",
     price_per_hour: r.price_per_hour != null ? String(r.price_per_hour) : null,
     price_per_shift: r.price_per_shift != null ? String(r.price_per_shift) : null,
+    fixed_monthly_amount:
+      r.fixed_monthly_amount != null ? String(r.fixed_monthly_amount) : null,
     night_surcharge: String(r.night_surcharge ?? "0"),
     night_surcharge_type: (r.night_surcharge_type as "percentage" | "fixed_amount") ?? "percentage",
     weekly_hours: String(r.weekly_hours ?? "0"),
@@ -68,8 +71,10 @@ export async function fetchContractById(id: string): Promise<ServiceContract | n
 export async function sendProposalApi(
   id: string,
   data: {
-    price_per_hour: number;
-    price_per_shift: number;
+    billing_mode?: "per_shift" | "per_hour" | "fixed";
+    price_per_hour?: number;
+    price_per_shift?: number;
+    fixed_monthly_amount?: number;
     night_surcharge?: number;
     night_surcharge_type?: string;
   }

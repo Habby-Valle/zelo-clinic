@@ -40,8 +40,10 @@ export interface ServiceContract {
   status: ContractStatus;
   start_date: string;
   end_date: string | null;
+  billing_mode: "per_shift" | "per_hour" | "fixed";
   price_per_hour: string | null;
   price_per_shift: string | null;
+  fixed_monthly_amount: string | null;
   night_surcharge: string;
   night_surcharge_type: "percentage" | "fixed_amount";
   weekly_hours: string;

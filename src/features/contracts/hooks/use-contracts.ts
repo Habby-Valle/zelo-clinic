@@ -47,8 +47,10 @@ export function useSendProposal(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      price_per_hour: number;
-      price_per_shift: number;
+      billing_mode?: "per_shift" | "per_hour" | "fixed";
+      price_per_hour?: number;
+      price_per_shift?: number;
+      fixed_monthly_amount?: number;
       night_surcharge?: number;
       night_surcharge_type?: string;
     }) => sendProposalApi(id, data),

@@ -20,6 +20,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMutation } from "@tanstack/react-query";
 import { generateInvoiceApi } from "@/features/billing/services";
 import {
@@ -108,6 +115,8 @@ export function ContractDetailClient() {
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
   const [pricePerHour, setPricePerHour] = useState("");
   const [pricePerShift, setPricePerShift] = useState("");
+  const [billingMode, setBillingMode] = useState<"per_shift" | "per_hour" | "fixed">("per_shift");
+  const [fixedMonthlyAmount, setFixedMonthlyAmount] = useState("");
   const [pricingEnabled, setPricingEnabled] = useState(false);
 
   const { data: pricingSuggestion, isLoading: pricingLoading } = usePricingSuggestion(
@@ -162,8 +171,10 @@ export function ContractDetailClient() {
   const handleSendProposal = () => {
     sendProposal.mutate(
       {
-        price_per_hour: Number(pricePerHour),
-        price_per_shift: Number(pricePerShift),
+        billing_mode: billingMode,
+        price_per_hour: pricePerHour ? Number(pricePerHour) : undefined,
+        price_per_shift: pricePerShift ? Number(pricePerShift) : undefined,
+        fixed_monthly_amount: fixedMonthlyAmount ? Number(fixedMonthlyAmount) : undefined,
       },
       {
         onSuccess: () => {
@@ -172,6 +183,14 @@ export function ContractDetailClient() {
       }
     );
   };
+
+  // Campo obrigatório conforme o modo de cobrança escolhido.
+  const proposalReady =
+    billingMode === "fixed"
+      ? !!fixedMonthlyAmount
+      : billingMode === "per_hour"
+        ? !!pricePerHour
+        : !!pricePerShift;
 
   const handleReject = () => {
     rejectContract.mutate(undefined, {
@@ -391,6 +410,22 @@ export function ContractDetailClient() {
             <CardTitle className="text-base">Valores</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
+            <Row
+              label="Modo de cobrança"
+              value={
+                contract.billing_mode === "per_hour"
+                  ? "Por hora"
+                  : contract.billing_mode === "fixed"
+                    ? "Valor fixo mensal"
+                    : "Por turno"
+              }
+            />
+            {contract.billing_mode === "fixed" && (
+              <Row
+                label="Valor fixo mensal"
+                value={formatCurrency(contract.fixed_monthly_amount)}
+              />
+            )}
             <Row label="Preço por hora" value={formatCurrency(contract.price_per_hour)} />
             <Row label="Preço por turno" value={formatCurrency(contract.price_per_shift)} />
             <Row
@@ -605,7 +640,48 @@ export function ContractDetailClient() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price_per_hour">Preço por hora (R$)</Label>
+              <Label htmlFor="billing_mode">Modo de cobrança</Label>
+              <Select
+                value={billingMode}
+                onValueChange={(v) =>
+                  setBillingMode((v ?? "per_shift") as "per_shift" | "per_hour" | "fixed")
+                }
+              >
+                <SelectTrigger id="billing_mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per_shift">Por turno</SelectItem>
+                  <SelectItem value="per_hour">Por hora</SelectItem>
+                  <SelectItem value="fixed">Valor fixo mensal</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {billingMode === "per_shift"
+                  ? "Cada turno concluído é cobrado pelo preço por turno."
+                  : billingMode === "per_hour"
+                    ? "Cobra as horas efetivamente trabalhadas × preço por hora."
+                    : "Cobra um valor fixo por mês, independente dos turnos."}
+              </p>
+            </div>
+            {billingMode === "fixed" && (
+              <div className="space-y-2">
+                <Label htmlFor="fixed_monthly_amount">Valor fixo mensal (R$)</Label>
+                <Input
+                  id="fixed_monthly_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={fixedMonthlyAmount}
+                  onChange={(e) => setFixedMonthlyAmount(e.target.value)}
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="price_per_hour">
+                Preço por hora (R$){billingMode === "per_hour" ? "" : " — referência"}
+              </Label>
               <Input
                 id="price_per_hour"
                 type="number"
@@ -617,7 +693,9 @@ export function ContractDetailClient() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price_per_shift">Preço por turno (R$)</Label>
+              <Label htmlFor="price_per_shift">
+                Preço por turno (R$){billingMode === "per_shift" ? "" : " — referência"}
+              </Label>
               <Input
                 id="price_per_shift"
                 type="number"
@@ -635,7 +713,7 @@ export function ContractDetailClient() {
             </Button>
             <Button
               onClick={handleSendProposal}
-              disabled={sendProposal.isPending || !pricePerHour || !pricePerShift}
+              disabled={sendProposal.isPending || !proposalReady}
             >
               {sendProposal.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Enviar Proposta
