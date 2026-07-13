@@ -22,7 +22,6 @@ import {
   useUpdateAsaasConfig,
   useTestAsaasConnection,
 } from "@/features/clinic/hooks/use-asaas-config";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -339,32 +338,35 @@ export function OnboardingWizard() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center gap-4 py-4">
-              <div className="relative">
-                <Avatar size="lg" className="h-28 w-28">
-                  <AvatarImage src={clinicLogo ?? undefined} alt={clinicName} />
-                  <AvatarFallback className="text-2xl">
-                    {clinicName ? getInitials(clinicName) : "ZC"}
-                  </AvatarFallback>
-                </Avatar>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute -right-1 -bottom-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs"
-                >
-                  {updateClinic.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoChange}
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-muted-foreground/30 bg-muted/30 transition-colors hover:border-primary/50"
+              >
+                {clinicLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={clinicLogo} alt={clinicName} className="h-full w-full object-contain" />
+                ) : (
+                  <span className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <ImageIcon className="h-12 w-12" />
+                    <span className="text-3xl font-semibold">
+                      {clinicName ? getInitials(clinicName) : "ZC"}
+                    </span>
+                  </span>
+                )}
+                {updateClinic.isPending && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-background/60">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </span>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoChange}
+              />
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                 <Camera className="mr-2 h-4 w-4" />
                 {clinicLogo ? "Trocar imagem" : "Enviar imagem"}
