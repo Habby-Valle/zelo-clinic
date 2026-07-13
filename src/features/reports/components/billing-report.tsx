@@ -113,7 +113,7 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
             Faturamento por Mês
           </p>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" fontSize={12} tickLine={false} />

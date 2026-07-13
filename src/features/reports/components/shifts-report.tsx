@@ -84,7 +84,7 @@ export function ShiftsReport({ data, loading, onExport }: ShiftsReportProps) {
           </div>
         ) : (
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" fontSize={12} tickLine={false} />

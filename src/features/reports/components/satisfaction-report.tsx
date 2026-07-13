@@ -78,7 +78,7 @@ export function SatisfactionReport({ data, loading, onExport }: SatisfactionRepo
 
             {byDate.length > 1 && (
               <div className="mb-4 h-56">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
                   <LineChart data={byDate} margin={{ left: -10 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" fontSize={12} tickLine={false} />

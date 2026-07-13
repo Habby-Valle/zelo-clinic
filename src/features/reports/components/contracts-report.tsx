@@ -139,7 +139,7 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
           <div className="h-64">
             <p className="mb-2 text-sm font-medium text-muted-foreground">Distribuição por Status</p>
             {donutData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
                 <PieChart>
                   <Pie
                     data={donutData}
@@ -182,7 +182,7 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
               Novos Contratos por Mês
             </p>
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" fontSize={12} tickLine={false} />
