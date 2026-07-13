@@ -136,8 +136,9 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="h-64">
+          <div className="flex h-64 flex-col">
             <p className="mb-2 text-sm font-medium text-muted-foreground">Distribuição por Status</p>
+            <div className="min-h-0 flex-1">
             {donutData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
                 <PieChart>
@@ -175,12 +176,14 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
                 Sem dados
               </div>
             )}
+            </div>
           </div>
 
-          <div className="h-64">
+          <div className="flex h-64 flex-col">
             <p className="mb-2 text-sm font-medium text-muted-foreground">
               Novos Contratos por Mês
             </p>
+            <div className="min-h-0 flex-1">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
                 <BarChart data={chartData}>
@@ -203,6 +206,7 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
                 Sem dados
               </div>
             )}
+            </div>
           </div>
         </div>
       </CardContent>
