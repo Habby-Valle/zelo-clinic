@@ -14,6 +14,7 @@ interface DjangoPlan {
   monthly_price: number;
   yearly_price: number | null;
   is_active: boolean;
+  is_trial: boolean;
   benefits: {
     id: string;
     benefit_id: string;
@@ -52,8 +53,8 @@ function normalizePlan(d: DjangoPlan): Plan {
     id: d.id,
     name: d.name,
     description: d.description,
-    monthly_price: d.monthly_price,
-    yearly_price: d.yearly_price,
+    monthly_price: Number(d.monthly_price),
+    yearly_price: d.yearly_price ? Number(d.yearly_price) : null,
     is_active: d.is_active,
     benefits: d.benefits.map((b) => ({
       id: b.id,
@@ -100,6 +101,7 @@ export async function getMyClinicPlan(): Promise<ClinicPlanInfo | null> {
         monthly_price: data.plan.monthly_price,
         yearly_price: data.plan.yearly_price,
         is_active: true,
+        is_trial: false,
         benefits: [],
       }),
       hasUsedTrial: data.has_used_trial ?? false,
@@ -154,9 +156,15 @@ export async function requestPlanChange(
 
   if (!targetPlan) return { success: false, error: "Plano não encontrado" };
 
-  if (targetPlan.monthly_price === 0) {
+  const isFreeOrTrial = Number(targetPlan.monthly_price) === 0 || targetPlan.is_trial;
+
+  if (isFreeOrTrial) {
     try {
-      await apiFetchServer("/subscriptions/me/activate-free/", {
+      const endpoint = targetPlan.is_trial
+        ? "/subscriptions/me/activate-trial/"
+        : "/subscriptions/me/activate-free/";
+
+      await apiFetchServer(endpoint, {
         method: "POST",
         body: JSON.stringify({ plan_id: targetPlan.id }),
       });
