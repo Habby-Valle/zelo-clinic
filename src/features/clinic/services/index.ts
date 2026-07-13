@@ -10,6 +10,7 @@ export interface UpdateClinicData {
   document?: string;
   media_id?: string | null;
   theme_color?: string | null;
+  onboarding_completed?: boolean;
   daily_report_enabled?: boolean;
   visit_notification_enabled?: boolean;
   satisfaction_survey_enabled?: boolean;

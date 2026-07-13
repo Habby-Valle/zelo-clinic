@@ -18,6 +18,7 @@ export interface Clinic {
   media_id: string | null;
   media_url: string | null;
   theme_color: string | null;
+  onboarding_completed: boolean;
   daily_report_enabled: boolean;
   visit_notification_enabled: boolean;
   satisfaction_survey_enabled: boolean;
