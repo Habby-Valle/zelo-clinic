@@ -42,16 +42,10 @@ export function useShiftsRange(
   });
 }
 
-export function usePatientShiftsRange(
-  patientId: string,
-  dateFrom: string,
-  dateTo: string
-) {
-  return useShiftsRange(
-    patientId ? dateFrom : "",
-    patientId ? dateTo : "",
-    { patient_id: patientId }
-  );
+export function usePatientShiftsRange(patientId: string, dateFrom: string, dateTo: string) {
+  return useShiftsRange(patientId ? dateFrom : "", patientId ? dateTo : "", {
+    patient_id: patientId,
+  });
 }
 
 export function useShift(id: string) {

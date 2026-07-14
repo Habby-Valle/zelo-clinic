@@ -201,7 +201,11 @@ export async function asaasSubscribe(
       billing_type: "PIX" | "CREDIT_CARD";
     }>("/asaas/plans/subscribe/", {
       method: "POST",
-      body: JSON.stringify({ plan_id: planId, billing_type: billingType, billing_cycle: billingCycle }),
+      body: JSON.stringify({
+        plan_id: planId,
+        billing_type: billingType,
+        billing_cycle: billingCycle,
+      }),
     });
     revalidatePath("/plan");
     revalidatePath("/dashboard");

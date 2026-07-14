@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Check, CreditCard, AlertCircle, Crown, CheckCircle, XCircle, Loader2,
-  QrCode, ShieldCheck,
+  Check,
+  CreditCard,
+  AlertCircle,
+  Crown,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  QrCode,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +26,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -119,7 +132,11 @@ function PlanCard({
             ) : disabled ? (
               (disabledReason ?? "Indisponível")
             ) : plan.monthly_price === 0 ? (
-              hasActivePaidPlan ? "Mudar para gratuito" : "Selecionar plano gratuito"
+              hasActivePaidPlan ? (
+                "Mudar para gratuito"
+              ) : (
+                "Selecionar plano gratuito"
+              )
             ) : hasActivePaidPlan ? (
               "Alterar para este plano"
             ) : (
@@ -333,8 +350,8 @@ export function PlanManagementClient({
     }
   }, [searchParams, router, queryClient]);
 
-  const hasPaidPlan = currentPlan.clinicPlan?.status === "active"
-    && (currentPlan.plan?.monthly_price ?? 0) > 0;
+  const hasPaidPlan =
+    currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
 
   async function handleSubscribe(planId: string) {
     const result = await requestPlanChange(planId, "monthly");
@@ -434,9 +451,8 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? Sua assinatura será encerrada imediatamente e
-              o plano será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser
-              desfeita.
+              Tem certeza que deseja cancelar? Sua assinatura será encerrada imediatamente e o plano
+              será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -452,13 +468,19 @@ export function PlanManagementClient({
       </AlertDialog>
 
       {/* Payment Method Modal */}
-      <Dialog open={showPaymentModal} onOpenChange={(open) => { if (!open) { setShowPaymentModal(false); setSubscribeResult(null); }}}>
+      <Dialog
+        open={showPaymentModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowPaymentModal(false);
+            setSubscribeResult(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Forma de Pagamento</DialogTitle>
-            <DialogDescription>
-              Escolha como deseja pagar sua assinatura.
-            </DialogDescription>
+            <DialogDescription>Escolha como deseja pagar sua assinatura.</DialogDescription>
           </DialogHeader>
 
           {subscribeResult?.error && (
@@ -491,7 +513,7 @@ export function PlanManagementClient({
                   <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 rounded-lg border bg-muted px-3 py-2 text-xs font-mono"
+                      className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
                       value={subscribeResult.pixPayload}
                       readOnly
                     />
@@ -528,7 +550,7 @@ export function PlanManagementClient({
             <div className="space-y-3">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14"
+                className="h-14 w-full justify-start gap-3"
                 onClick={() => handlePaymentChoice("PIX")}
                 disabled={subscribing}
               >
@@ -540,14 +562,16 @@ export function PlanManagementClient({
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14"
+                className="h-14 w-full justify-start gap-3"
                 onClick={() => handlePaymentChoice("CREDIT_CARD")}
                 disabled={subscribing}
               >
                 <CreditCard className="h-5 w-5 text-primary" />
                 <div className="text-left">
                   <p className="font-medium">Cartão de Crédito</p>
-                  <p className="text-xs text-muted-foreground">Pagamento via checkout seguro ASAAS</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pagamento via checkout seguro ASAAS
+                  </p>
                 </div>
               </Button>
               {subscribing && (
@@ -559,7 +583,10 @@ export function PlanManagementClient({
               <Button
                 variant="ghost"
                 className="w-full"
-                onClick={() => { setShowPaymentModal(false); setSubscribeResult(null); }}
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                }}
               >
                 Cancelar
               </Button>

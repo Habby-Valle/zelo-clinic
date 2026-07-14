@@ -11,10 +11,5 @@ export default async function ManageSubscriptionPage() {
     redirect("/plan");
   }
 
-  return (
-    <ManageSubscriptionClient
-      clinicName={clinic.name}
-      subscription={clinic.subscription}
-    />
-  );
+  return <ManageSubscriptionClient clinicName={clinic.name} subscription={clinic.subscription} />;
 }

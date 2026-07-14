@@ -100,7 +100,11 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
                   Alertas por Paciente
                 </h4>
                 <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    initialDimension={{ width: 500, height: 300 }}
+                  >
                     <BarChart data={data.byPatient}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="patientName" fontSize={12} tickLine={false} />
@@ -132,7 +136,11 @@ export function SosReport({ data, loading, onExport }: SosReportProps) {
                   Alertas ao Longo do Tempo
                 </h4>
                 <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    initialDimension={{ width: 500, height: 300 }}
+                  >
                     <BarChart data={data.byDate}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis

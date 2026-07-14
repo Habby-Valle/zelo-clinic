@@ -137,45 +137,51 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="flex h-64 flex-col">
-            <p className="mb-2 text-sm font-medium text-muted-foreground">Distribuição por Status</p>
+            <p className="mb-2 text-sm font-medium text-muted-foreground">
+              Distribuição por Status
+            </p>
             <div className="min-h-0 flex-1">
-            {donutData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={3}
-                  >
-                    {donutData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    formatter={(value: string) => (
-                      <span className="text-xs text-muted-foreground">{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                Sem dados
-              </div>
-            )}
+              {donutData.length > 0 ? (
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  initialDimension={{ width: 500, height: 300 }}
+                >
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={3}
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      formatter={(value: string) => (
+                        <span className="text-xs text-muted-foreground">{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  Sem dados
+                </div>
+              )}
             </div>
           </div>
 
@@ -184,28 +190,32 @@ export function ContractsReport({ data, loading, onExport }: ContractsReportProp
               Novos Contratos por Mês
             </p>
             <div className="min-h-0 flex-1">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" fontSize={12} tickLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="new" name="Novos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                Sem dados
-              </div>
-            )}
+              {chartData.length > 0 ? (
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  initialDimension={{ width: 500, height: 300 }}
+                >
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" fontSize={12} tickLine={false} />
+                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="new" name="Novos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  Sem dados
+                </div>
+              )}
             </div>
           </div>
         </div>

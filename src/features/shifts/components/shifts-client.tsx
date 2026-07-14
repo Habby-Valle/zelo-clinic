@@ -447,139 +447,140 @@ export function ShiftsClient() {
               </CardContent>
             </Card>
           ) : (
-          <>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Cuidador</TableHead>
-                    <TableHead>Início</TableHead>
-                    <TableHead>Fim</TableHead>
-                    <TableHead>Duração</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shiftsQuery.isLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-36" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-16" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-5 w-24 rounded-full" />
-                        </TableCell>
-                        <TableCell />
+            <>
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Paciente</TableHead>
+                        <TableHead>Cuidador</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Fim</TableHead>
+                        <TableHead>Duração</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[100px]" />
                       </TableRow>
-                    ))
-                  ) : shifts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-8 w-8" />
-                          <p>Nenhum turno encontrado</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    shifts.map((shift) => (
-                      <TableRow key={shift.id}>
-                        <TableCell className="font-medium">
-                          {shift.shift_patients[0]?.patient_name ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {shift.caregiver_name}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTime(shift.start)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTime(shift.end)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDuration(shift.start, shift.end)}
-                        </TableCell>
-                        <TableCell>
-                          {shift.status === "scheduled" && new Date(shift.start) > new Date() ? (
-                            <Badge variant="outline">Aguardando início</Badge>
-                          ) : (
-                            <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"}>
-                              {STATUS_LABELS[shift.status] ?? shift.status}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {!isNurse && shift.status === "in_progress" && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-green-600"
-                                onClick={() =>
-                                  setConfirmAction({ type: "finish", shiftId: shift.id })
-                                }
-                                title="Finalizar"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-                                onClick={() =>
-                                  setConfirmAction({ type: "cancel", shiftId: shift.id })
-                                }
-                                title="Cancelar"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
+                    </TableHeader>
+                    <TableBody>
+                      {shiftsQuery.isLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <Skeleton className="h-4 w-36" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-5 w-24 rounded-full" />
+                            </TableCell>
+                            <TableCell />
+                          </TableRow>
+                        ))
+                      ) : shifts.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-32 text-center">
+                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-8 w-8" />
+                              <p>Nenhum turno encontrado</p>
                             </div>
-                          )}
-                          {!isNurse && shift.status === "scheduled" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() =>
-                                setConfirmAction({ type: "delete", shiftId: shift.id })
-                              }
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        shifts.map((shift) => (
+                          <TableRow key={shift.id}>
+                            <TableCell className="font-medium">
+                              {shift.shift_patients[0]?.patient_name ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {shift.caregiver_name}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDateTime(shift.start)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDateTime(shift.end)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDuration(shift.start, shift.end)}
+                            </TableCell>
+                            <TableCell>
+                              {shift.status === "scheduled" &&
+                              new Date(shift.start) > new Date() ? (
+                                <Badge variant="outline">Aguardando início</Badge>
+                              ) : (
+                                <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"}>
+                                  {STATUS_LABELS[shift.status] ?? shift.status}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {!isNurse && shift.status === "in_progress" && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-green-600"
+                                    onClick={() =>
+                                      setConfirmAction({ type: "finish", shiftId: shift.id })
+                                    }
+                                    title="Finalizar"
+                                  >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive"
+                                    onClick={() =>
+                                      setConfirmAction({ type: "cancel", shiftId: shift.id })
+                                    }
+                                    title="Cancelar"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                              {!isNurse && shift.status === "scheduled" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() =>
+                                    setConfirmAction({ type: "delete", shiftId: shift.id })
+                                  }
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
 
-          <DataTablePagination
-            page={page}
-            pageSize={pageSize}
-            total={shiftsTotal}
-            onPageChange={setPage}
-            label="turnos"
-          />
-          </>
+              <DataTablePagination
+                page={page}
+                pageSize={pageSize}
+                total={shiftsTotal}
+                onPageChange={setPage}
+                label="turnos"
+              />
+            </>
           )}
         </TabsContent>
 
@@ -734,8 +735,7 @@ export function ShiftsClient() {
                   setFormPatient(val);
                   // Início do cuidado vem do contrato (o que a família pediu);
                   // se já passou, usa hoje — não agenda no passado.
-                  const start =
-                    patients.find((p) => p.id === val)?.contract_start_date ?? null;
+                  const start = patients.find((p) => p.id === val)?.contract_start_date ?? null;
                   setFormDate(shiftStartFromContract(start));
                 }}
               >
@@ -782,9 +782,7 @@ export function ShiftsClient() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="shift-date">
-                {formRepeat ? "Data de início" : "Data"} *
-              </Label>
+              <Label htmlFor="shift-date">{formRepeat ? "Data de início" : "Data"} *</Label>
               <Input
                 id="shift-date"
                 type="date"
@@ -818,10 +816,7 @@ export function ShiftsClient() {
 
             <div className="space-y-2 rounded-lg border p-3">
               <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={formRepeat}
-                  onCheckedChange={(v) => setFormRepeat(v === true)}
-                />
+                <Checkbox checked={formRepeat} onCheckedChange={(v) => setFormRepeat(v === true)} />
                 Repetir (turno recorrente)
               </label>
               {formRepeat && (

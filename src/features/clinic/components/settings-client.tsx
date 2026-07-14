@@ -77,7 +77,9 @@ export function SettingsClient() {
   const [socialInstagram, setSocialInstagram] = useState("");
   const [socialFacebook, setSocialFacebook] = useState("");
   const [socialLinkedin, setSocialLinkedin] = useState("");
-  const [businessHours, setBusinessHours] = useState<Record<string, { open: string; close: string; is_open: boolean }>>({});
+  const [businessHours, setBusinessHours] = useState<
+    Record<string, { open: string; close: string; is_open: boolean }>
+  >({});
   const DAYS = [
     { key: "monday", label: "Segunda" },
     { key: "tuesday", label: "Terça" },
@@ -138,7 +140,12 @@ export function SettingsClient() {
       setSocialInstagram(sm?.instagram ?? "");
       setSocialFacebook(sm?.facebook ?? "");
       setSocialLinkedin(sm?.linkedin ?? "");
-      setBusinessHours((clinic.business_hours as Record<string, { open: string; close: string; is_open: boolean }>) ?? {});
+      setBusinessHours(
+        (clinic.business_hours as Record<
+          string,
+          { open: string; close: string; is_open: boolean }
+        >) ?? {}
+      );
     });
   }, [clinic]);
 
@@ -311,9 +318,12 @@ export function SettingsClient() {
     whatsapp !== (clinic?.whatsapp ?? "") ||
     cnes !== (clinic?.cnes ?? "") ||
     specialty !== (clinic?.specialty ?? "") ||
-    socialInstagram !== ((clinic?.social_media as Record<string, string> | undefined)?.instagram ?? "") ||
-    socialFacebook !== ((clinic?.social_media as Record<string, string> | undefined)?.facebook ?? "") ||
-    socialLinkedin !== ((clinic?.social_media as Record<string, string> | undefined)?.linkedin ?? "") ||
+    socialInstagram !==
+      ((clinic?.social_media as Record<string, string> | undefined)?.instagram ?? "") ||
+    socialFacebook !==
+      ((clinic?.social_media as Record<string, string> | undefined)?.facebook ?? "") ||
+    socialLinkedin !==
+      ((clinic?.social_media as Record<string, string> | undefined)?.linkedin ?? "") ||
     JSON.stringify(businessHours) !== JSON.stringify(clinic?.business_hours ?? {});
 
   if (isLoading) {
@@ -430,29 +440,59 @@ export function SettingsClient() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="number">Número</Label>
-                  <Input id="number" placeholder="S/N" value={number} onChange={(e) => setNumber(e.target.value)} />
+                  <Input
+                    id="number"
+                    placeholder="S/N"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="complement">Complemento</Label>
-                  <Input id="complement" placeholder="Sala, bloco..." value={complement} onChange={(e) => setComplement(e.target.value)} />
+                  <Input
+                    id="complement"
+                    placeholder="Sala, bloco..."
+                    value={complement}
+                    onChange={(e) => setComplement(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input id="neighborhood" placeholder="Centro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+                  <Input
+                    id="neighborhood"
+                    placeholder="Centro"
+                    value={neighborhood}
+                    onChange={(e) => setNeighborhood(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-4">
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="city">Cidade</Label>
-                  <Input id="city" placeholder="São Paulo" value={city} onChange={(e) => setCity(e.target.value)} />
+                  <Input
+                    id="city"
+                    placeholder="São Paulo"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="state">Estado</Label>
-                  <Input id="state" placeholder="SP" value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} />
+                  <Input
+                    id="state"
+                    placeholder="SP"
+                    value={state}
+                    onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+                    maxLength={2}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="country">País</Label>
-                  <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                  <Input
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -462,11 +502,23 @@ export function SettingsClient() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="contato@clinica.com.br"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
+                  <Input
+                    id="whatsapp"
+                    placeholder="(00) 00000-0000"
+                    value={formatPhone(whatsapp)}
+                    onChange={(e) => setWhatsapp(unformat(e.target.value))}
+                    maxLength={15}
+                  />
                 </div>
               </div>
             </div>
@@ -476,88 +528,51 @@ export function SettingsClient() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="cnes">CNES</Label>
-                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
+                  <Input
+                    id="cnes"
+                    placeholder="Código CNES"
+                    value={cnes}
+                    onChange={(e) => setCnes(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="specialty">Especialidade</Label>
-                  <Input id="specialty" placeholder="Home Care, Geriatria..." value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+                  <Input
+                    id="specialty"
+                    placeholder="Home Care, Geriatria..."
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="responsibleName">Responsável Legal</Label>
-                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+                <Input
+                  id="responsibleName"
+                  placeholder="Nome do responsável"
+                  value={responsibleName}
+                  onChange={(e) => setResponsibleName(e.target.value)}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="website">Site</Label>
-                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="description">Descrição</Label>
-                <textarea id="description" rows={3} className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Breve descrição da clínica..." value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground">Redes Sociais</h3>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="socialInstagram">Instagram</Label>
-                  <Input id="socialInstagram" placeholder="@clinica ou url" value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="socialFacebook">Facebook</Label>
-                  <Input id="socialFacebook" placeholder="url do Facebook" value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
-                  <Input id="socialLinkedin" placeholder="url do LinkedIn" value={socialLinkedin} onChange={(e) => setSocialLinkedin(e.target.value)} />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground">Contato</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="website">Site</Label>
-                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground">Informações</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cnes">CNES</Label>
-                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="specialty">Especialidade</Label>
-                  <Input id="specialty" placeholder="Ex: Home Care, Geriatria" value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="responsibleName">Responsável Legal</Label>
-                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://www.clinica.com.br"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="description">Descrição</Label>
                 <textarea
                   id="description"
                   rows={3}
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                  placeholder="Breve descrição da clínica..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Breve descrição da clínica..."
-                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               </div>
             </div>
@@ -567,15 +582,143 @@ export function SettingsClient() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="socialInstagram">Instagram</Label>
-                  <Input id="socialInstagram" placeholder="https://instagram.com/..." value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} />
+                  <Input
+                    id="socialInstagram"
+                    placeholder="@clinica ou url"
+                    value={socialInstagram}
+                    onChange={(e) => setSocialInstagram(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="socialFacebook">Facebook</Label>
-                  <Input id="socialFacebook" placeholder="https://facebook.com/..." value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} />
+                  <Input
+                    id="socialFacebook"
+                    placeholder="url do Facebook"
+                    value={socialFacebook}
+                    onChange={(e) => setSocialFacebook(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="socialLinkedin">LinkedIn</Label>
-                  <Input id="socialLinkedin" placeholder="https://linkedin.com/..." value={socialLinkedin} onChange={(e) => setSocialLinkedin(e.target.value)} />
+                  <Input
+                    id="socialLinkedin"
+                    placeholder="url do LinkedIn"
+                    value={socialLinkedin}
+                    onChange={(e) => setSocialLinkedin(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Contato</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="contato@clinica.com.br"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input
+                    id="whatsapp"
+                    placeholder="(00) 00000-0000"
+                    value={formatPhone(whatsapp)}
+                    onChange={(e) => setWhatsapp(unformat(e.target.value))}
+                    maxLength={15}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="website">Site</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://www.clinica.com.br"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Informações</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cnes">CNES</Label>
+                  <Input
+                    id="cnes"
+                    placeholder="Código CNES"
+                    value={cnes}
+                    onChange={(e) => setCnes(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="specialty">Especialidade</Label>
+                  <Input
+                    id="specialty"
+                    placeholder="Ex: Home Care, Geriatria"
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="responsibleName">Responsável Legal</Label>
+                <Input
+                  id="responsibleName"
+                  placeholder="Nome do responsável"
+                  value={responsibleName}
+                  onChange={(e) => setResponsibleName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="description">Descrição</Label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Breve descrição da clínica..."
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Redes Sociais</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Input
+                    id="socialInstagram"
+                    placeholder="https://instagram.com/..."
+                    value={socialInstagram}
+                    onChange={(e) => setSocialInstagram(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialFacebook">Facebook</Label>
+                  <Input
+                    id="socialFacebook"
+                    placeholder="https://facebook.com/..."
+                    value={socialFacebook}
+                    onChange={(e) => setSocialFacebook(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Input
+                    id="socialLinkedin"
+                    placeholder="https://linkedin.com/..."
+                    value={socialLinkedin}
+                    onChange={(e) => setSocialLinkedin(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -594,7 +737,10 @@ export function SettingsClient() {
                           onChange={(e) =>
                             setBusinessHours((prev) => ({
                               ...prev,
-                              [d.key]: { ...prev[d.key] ?? { open: "", close: "", is_open: true }, open: e.target.value },
+                              [d.key]: {
+                                ...(prev[d.key] ?? { open: "", close: "", is_open: true }),
+                                open: e.target.value,
+                              },
                             }))
                           }
                           className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm"
@@ -602,9 +748,7 @@ export function SettingsClient() {
                           <option value="">--</option>
                           {Array.from({ length: 24 }, (_, i) => {
                             const h = String(i).padStart(2, "0");
-                            return (
-                              <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
-                            );
+                            return <option key={h} value={`${h}:00`}>{`${h}:00`}</option>;
                           })}
                         </select>
                         <span className="flex items-center text-xs text-muted-foreground">às</span>
@@ -613,7 +757,10 @@ export function SettingsClient() {
                           onChange={(e) =>
                             setBusinessHours((prev) => ({
                               ...prev,
-                              [d.key]: { ...prev[d.key] ?? { open: "", close: "", is_open: true }, close: e.target.value },
+                              [d.key]: {
+                                ...(prev[d.key] ?? { open: "", close: "", is_open: true }),
+                                close: e.target.value,
+                              },
                             }))
                           }
                           className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm"
@@ -621,9 +768,7 @@ export function SettingsClient() {
                           <option value="">--</option>
                           {Array.from({ length: 24 }, (_, i) => {
                             const h = String(i).padStart(2, "0");
-                            return (
-                              <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
-                            );
+                            return <option key={h} value={`${h}:00`}>{`${h}:00`}</option>;
                           })}
                         </select>
                       </div>
@@ -635,7 +780,11 @@ export function SettingsClient() {
 
             <div className="flex justify-end">
               <Button onClick={handleSaveClinic} disabled={saving || !hasClinicChanges}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
                 Salvar alterações
               </Button>
             </div>
@@ -715,8 +864,8 @@ export function SettingsClient() {
                   Pedir avaliação após cada turno
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Quando um turno é concluído, os familiares recebem por push e e-mail um convite para
-                  avaliar o atendimento (nota de 1 a 5 e comentário).
+                  Quando um turno é concluído, os familiares recebem por push e e-mail um convite
+                  para avaliar o atendimento (nota de 1 a 5 e comentário).
                 </p>
               </div>
               <Switch
@@ -768,7 +917,10 @@ export function SettingsClient() {
                       className="flex-1"
                     />
                     {asaasConfig?.has_api_key && (
-                      <Badge variant="outline" className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700">
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
+                      >
                         Configurada
                       </Badge>
                     )}
@@ -784,12 +936,24 @@ export function SettingsClient() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleTestAsaas} disabled={!asaasApiKey || testAsaas.isPending}>
-                    {testAsaas.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2 h-4 w-4" />}
+                  <Button
+                    variant="outline"
+                    onClick={handleTestAsaas}
+                    disabled={!asaasApiKey || testAsaas.isPending}
+                  >
+                    {testAsaas.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wifi className="mr-2 h-4 w-4" />
+                    )}
                     Testar conexão
                   </Button>
                   <Button onClick={handleSaveAsaas} disabled={updateAsaas.isPending}>
-                    {updateAsaas.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {updateAsaas.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
                     Salvar
                   </Button>
                 </div>
@@ -809,7 +973,11 @@ export function SettingsClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)} className="space-y-4" noValidate>
+            <form
+              onSubmit={passwordForm.handleSubmit(handlePasswordChange)}
+              className="space-y-4"
+              noValidate
+            >
               {passwordResult && (
                 <Alert variant={passwordResult.success ? "default" : "destructive"}>
                   <AlertDescription>{passwordResult.message}</AlertDescription>
@@ -817,27 +985,55 @@ export function SettingsClient() {
               )}
               <div className="space-y-1.5">
                 <Label htmlFor="current_password">Senha atual</Label>
-                <Input id="current_password" type="password" placeholder="••••••••" autoComplete="current-password" {...passwordForm.register("current_password")} />
+                <Input
+                  id="current_password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  {...passwordForm.register("current_password")}
+                />
                 {passwordForm.formState.errors.current_password && (
-                  <p className="text-xs text-destructive">{passwordForm.formState.errors.current_password.message}</p>
+                  <p className="text-xs text-destructive">
+                    {passwordForm.formState.errors.current_password.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="new_password">Nova senha</Label>
-                <Input id="new_password" type="password" placeholder="••••••••" autoComplete="new-password" {...passwordForm.register("new_password")} />
+                <Input
+                  id="new_password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  {...passwordForm.register("new_password")}
+                />
                 {passwordForm.formState.errors.new_password && (
-                  <p className="text-xs text-destructive">{passwordForm.formState.errors.new_password.message}</p>
+                  <p className="text-xs text-destructive">
+                    {passwordForm.formState.errors.new_password.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="confirm_password">Confirmar nova senha</Label>
-                <Input id="confirm_password" type="password" placeholder="••••••••" autoComplete="new-password" {...passwordForm.register("confirm_password")} />
+                <Input
+                  id="confirm_password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  {...passwordForm.register("confirm_password")}
+                />
                 {passwordForm.formState.errors.confirm_password && (
-                  <p className="text-xs text-destructive">{passwordForm.formState.errors.confirm_password.message}</p>
+                  <p className="text-xs text-destructive">
+                    {passwordForm.formState.errors.confirm_password.message}
+                  </p>
                 )}
               </div>
               <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
-                {passwordForm.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
+                {passwordForm.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Lock className="mr-2 h-4 w-4" />
+                )}
                 Alterar senha
               </Button>
             </form>

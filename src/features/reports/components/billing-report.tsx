@@ -84,7 +84,8 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
         <div className="mb-4 grid grid-cols-4 gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-green-600">
-              R$ {Number(summary.totalRevenue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              R${" "}
+              {Number(summary.totalRevenue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-muted-foreground">Receita Total</p>
           </div>
@@ -96,24 +97,30 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-yellow-600">
-              R$ {Number(summary.totalPending).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              R${" "}
+              {Number(summary.totalPending).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-muted-foreground">Pendente</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold">
-              R$ {Number(summary.avgInvoiceValue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              R${" "}
+              {Number(summary.avgInvoiceValue).toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
             </p>
             <p className="text-xs text-muted-foreground">Ticket Médio</p>
           </div>
         </div>
 
         <div className="mb-6 h-64">
-          <p className="mb-2 text-sm font-medium text-muted-foreground">
-            Faturamento por Mês
-          </p>
+          <p className="mb-2 text-sm font-medium text-muted-foreground">Faturamento por Mês</p>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              initialDimension={{ width: 500, height: 300 }}
+            >
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" fontSize={12} tickLine={false} />
@@ -121,9 +128,7 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v: number) =>
-                    `R$${(v / 1000).toFixed(0)}k`
-                  }
+                  tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -136,8 +141,20 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
                   }
                 />
                 <Legend />
-                <Bar dataKey="paid" name="Recebido" fill="#22c55e" radius={[4, 4, 0, 0]} stackId="a" />
-                <Bar dataKey="pending" name="Pendente" fill="#eab308" radius={[4, 4, 0, 0]} stackId="a" />
+                <Bar
+                  dataKey="paid"
+                  name="Recebido"
+                  fill="#22c55e"
+                  radius={[4, 4, 0, 0]}
+                  stackId="a"
+                />
+                <Bar
+                  dataKey="pending"
+                  name="Pendente"
+                  fill="#eab308"
+                  radius={[4, 4, 0, 0]}
+                  stackId="a"
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -167,7 +184,10 @@ export function BillingReport({ data, loading, onExport }: BillingReportProps) {
                     <TableCell className="font-medium">{c.contractNumber}</TableCell>
                     <TableCell>{c.patientName}</TableCell>
                     <TableCell className="text-right">
-                      R$ {Number(c.totalInvoiced).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R${" "}
+                      {Number(c.totalInvoiced).toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
                     </TableCell>
                     <TableCell className="text-right">
                       R$ {Number(c.totalPaid).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}

@@ -304,29 +304,59 @@ export function OnboardingWizard() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="number">Número</Label>
-                  <Input id="number" placeholder="S/N" value={number} onChange={(e) => setNumber(e.target.value)} />
+                  <Input
+                    id="number"
+                    placeholder="S/N"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="complement">Complemento</Label>
-                  <Input id="complement" placeholder="Sala, bloco..." value={complement} onChange={(e) => setComplement(e.target.value)} />
+                  <Input
+                    id="complement"
+                    placeholder="Sala, bloco..."
+                    value={complement}
+                    onChange={(e) => setComplement(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input id="neighborhood" placeholder="Centro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+                  <Input
+                    id="neighborhood"
+                    placeholder="Centro"
+                    value={neighborhood}
+                    onChange={(e) => setNeighborhood(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-4">
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="city">Cidade</Label>
-                  <Input id="city" placeholder="São Paulo" value={city} onChange={(e) => setCity(e.target.value)} />
+                  <Input
+                    id="city"
+                    placeholder="São Paulo"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="state">Estado</Label>
-                  <Input id="state" placeholder="SP" value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} />
+                  <Input
+                    id="state"
+                    placeholder="SP"
+                    value={state}
+                    onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+                    maxLength={2}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="country">País</Label>
-                  <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                  <Input
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -336,16 +366,34 @@ export function OnboardingWizard() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="contato@clinica.com.br"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
+                  <Input
+                    id="whatsapp"
+                    placeholder="(00) 00000-0000"
+                    value={formatPhone(whatsapp)}
+                    onChange={(e) => setWhatsapp(unformat(e.target.value))}
+                    maxLength={15}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="website">Site</Label>
-                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://www.clinica.com.br"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
               </div>
             </div>
 
@@ -354,16 +402,31 @@ export function OnboardingWizard() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="cnes">CNES</Label>
-                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
+                  <Input
+                    id="cnes"
+                    placeholder="Código CNES"
+                    value={cnes}
+                    onChange={(e) => setCnes(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="specialty">Especialidade</Label>
-                  <Input id="specialty" placeholder="Ex: Home Care, Geriatria" value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+                  <Input
+                    id="specialty"
+                    placeholder="Ex: Home Care, Geriatria"
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="responsibleName">Responsável Legal</Label>
-                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+                <Input
+                  id="responsibleName"
+                  placeholder="Nome do responsável"
+                  value={responsibleName}
+                  onChange={(e) => setResponsibleName(e.target.value)}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="description">Descrição</Label>
@@ -373,7 +436,7 @@ export function OnboardingWizard() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Breve descrição da clínica..."
-                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 />
               </div>
             </div>
@@ -491,7 +554,10 @@ export function OnboardingWizard() {
                       className="flex-1"
                     />
                     {asaasConfig?.has_api_key && (
-                      <Badge variant="outline" className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700">
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
+                      >
                         Configurada
                       </Badge>
                     )}
@@ -506,7 +572,11 @@ export function OnboardingWizard() {
                     onChange={(e) => setAsaasWalletId(e.target.value)}
                   />
                 </div>
-                <Button variant="outline" onClick={handleTestAsaas} disabled={!asaasApiKey || testAsaas.isPending}>
+                <Button
+                  variant="outline"
+                  onClick={handleTestAsaas}
+                  disabled={!asaasApiKey || testAsaas.isPending}
+                >
                   {testAsaas.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (

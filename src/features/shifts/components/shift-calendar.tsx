@@ -27,7 +27,10 @@ const STATUS_LABEL: Record<ShiftItem["status"], string> = {
   cancelled: "Cancelado",
 };
 
-const STATUS_BADGE: Record<ShiftItem["status"], "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_BADGE: Record<
+  ShiftItem["status"],
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
@@ -192,8 +195,8 @@ export function ShiftCalendar({
       {gapDays.size > 0 && (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-block h-3 w-3 rounded-sm bg-amber-500/20" />
-          Dias em âmbar: sem cobertura (turno esperado nesse dia da semana, mas nenhum
-          agendado — possível conflito de escala).
+          Dias em âmbar: sem cobertura (turno esperado nesse dia da semana, mas nenhum agendado —
+          possível conflito de escala).
         </p>
       )}
 

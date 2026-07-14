@@ -78,7 +78,11 @@ export function FamilyMembersGrowthReport({
           </div>
         ) : (
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              initialDimension={{ width: 500, height: 300 }}
+            >
               <AreaChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" fontSize={12} tickLine={false} />

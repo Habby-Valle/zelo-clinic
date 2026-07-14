@@ -10,12 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -56,7 +51,10 @@ function today(): string {
 
 // Remove a dose entre parênteses do nome ("Losartana (50mg)" → "Losartana").
 function stripDose(name: string): string {
-  return name.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+  return name
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // Normaliza horário declarado para HH:MM ("8:00" → "08:00", "20" → "20:00").
@@ -123,9 +121,7 @@ export function MedicationSection({
       details.find((d) => (s.source_text ?? "").toLowerCase().includes(d.name.toLowerCase()));
     const rawTimes = detail?.times.length
       ? detail.times
-      : (detail?.turns ?? [])
-          .map((t) => TURN_DEFAULT_TIME[t])
-          .filter(Boolean);
+      : (detail?.turns ?? []).map((t) => TURN_DEFAULT_TIME[t]).filter(Boolean);
     const times = rawTimes.map(normalizeTime);
     setForm({
       ...emptyForm(),
@@ -375,8 +371,8 @@ export function MedicationSection({
         {!showForm && suggestions.length > 0 && (
           <div className="rounded-lg border border-dashed p-3">
             <p className="mb-2 text-xs text-muted-foreground">
-              Declarados pela família. Ao aplicar, nome, dose e horários vêm como rascunho —
-              valide na receita antes de salvar.
+              Declarados pela família. Ao aplicar, nome, dose e horários vêm como rascunho — valide
+              na receita antes de salvar.
             </p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s, i) => (

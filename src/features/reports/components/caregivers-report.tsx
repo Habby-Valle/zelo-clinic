@@ -89,7 +89,11 @@ export function CaregiversReport({ data, loading, onExport }: CaregiversReportPr
             </div>
 
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: 300 }}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                initialDimension={{ width: 500, height: 300 }}
+              >
                 <BarChart data={data} layout="vertical" margin={{ left: 100 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" fontSize={12} tickLine={false} />

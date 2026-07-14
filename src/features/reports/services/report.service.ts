@@ -72,17 +72,13 @@ export async function fetchSatisfactionReportApi(
   return apiFetchClient<SatisfactionReportData>(`/reports/satisfaction/?${qs}`);
 }
 
-export async function fetchContractsReportApi(
-  months: number = 12
-): Promise<ContractsReportData> {
+export async function fetchContractsReportApi(months: number = 12): Promise<ContractsReportData> {
   const qs = new URLSearchParams();
   qs.set("months", String(months));
   return apiFetchClient<ContractsReportData>(`/reports/contracts/?${qs}`);
 }
 
-export async function fetchBillingReportApi(
-  months: number = 12
-): Promise<BillingReportData> {
+export async function fetchBillingReportApi(months: number = 12): Promise<BillingReportData> {
   const qs = new URLSearchParams();
   qs.set("months", String(months));
   return apiFetchClient<BillingReportData>(`/reports/billing/?${qs}`);

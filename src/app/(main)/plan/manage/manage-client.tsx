@@ -25,24 +25,37 @@ export function ManageSubscriptionClient({
   const [cancelling, setCancelling] = useState(false);
 
   const billingTypeLabel =
-    subscription?.billing_type === "PIX" ? "PIX"
-    : subscription?.billing_type === "CREDIT_CARD" ? "Cartão de Crédito"
-    : subscription?.billing_type ?? "—";
+    subscription?.billing_type === "PIX"
+      ? "PIX"
+      : subscription?.billing_type === "CREDIT_CARD"
+        ? "Cartão de Crédito"
+        : (subscription?.billing_type ?? "—");
 
   const statusLabel =
-    subscription?.status === "active" ? "Ativa"
-    : subscription?.status === "past_due" ? "Inadimplente"
-    : subscription?.status === "canceled" ? "Cancelada"
-    : subscription?.status ?? "—";
+    subscription?.status === "active"
+      ? "Ativa"
+      : subscription?.status === "past_due"
+        ? "Inadimplente"
+        : subscription?.status === "canceled"
+          ? "Cancelada"
+          : (subscription?.status ?? "—");
 
   const statusVariant =
-    subscription?.status === "active" ? "default"
-    : subscription?.status === "past_due" ? "destructive"
-    : subscription?.status === "canceled" ? "outline"
-    : "outline";
+    subscription?.status === "active"
+      ? "default"
+      : subscription?.status === "past_due"
+        ? "destructive"
+        : subscription?.status === "canceled"
+          ? "outline"
+          : "outline";
 
   async function handleCancel() {
-    if (!confirm("Tem certeza que deseja cancelar a assinatura? O plano será rebaixado para Gratuito.")) return;
+    if (
+      !confirm(
+        "Tem certeza que deseja cancelar a assinatura? O plano será rebaixado para Gratuito."
+      )
+    )
+      return;
     setCancelling(true);
     try {
       const res = await fetch("/asaas/plans/cancel/", { method: "POST" });
@@ -121,8 +134,8 @@ export function ManageSubscriptionClient({
             <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
               <p className="font-medium">Gerenciamento pelo ASAAS</p>
               <p className="mt-1">
-                Para alterar método de pagamento, visualizar histórico completo ou
-                atualizar dados, acesse o painel de controle do ASAAS.
+                Para alterar método de pagamento, visualizar histórico completo ou atualizar dados,
+                acesse o painel de controle do ASAAS.
               </p>
             </div>
 
@@ -133,9 +146,7 @@ export function ManageSubscriptionClient({
                 onClick={handleCancel}
                 disabled={cancelling}
               >
-                {cancelling ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
+                {cancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Cancelar assinatura
               </Button>
             )}

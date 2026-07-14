@@ -548,10 +548,7 @@ function PatientShiftsSection({
 
             <div className="space-y-2 rounded-lg border p-3">
               <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={formRepeat}
-                  onCheckedChange={(v) => setFormRepeat(v === true)}
-                />
+                <Checkbox checked={formRepeat} onCheckedChange={(v) => setFormRepeat(v === true)} />
                 Repetir (turno recorrente)
               </label>
               {formRepeat && (
