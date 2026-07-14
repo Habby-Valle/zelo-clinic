@@ -62,6 +62,13 @@ export function OnboardingWizard() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("Brasil");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [cnes, setCnes] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [description, setDescription] = useState("");
+  const [responsibleName, setResponsibleName] = useState("");
 
   // ── Passo 3: ASAAS ──
   const [asaasApiKey, setAsaasApiKey] = useState("");
@@ -81,6 +88,13 @@ export function OnboardingWizard() {
       setCity(clinic.address?.city ?? "");
       setState(clinic.address?.state ?? "");
       setCountry(clinic.address?.country ?? "Brasil");
+      setEmail(clinic.email ?? "");
+      setWebsite(clinic.website ?? "");
+      setDescription(clinic.description ?? "");
+      setResponsibleName(clinic.responsible_name ?? "");
+      setWhatsapp(clinic.whatsapp ?? "");
+      setCnes(clinic.cnes ?? "");
+      setSpecialty(clinic.specialty ?? "");
     });
   }, [clinic]);
 
@@ -107,6 +121,11 @@ export function OnboardingWizard() {
         state,
         country,
       },
+      email: email || undefined,
+      website: website || undefined,
+      whatsapp: unformat(whatsapp) || undefined,
+      cnes: cnes || undefined,
+      specialty: specialty || undefined,
     });
     setStep(2);
   }
@@ -309,6 +328,53 @@ export function OnboardingWizard() {
                   <Label htmlFor="country">País</Label>
                   <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Contato</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="website">Site</Label>
+                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Informações Adicionais</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cnes">CNES</Label>
+                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="specialty">Especialidade</Label>
+                  <Input id="specialty" placeholder="Ex: Home Care, Geriatria" value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="responsibleName">Responsável Legal</Label>
+                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="description">Descrição</Label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Breve descrição da clínica..."
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
               </div>
             </div>
 

@@ -67,6 +67,26 @@ export function SettingsClient() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("Brasil");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
+  const [responsibleName, setResponsibleName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [cnes, setCnes] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [businessHours, setBusinessHours] = useState<Record<string, { open: string; close: string; is_open: boolean }>>({});
+  const DAYS = [
+    { key: "monday", label: "Segunda" },
+    { key: "tuesday", label: "Terça" },
+    { key: "wednesday", label: "Quarta" },
+    { key: "thursday", label: "Quinta" },
+    { key: "friday", label: "Sexta" },
+    { key: "saturday", label: "Sábado" },
+    { key: "sunday", label: "Domingo" },
+  ] as const;
 
   const [saving, setSaving] = useState(false);
 
@@ -107,6 +127,18 @@ export function SettingsClient() {
       setCity(clinic.address?.city ?? "");
       setState(clinic.address?.state ?? "");
       setCountry(clinic.address?.country ?? "Brasil");
+      setEmail(clinic.email ?? "");
+      setWebsite(clinic.website ?? "");
+      setDescription(clinic.description ?? "");
+      setResponsibleName(clinic.responsible_name ?? "");
+      setWhatsapp(clinic.whatsapp ?? "");
+      setCnes(clinic.cnes ?? "");
+      setSpecialty(clinic.specialty ?? "");
+      const sm = clinic.social_media as Record<string, string> | undefined;
+      setSocialInstagram(sm?.instagram ?? "");
+      setSocialFacebook(sm?.facebook ?? "");
+      setSocialLinkedin(sm?.linkedin ?? "");
+      setBusinessHours((clinic.business_hours as Record<string, { open: string; close: string; is_open: boolean }>) ?? {});
     });
   }, [clinic]);
 
@@ -116,6 +148,11 @@ export function SettingsClient() {
   async function handleSaveClinic() {
     setSaving(true);
     try {
+      const socialMediaData: Record<string, string> = {};
+      if (socialInstagram) socialMediaData.instagram = socialInstagram;
+      if (socialFacebook) socialMediaData.facebook = socialFacebook;
+      if (socialLinkedin) socialMediaData.linkedin = socialLinkedin;
+
       await updateClinic.mutateAsync({
         phone: unformat(phone) || undefined,
         document: unformat(document) || undefined,
@@ -129,6 +166,15 @@ export function SettingsClient() {
           state,
           country,
         },
+        email: email || undefined,
+        website: website || undefined,
+        description: description || undefined,
+        responsible_name: responsibleName || undefined,
+        whatsapp: unformat(whatsapp) || undefined,
+        cnes: cnes || undefined,
+        specialty: specialty || undefined,
+        social_media: Object.keys(socialMediaData).length > 0 ? socialMediaData : undefined,
+        business_hours: businessHours,
       });
       toast.success("Dados da clínica atualizados");
     } catch {
@@ -245,6 +291,8 @@ export function SettingsClient() {
     }
   }
 
+  const [tab, setTab] = useState("geral");
+
   const hasClinicChanges =
     phone !== (clinic?.phone ?? "") ||
     document !== (clinic?.document ?? "") ||
@@ -255,7 +303,18 @@ export function SettingsClient() {
     neighborhood !== (clinic?.address?.neighborhood ?? "") ||
     city !== (clinic?.address?.city ?? "") ||
     state !== (clinic?.address?.state ?? "") ||
-    country !== (clinic?.address?.country ?? "Brasil");
+    country !== (clinic?.address?.country ?? "Brasil") ||
+    email !== (clinic?.email ?? "") ||
+    website !== (clinic?.website ?? "") ||
+    description !== (clinic?.description ?? "") ||
+    responsibleName !== (clinic?.responsible_name ?? "") ||
+    whatsapp !== (clinic?.whatsapp ?? "") ||
+    cnes !== (clinic?.cnes ?? "") ||
+    specialty !== (clinic?.specialty ?? "") ||
+    socialInstagram !== ((clinic?.social_media as Record<string, string> | undefined)?.instagram ?? "") ||
+    socialFacebook !== ((clinic?.social_media as Record<string, string> | undefined)?.facebook ?? "") ||
+    socialLinkedin !== ((clinic?.social_media as Record<string, string> | undefined)?.linkedin ?? "") ||
+    JSON.stringify(businessHours) !== JSON.stringify(clinic?.business_hours ?? {});
 
   if (isLoading) {
     return (
@@ -264,8 +323,6 @@ export function SettingsClient() {
       </div>
     );
   }
-
-  const [tab, setTab] = useState("geral");
 
   return (
     <Tabs value={tab} onValueChange={setTab}>
@@ -397,6 +454,182 @@ export function SettingsClient() {
                   <Label htmlFor="country">País</Label>
                   <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Contato</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Informações da Clínica</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cnes">CNES</Label>
+                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="specialty">Especialidade</Label>
+                  <Input id="specialty" placeholder="Home Care, Geriatria..." value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="responsibleName">Responsável Legal</Label>
+                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="website">Site</Label>
+                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="description">Descrição</Label>
+                <textarea id="description" rows={3} className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Breve descrição da clínica..." value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Redes Sociais</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Input id="socialInstagram" placeholder="@clinica ou url" value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialFacebook">Facebook</Label>
+                  <Input id="socialFacebook" placeholder="url do Facebook" value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Input id="socialLinkedin" placeholder="url do LinkedIn" value={socialLinkedin} onChange={(e) => setSocialLinkedin(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Contato</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="contato@clinica.com.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input id="whatsapp" placeholder="(00) 00000-0000" value={formatPhone(whatsapp)} onChange={(e) => setWhatsapp(unformat(e.target.value))} maxLength={15} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="website">Site</Label>
+                <Input id="website" type="url" placeholder="https://www.clinica.com.br" value={website} onChange={(e) => setWebsite(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Informações</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cnes">CNES</Label>
+                  <Input id="cnes" placeholder="Código CNES" value={cnes} onChange={(e) => setCnes(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="specialty">Especialidade</Label>
+                  <Input id="specialty" placeholder="Ex: Home Care, Geriatria" value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="responsibleName">Responsável Legal</Label>
+                <Input id="responsibleName" placeholder="Nome do responsável" value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="description">Descrição</Label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Breve descrição da clínica..."
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Redes Sociais</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Input id="socialInstagram" placeholder="https://instagram.com/..." value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialFacebook">Facebook</Label>
+                  <Input id="socialFacebook" placeholder="https://facebook.com/..." value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Input id="socialLinkedin" placeholder="https://linkedin.com/..." value={socialLinkedin} onChange={(e) => setSocialLinkedin(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground">Horários de Funcionamento</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {DAYS.map((d) => {
+                  const day = businessHours[d.key];
+                  return (
+                    <div key={d.key} className="rounded-lg border p-3">
+                      <p className="mb-2 text-xs font-medium">{d.label}</p>
+                      <div className="flex gap-2">
+                        <select
+                          value={day?.open ?? ""}
+                          onChange={(e) =>
+                            setBusinessHours((prev) => ({
+                              ...prev,
+                              [d.key]: { ...prev[d.key] ?? { open: "", close: "", is_open: true }, open: e.target.value },
+                            }))
+                          }
+                          className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm"
+                        >
+                          <option value="">--</option>
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const h = String(i).padStart(2, "0");
+                            return (
+                              <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                            );
+                          })}
+                        </select>
+                        <span className="flex items-center text-xs text-muted-foreground">às</span>
+                        <select
+                          value={day?.close ?? ""}
+                          onChange={(e) =>
+                            setBusinessHours((prev) => ({
+                              ...prev,
+                              [d.key]: { ...prev[d.key] ?? { open: "", close: "", is_open: true }, close: e.target.value },
+                            }))
+                          }
+                          className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm"
+                        >
+                          <option value="">--</option>
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const h = String(i).padStart(2, "0");
+                            return (
+                              <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
