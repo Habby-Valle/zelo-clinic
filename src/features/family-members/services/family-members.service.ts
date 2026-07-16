@@ -11,11 +11,11 @@ export async function fetchFamilyMembers(params: {
   qs.set("page", String(params.page));
   qs.set("page_size", String(params.pageSize));
 
-  const data = await apiFetchClient<FamilyMembersPage>(`/family-members/?${qs}`);
+  const data = await apiFetchClient<FamilyMembersPage>(`/family/members/?${qs}`);
 
   return { familyMembers: data.results ?? [], total: data.count ?? 0 };
 }
 
 export async function fetchFamilyMember(id: string): Promise<FamilyMemberDetail> {
-  return apiFetchClient<FamilyMemberDetail>(`/family-members/${id}/`);
+  return apiFetchClient<FamilyMemberDetail>(`/family/members/${id}/`);
 }
