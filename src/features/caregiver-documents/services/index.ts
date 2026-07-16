@@ -2,7 +2,7 @@ import { apiFetchClient } from "@/lib/api-client";
 import type { CaregiverDocument, CreateCaregiverDocumentInput } from "../types";
 
 export async function fetchCaregiverDocuments(caregiverId: string): Promise<CaregiverDocument[]> {
-  return apiFetchClient<CaregiverDocument[]>(`/caregiver-documents/?caregiver=${caregiverId}`);
+  return apiFetchClient<CaregiverDocument[]>(`/caregivers/documents/?caregiver=${caregiverId}`);
 }
 
 export async function uploadDocumentMedia(file: File): Promise<string> {
@@ -25,12 +25,12 @@ export async function uploadDocumentMedia(file: File): Promise<string> {
 export async function createCaregiverDocument(
   input: CreateCaregiverDocumentInput
 ): Promise<CaregiverDocument> {
-  return apiFetchClient<CaregiverDocument>("/caregiver-documents/", {
+  return apiFetchClient<CaregiverDocument>("/caregivers/documents/", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export async function deleteCaregiverDocument(id: string): Promise<void> {
-  await apiFetchClient(`/caregiver-documents/${id}/`, { method: "DELETE" });
+  await apiFetchClient(`/caregivers/documents/${id}/`, { method: "DELETE" });
 }

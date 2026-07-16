@@ -28,7 +28,7 @@ export async function verifyCaregiverApi(
   action: "approve" | "reject",
   note = ""
 ): Promise<CaregiverProfile> {
-  return apiFetchClient<CaregiverProfile>(`/users/${id}/verify/`, {
+  return apiFetchClient<CaregiverProfile>(`/caregivers/${id}/verify/`, {
     method: "POST",
     body: JSON.stringify({ action, note }),
   });

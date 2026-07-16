@@ -252,7 +252,7 @@ export async function fetchChecklistSuggestions(
 
 export async function fetchCaregiverMatch(patientId: string): Promise<CaregiverMatchResult[]> {
   return apiFetchClient<CaregiverMatchResult[]>(
-    `/api/ai/caregiver-match/?patient_id=${patientId}&use_ai=true`
+    `/caregivers/match/?patient_id=${patientId}&use_ai=true`
   );
 }
 
