@@ -256,7 +256,7 @@ export async function removeEmergencyContactApi(
   patientId: string,
   contactId: string
 ): Promise<void> {
-  await apiFetchClient(`/patients/${patientId}/emergency-contacts/${contactId}/`, {
+  await apiFetchClient(`/patients/${patientId}/contacts/internal/${contactId}/`, {
     method: "DELETE",
   });
 }

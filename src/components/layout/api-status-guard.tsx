@@ -19,7 +19,7 @@ export function ApiStatusGuard({ children }: ApiStatusGuardProps) {
   async function checkApi() {
     setStatus("checking");
     try {
-      const res = await fetch("/api/proxy/system-config/public/", {
+      const res = await fetch("/api/proxy/public/system/", {
         signal: AbortSignal.timeout(5000),
       });
       if (res.ok) {

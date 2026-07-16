@@ -4,7 +4,7 @@ import type { PublicPlan, LeadInput } from "@/features/landing/types";
 
 /** Busca os planos públicos (server-side, sem autenticação). */
 export async function getPublicPlans(): Promise<PublicPlan[]> {
-  return apiFetch<PublicPlan[]>("/plans/public/");
+  return apiFetch<PublicPlan[]>("/public/plans/");
 }
 
 /** Envia um lead da landing page (endpoint público). */

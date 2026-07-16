@@ -126,7 +126,7 @@ export async function getAllPlans(): Promise<Plan[]> {
 
 export async function arePlansEnabled(): Promise<boolean> {
   try {
-    const data = await apiFetchServer<Record<string, unknown>>("/system-config/public/");
+    const data = await apiFetchServer<Record<string, unknown>>("/public/system/");
     return (data.plans_enabled as boolean) ?? false;
   } catch {
     return false;

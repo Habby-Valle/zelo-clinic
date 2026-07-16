@@ -238,7 +238,7 @@ export async function fetchChecklistSuggestions(
   const data = await apiFetchClient<{
     categories: string[];
     suggestions: Record<string, unknown>[];
-  }>(`/patients/${patientId}/checklist-suggestions/`);
+  }>(`/patients/${patientId}/checklists/suggestions/`);
   return {
     categories: data.categories ?? [],
     suggestions: (data.suggestions ?? []).map((cl) => ({
