@@ -13,12 +13,12 @@ export async function fetchSosAlertsApi(
   if (params.status && params.status !== "all") qs.set("status", params.status);
   qs.set("page", String(params.page ?? 1));
   qs.set("page_size", String(params.page_size ?? 20));
-  const data = await apiFetchClient<SosAlertsListResult>(`/sos-alerts/?${qs}`);
+  const data = await apiFetchClient<SosAlertsListResult>(`/alerts/?${qs}`);
   return { alerts: data.results, total: data.count };
 }
 
 export async function fetchSosSummaryApi(): Promise<SosSummary> {
-  const data = await apiFetchClient<SosAlertsListResult>(`/sos-alerts/?page_size=10000`);
+  const data = await apiFetchClient<SosAlertsListResult>(`/alerts/?page_size=10000`);
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
@@ -32,13 +32,13 @@ export async function fetchSosSummaryApi(): Promise<SosSummary> {
 }
 
 export async function acknowledgeSosAlertApi(id: string): Promise<void> {
-  await apiFetchClient<void>(`/sos-alerts/${id}/acknowledge/`, {
+  await apiFetchClient<void>(`/alerts/${id}/acknowledge/`, {
     method: "PATCH",
   });
 }
 
 export async function resolveSosAlertApi(id: string, resolution_reason?: string): Promise<void> {
-  await apiFetchClient<void>(`/sos-alerts/${id}/resolve/`, {
+  await apiFetchClient<void>(`/alerts/${id}/resolve/`, {
     method: "PATCH",
     body: JSON.stringify({ resolution_reason: resolution_reason ?? "" }),
   });
