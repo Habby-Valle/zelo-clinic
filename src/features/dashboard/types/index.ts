@@ -24,21 +24,21 @@ export interface DashboardResponse {
 
 export interface RecentShift {
   id: string;
-  caregiver: { id: string; name: string } | null;
+  caregiver_name: string | null;
   started_at: string | null;
   ended_at: string | null;
   status: string;
-  patients: Array<{ id: string; name: string }>;
+  patient_name: string | null;
 }
 
 export interface ShiftsListResponse {
   results: Array<{
     id: string;
-    caregiver: { id: string; name: string } | null;
+    caregiver_name: string | null;
     start: string | null;
     end: string | null;
     status: string;
-    shift_patients: Array<{ patient: { id: string; name: string } }>;
+    shift_patients: Array<{ patient_name: string }>;
   }>;
   count: number;
 }

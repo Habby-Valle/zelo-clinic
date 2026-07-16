@@ -10,11 +10,11 @@ export async function fetchRecentShifts(): Promise<RecentShift[]> {
     const data = await apiFetchServer<ShiftsListResponse>("/shifts/?ordering=-start&page_size=5");
     return (data.results ?? []).map((s) => ({
       id: s.id,
-      caregiver: s.caregiver,
+      caregiver_name: s.caregiver_name,
       started_at: s.start,
       ended_at: s.end,
       status: s.status,
-      patients: (s.shift_patients ?? []).map((sp) => sp.patient),
+      patient_name: s.shift_patients?.[0]?.patient_name ?? null,
     }));
   } catch {
     return [];

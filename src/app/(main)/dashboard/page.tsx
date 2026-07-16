@@ -305,10 +305,10 @@ export default async function DashboardPage() {
                     {recentShifts.map((shift) => (
                       <TableRow key={shift.id}>
                         <TableCell className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {shift.patients[0]?.name ?? "—"}
+                          {shift.patient_name ?? "—"}
                         </TableCell>
                         <TableCell className="text-zinc-600 dark:text-zinc-400">
-                          {shift.caregiver?.name ?? "—"}
+                          {shift.caregiver_name ?? "—"}
                         </TableCell>
                         <TableCell className="text-zinc-500 dark:text-zinc-400">
                           {fmtDate(shift.started_at)}
