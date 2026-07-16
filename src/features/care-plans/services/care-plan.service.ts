@@ -49,7 +49,7 @@ function mapChecklistItem(item: Record<string, unknown>): CarePlanChecklistItem 
 
 export async function fetchCarePlanByPatient(patientId: string): Promise<CarePlan | null> {
   const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(
-    `/care-plans/?patient_id=${patientId}`
+    `/care/plans/?patient_id=${patientId}`
   );
   const plans = data.results ?? [];
   const raw = (plans.find((p) => p.status === "active") ??
@@ -114,7 +114,7 @@ export async function fetchChecklistOptions(): Promise<ChecklistOption[]> {
 }
 
 export async function createCarePlan(input: SaveCarePlanInput): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/`, {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -122,7 +122,7 @@ export async function createCarePlan(input: SaveCarePlanInput): Promise<CarePlan
 }
 
 export async function updateCarePlan(id: string, input: SaveCarePlanInput): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/${id}/`, {
     method: "PATCH",
     body: JSON.stringify(input),
   });
@@ -192,7 +192,7 @@ export async function fetchCarePlans(params?: {
   if (params?.pageSize) query.set("page_size", String(params.pageSize));
   const qs = query.toString();
   const data = await apiFetchClient<{ count: number; results: Record<string, unknown>[] }>(
-    `/care-plans/${qs ? `?${qs}` : ""}`
+    `/care/plans/${qs ? `?${qs}` : ""}`
   );
   return {
     plans: (data.results ?? []).map(mapCarePlan),
@@ -202,20 +202,20 @@ export async function fetchCarePlans(params?: {
 
 export async function fetchCarePlansForReview(): Promise<CarePlan[]> {
   const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(
-    `/care-plans/?status=pending_review`
+    `/care/plans/?status=pending_review`
   );
   return (data.results ?? []).map(mapCarePlan);
 }
 
 export async function fetchActiveCarePlans(): Promise<CarePlan[]> {
   const data = await apiFetchClient<{ results: Record<string, unknown>[] }>(
-    `/care-plans/?status=active`
+    `/care/plans/?status=active`
   );
   return (data.results ?? []).map(mapCarePlan);
 }
 
 export async function submitCarePlan(id: string): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/submit/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/${id}/submit/`, {
     method: "POST",
   });
   return mapCarePlan(raw);
@@ -225,7 +225,7 @@ export async function updateCarePlanChecklists(
   id: string,
   checklists: SaveCarePlanChecklist[]
 ): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/${id}/`, {
     method: "PATCH",
     body: JSON.stringify({ checklists }),
   });
@@ -257,14 +257,14 @@ export async function fetchCaregiverMatch(patientId: string): Promise<CaregiverM
 }
 
 export async function approveCarePlan(id: string): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/approve/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/${id}/approve/`, {
     method: "POST",
   });
   return mapCarePlan(raw);
 }
 
 export async function returnCarePlan(id: string, note: string): Promise<CarePlan> {
-  const raw = await apiFetchClient<Record<string, unknown>>(`/care-plans/${id}/return/`, {
+  const raw = await apiFetchClient<Record<string, unknown>>(`/care/plans/${id}/return/`, {
     method: "POST",
     body: JSON.stringify({ note }),
   });
