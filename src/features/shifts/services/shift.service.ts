@@ -33,7 +33,7 @@ export async function fetchShiftApi(id: string): Promise<ShiftItem> {
 
 export async function fetchShiftTemplatesApi(): Promise<ShiftTemplateItem[]> {
   const data = await apiFetchClient<ListResult<ShiftTemplateItem>>(
-    "/shift-templates/?page_size=100"
+    "/shifts/templates/?page_size=100"
   );
   return data.results;
 }

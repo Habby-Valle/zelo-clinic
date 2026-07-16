@@ -160,7 +160,7 @@ export async function createShiftTemplate(data: {
       return { success: false, error: "Campos obrigatórios não preenchidos" };
     }
 
-    await apiFetchServer<unknown>("/shift-templates/", {
+    await apiFetchServer<unknown>("/shifts/templates/", {
       method: "POST",
       body: JSON.stringify({
         clinic_id: user.clinic_id,
@@ -192,7 +192,7 @@ export async function updateShiftTemplate(data: {
   try {
     await requireClinicAdmin();
 
-    await apiFetchServer<unknown>(`/shift-templates/${data.id}/`, {
+    await apiFetchServer<unknown>(`/shifts/templates/${data.id}/`, {
       method: "PATCH",
       body: JSON.stringify({
         name: data.name.trim(),
@@ -218,7 +218,7 @@ export async function deleteShiftTemplate(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();
-    await apiFetchServer<unknown>(`/shift-templates/${id}/`, {
+    await apiFetchServer<unknown>(`/shifts/templates/${id}/`, {
       method: "DELETE",
     });
     revalidatePath("/shifts");
