@@ -60,7 +60,7 @@ export async function fetchCaregiversReportApi(
   const qs = new URLSearchParams();
   qs.set("date_from", dateRange.from);
   qs.set("date_to", dateRange.to);
-  return apiFetchClient<CaregiverReportData[]>(`/caregivers/reports/?${qs}`);
+  return apiFetchClient<CaregiverReportData[]>(`/reports/caregivers/?${qs}`);
 }
 
 export async function fetchSatisfactionReportApi(
