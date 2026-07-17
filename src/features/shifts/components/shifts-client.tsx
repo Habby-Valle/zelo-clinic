@@ -75,6 +75,7 @@ import {
   shiftStartFromContract,
   WEEKDAY_LABELS,
 } from "../lib/shift-time";
+import { shiftBadgeKey, SHIFT_BADGE_LABELS } from "../lib/shift-status";
 import { SkippedShiftsDialog, type SkippedShiftInfo } from "./skipped-shifts-dialog";
 import { ShiftCalendar } from "./shift-calendar";
 
@@ -83,13 +84,7 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: "Agendado",
-  in_progress: "Em andamento",
-  completed: "Concluído",
-  cancelled: "Cancelado",
+  not_performed: "destructive",
 };
 
 function formatDateTime(dateStr: string): string {
@@ -519,8 +514,16 @@ export function ShiftsClient() {
                               new Date(shift.start) > new Date() ? (
                                 <Badge variant="outline">Aguardando início</Badge>
                               ) : (
-                                <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"}>
-                                  {STATUS_LABELS[shift.status] ?? shift.status}
+                                <Badge
+                                  variant={
+                                    STATUS_VARIANTS[
+                                      shiftBadgeKey(shift.status, shift.auto_cancelled)
+                                    ] ?? "outline"
+                                  }
+                                >
+                                  {SHIFT_BADGE_LABELS[
+                                    shiftBadgeKey(shift.status, shift.auto_cancelled)
+                                  ] ?? shift.status}
                                 </Badge>
                               )}
                             </TableCell>

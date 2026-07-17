@@ -21,19 +21,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { finishShift, cancelShift, deleteShift } from "@/app/(main)/shifts/actions";
+import { shiftBadgeKey, SHIFT_BADGE_LABELS } from "../lib/shift-status";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: "Agendado",
-  in_progress: "Em andamento",
-  completed: "Concluído",
-  cancelled: "Cancelado",
+  not_performed: "destructive",
 };
 
 function formatDateTime(dateStr: string) {
@@ -111,8 +106,11 @@ export function ShiftDetailClient({ id }: Props) {
           <h1 className="text-2xl font-bold tracking-tight">Detalhes do Turno</h1>
           <p className="text-sm text-muted-foreground">#{shift.id}</p>
         </div>
-        <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"} className="text-sm">
-          {STATUS_LABELS[shift.status] ?? shift.status}
+        <Badge
+          variant={STATUS_VARIANTS[shiftBadgeKey(shift.status, shift.auto_cancelled)] ?? "outline"}
+          className="text-sm"
+        >
+          {SHIFT_BADGE_LABELS[shiftBadgeKey(shift.status, shift.auto_cancelled)] ?? shift.status}
         </Badge>
       </div>
 

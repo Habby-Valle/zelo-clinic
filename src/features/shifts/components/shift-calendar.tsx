@@ -19,22 +19,17 @@ import {
 import { useShiftsRange } from "../hooks/use-shifts";
 import type { ShiftItem } from "../types";
 import { mondayOf, addDays, localDateKey } from "../lib/shift-time";
-
-const STATUS_LABEL: Record<ShiftItem["status"], string> = {
-  scheduled: "Agendado",
-  in_progress: "Em andamento",
-  completed: "Concluído",
-  cancelled: "Cancelado",
-};
+import { shiftBadgeKey, SHIFT_BADGE_LABELS, type ShiftBadgeKey } from "../lib/shift-status";
 
 const STATUS_BADGE: Record<
-  ShiftItem["status"],
+  ShiftBadgeKey,
   "default" | "secondary" | "destructive" | "outline"
 > = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
+  not_performed: "destructive",
 };
 
 const localizer = dateFnsLocalizer({
@@ -45,11 +40,12 @@ const localizer = dateFnsLocalizer({
   locales: { "pt-BR": ptBR },
 });
 
-const STATUS_COLOR: Record<ShiftItem["status"], string> = {
+const STATUS_COLOR: Record<ShiftBadgeKey, string> = {
   scheduled: "#64748b", // slate
   in_progress: "#2563eb", // blue
   completed: "#16a34a", // green
   cancelled: "#dc2626", // red
+  not_performed: "#b45309", // amber-700
 };
 
 interface ShiftEvent extends Event {
@@ -152,7 +148,7 @@ export function ShiftCalendar({
             popup
             eventPropGetter={(event) => {
               const e = event as ShiftEvent;
-              const bg = STATUS_COLOR[e.status];
+              const bg = STATUS_COLOR[shiftBadgeKey(e.status, e.shift.auto_cancelled)];
               return {
                 style: {
                   backgroundColor: bg,
@@ -206,8 +202,8 @@ export function ShiftCalendar({
             <DialogTitle className="flex items-center gap-2">
               Turno
               {selected && (
-                <Badge variant={STATUS_BADGE[selected.status]}>
-                  {STATUS_LABEL[selected.status]}
+                <Badge variant={STATUS_BADGE[shiftBadgeKey(selected.status, selected.auto_cancelled)]}>
+                  {SHIFT_BADGE_LABELS[shiftBadgeKey(selected.status, selected.auto_cancelled)]}
                 </Badge>
               )}
             </DialogTitle>

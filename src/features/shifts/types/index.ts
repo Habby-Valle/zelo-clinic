@@ -12,6 +12,7 @@ export interface ShiftItem {
   start: string;
   end: string;
   status: "scheduled" | "in_progress" | "completed" | "cancelled";
+  auto_cancelled: boolean;
   notes: string;
   shift_patients: ShiftPatient[];
   caregiver_name: string;
