@@ -35,3 +35,17 @@ export function formatCep(value: string | undefined | null): string {
 export function unformat(value: string): string {
   return value.replace(/\D/g, "");
 }
+
+/**
+ * Formata uma data para pt-BR. Strings "só-dia" (YYYY-MM-DD) são interpretadas
+ * como meia-noite **local** — evita o off-by-one em que `new Date("2026-08-18")`
+ * é lido como UTC e, no fuso do Brasil (UTC-3), aparece como 17/08.
+ */
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR");
+}

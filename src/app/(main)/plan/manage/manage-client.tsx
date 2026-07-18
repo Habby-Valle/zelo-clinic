@@ -30,6 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { formatDate } from "@/lib/format";
 import { getPlanPaymentPix, manageGetClinic, cancelSubscription, type PlanPayment } from "../actions";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
@@ -52,11 +53,6 @@ function formatBRL(value: string) {
   const num = parseFloat(value);
   if (isNaN(num)) return value;
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
-}
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
 }
 
 interface ManageSubscriptionClientProps {

@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 import { useInvoice, useUpdateInvoiceStatus } from "../hooks";
 import type { InvoiceStatus } from "../types";
 import { INVOICE_STATUS_LABELS } from "../types";
@@ -46,10 +47,6 @@ function formatCurrency(value: string): string {
   }).format(Number(value));
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
-}
 
 function Row({ label, value }: { label: string; value: string }) {
   return (

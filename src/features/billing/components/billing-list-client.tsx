@@ -16,6 +16,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/format";
 import { useInvoices, useInvoiceStats } from "../hooks";
 import type { InvoiceStatus } from "../types";
 import { INVOICE_STATUS_LABELS } from "../types";
@@ -39,11 +40,6 @@ function formatCurrency(value: string): string {
     style: "currency",
     currency: "BRL",
   }).format(Number(value));
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
 }
 
 export function BillingListClient() {
