@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, startTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Camera,
   Loader2,
@@ -298,7 +299,12 @@ export function SettingsClient() {
     }
   }
 
-  const [tab, setTab] = useState("geral");
+  const searchParams = useSearchParams();
+  const validTabs = ["geral", "notificacoes", "pagamentos", "seguranca"];
+  const requestedTab = searchParams.get("tab");
+  const [tab, setTab] = useState(
+    requestedTab && validTabs.includes(requestedTab) ? requestedTab : "geral"
+  );
 
   const hasClinicChanges =
     phone !== (clinic?.phone ?? "") ||

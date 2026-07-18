@@ -5,6 +5,7 @@ import type { Clinic } from "@/features/clinic/types";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { OnboardingWrapper } from "@/features/onboarding/components/onboarding-wrapper";
+import { AsaasConfigBanner } from "@/features/clinic/components";
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { user } = await requireClinicUser();
@@ -23,7 +24,10 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar role={user.role} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-6">
+          <AsaasConfigBanner role={user.role} />
+          {children}
+        </main>
       </div>
       <OnboardingWrapper />
     </div>
