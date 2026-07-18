@@ -191,6 +191,11 @@ export async function asaasSubscribe(
   pixQrCode?: string;
   pixPayload?: string;
   billingType?: "PIX" | "CREDIT_CARD";
+  prorataCharge?: {
+    value: number;
+    pixQrCode: string;
+    pixPayload: string;
+  };
 }> {
   try {
     const data = await apiFetchServer<{
@@ -199,6 +204,12 @@ export async function asaasSubscribe(
       pix_qr_code?: string;
       pix_payload?: string;
       billing_type: "PIX" | "CREDIT_CARD";
+      prorata_charge?: {
+        charge_id: string;
+        value: number;
+        pix_qr_code: string;
+        pix_payload: string;
+      };
     }>("/asaas/plans/subscribe/", {
       method: "POST",
       body: JSON.stringify({
@@ -215,6 +226,13 @@ export async function asaasSubscribe(
       pixQrCode: data.pix_qr_code,
       pixPayload: data.pix_payload,
       billingType: data.billing_type,
+      prorataCharge: data.prorata_charge
+        ? {
+            value: data.prorata_charge.value,
+            pixQrCode: data.prorata_charge.pix_qr_code,
+            pixPayload: data.prorata_charge.pix_payload,
+          }
+        : undefined,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Erro ao criar assinatura";

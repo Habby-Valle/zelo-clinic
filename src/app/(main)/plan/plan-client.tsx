@@ -335,6 +335,7 @@ export function PlanManagementClient({
     checkoutUrl?: string;
     billingType?: string;
     error?: string;
+    prorataCharge?: { value: number; pixQrCode: string; pixPayload: string };
   } | null>(null);
   const [subscribing, setSubscribing] = useState(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
@@ -426,6 +427,7 @@ export function PlanManagementClient({
       pixQrCode: result.pixQrCode,
       pixPayload: result.pixPayload,
       billingType: result.billingType,
+      prorataCharge: result.prorataCharge,
     });
   }
 
@@ -546,6 +548,53 @@ export function PlanManagementClient({
                   </div>
                 </div>
               )}
+              {(() => {
+                const pc = subscribeResult.prorataCharge;
+                if (!pc) return null;
+                return (
+                  <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-800">
+                      Cobrança adicional proporcional
+                    </p>
+                    <p className="text-xs text-amber-700">
+                      Valor referente à diferença do upgrade proporcional aos dias restantes do
+                      ciclo atual: <strong>R$ {pc.value.toFixed(2)}</strong>
+                    </p>
+                    <div className="flex justify-center">
+                      <img
+                        src={`data:image/png;base64,${pc.pixQrCode}`}
+                        alt="QR Code PIX proporcional"
+                        className="h-40 w-40"
+                      />
+                    </div>
+                    {pc.pixPayload && (
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">
+                          Código PIX (copia e cola)
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            className="flex-1 rounded-lg border bg-white px-3 py-2 font-mono text-xs"
+                            value={pc.pixPayload}
+                            readOnly
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(pc.pixPayload!);
+                              toast.success("Código PIX copiado!");
+                            }}
+                          >
+                            Copiar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               <p className="text-center text-xs text-muted-foreground">
                 A assinatura será ativada automaticamente após a confirmação do pagamento.
               </p>
@@ -618,7 +667,7 @@ export function PlanManagementClient({
             <AlertDialogTitle>Alterar plano</AlertDialogTitle>
             <AlertDialogDescription>
               {hasPaidPlan
-                ? "Você já possui um plano pago ativo. Ao alterar, sua assinatura atual será cancelada e uma nova será criada. Deseja continuar?"
+                ? "Você já possui um plano pago ativo. Ao alterar, a diferença proporcional dos dias restantes do ciclo atual será cobrada no PIX (se aplicável). Deseja continuar?"
                 : "Deseja alterar para este plano?"}
             </AlertDialogDescription>
           </AlertDialogHeader>
