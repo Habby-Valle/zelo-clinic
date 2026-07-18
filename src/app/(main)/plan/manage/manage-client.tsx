@@ -271,7 +271,12 @@ export function ManageSubscriptionClient({
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {(p.status === "pending" || p.status === "overdue") &&
+                            {/* Só permite pagar cobrança já vencida ou que vence
+                                hoje — cobranças de ciclos futuros não devem ser
+                                pagas adiantado (adiantaria o ciclo). */}
+                            {(p.status === "overdue" ||
+                              (p.status === "pending" &&
+                                p.due_date <= new Date().toLocaleDateString("en-CA"))) &&
                             (p.payment_method === "PIX" ||
                               subscription?.billing_type === "PIX") ? (
                               <Button variant="outline" size="sm" onClick={() => openPix(p)}>
