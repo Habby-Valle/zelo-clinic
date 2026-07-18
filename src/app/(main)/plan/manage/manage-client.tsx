@@ -3,10 +3,46 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CreditCard, QrCode, AlertCircle, Loader2, ChevronLeft } from "lucide-react";
+import { CreditCard, QrCode, AlertCircle, Loader2, ChevronLeft, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { PlanPayment } from "../actions";
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  paid: "Pago",
+  pending: "Pendente",
+  overdue: "Vencido",
+  refunded: "Estornado",
+  chargeback: "Chargeback",
+};
+
+const PAYMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  paid: "default",
+  pending: "secondary",
+  overdue: "destructive",
+  refunded: "outline",
+  chargeback: "destructive",
+};
+
+function formatBRL(value: string) {
+  const num = parseFloat(value);
+  if (isNaN(num)) return value;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("pt-BR");
+}
 
 interface ManageSubscriptionClientProps {
   clinicName: string;
@@ -15,11 +51,13 @@ interface ManageSubscriptionClientProps {
     billing_type: string;
     status: string;
   } | null;
+  payments: PlanPayment[];
 }
 
 export function ManageSubscriptionClient({
   clinicName,
   subscription,
+  payments,
 }: ManageSubscriptionClientProps) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
@@ -138,6 +176,55 @@ export function ManageSubscriptionClient({
                 acesse o painel de controle do ASAAS.
               </p>
             </div>
+
+            {payments.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="flex items-center gap-2 text-sm font-medium">
+                  <History className="h-4 w-4" />
+                  Histórico de Pagamentos
+                </h3>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Forma</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payments.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="text-sm">
+                            {formatDate(p.paid_at || p.due_date)}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {formatBRL(p.amount)}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {p.payment_method === "PIX"
+                              ? "PIX"
+                              : p.payment_method === "CREDIT_CARD"
+                                ? "Cartão"
+                                : p.payment_method || "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                PAYMENT_STATUS_VARIANTS[p.status] ?? "outline"
+                              }
+                            >
+                              {PAYMENT_STATUS_LABELS[p.status] ?? p.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
 
             {subscription.status === "active" && (
               <Button

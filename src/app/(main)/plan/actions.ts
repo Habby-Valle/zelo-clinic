@@ -240,6 +240,17 @@ export async function asaasSubscribe(
   }
 }
 
+export interface PlanPayment {
+  id: string;
+  asaas_payment_id: string;
+  amount: string;
+  status: string;
+  payment_method: string;
+  paid_at: string | null;
+  due_date: string;
+  created_at: string;
+}
+
 export async function manageGetClinic(): Promise<{
   id: string;
   name: string;
@@ -248,6 +259,7 @@ export async function manageGetClinic(): Promise<{
     billing_type: string;
     status: string;
   } | null;
+  payments: PlanPayment[];
 } | null> {
   try {
     const clinicData = await apiFetchServer<{ id: string; name: string }>("/clinics/me/");
@@ -257,11 +269,13 @@ export async function manageGetClinic(): Promise<{
         billing_type: string;
         status: string;
       } | null;
+      payments: PlanPayment[];
     }>("/asaas/plans/me/");
     return {
       id: clinicData.id,
       name: clinicData.name,
       subscription: subData.subscription ?? null,
+      payments: subData.payments ?? [],
     };
   } catch {
     return null;
