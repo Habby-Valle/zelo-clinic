@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
+import { usePlanLimits } from "@/features/plan";
 import {
   useAsaasConfig,
   useUpdateAsaasConfig,
@@ -55,6 +56,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export function SettingsClient() {
   const { data: clinic, isLoading } = useClinic();
+  const { data: planLimits } = usePlanLimits();
   const updateClinic = useUpdateClinic();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -800,6 +802,7 @@ export function SettingsClient() {
 
       {/* ───── Notificações ───── */}
       <TabsContent value="notificacoes" className="space-y-6">
+        {planLimits?.limits?.has_daily_report !== false && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -827,6 +830,7 @@ export function SettingsClient() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         <Card>
           <CardHeader>

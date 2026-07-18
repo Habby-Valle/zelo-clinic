@@ -4,6 +4,8 @@ import { ClipboardCheck, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { usePlanLimits } from "@/features/plan";
+import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { useComplianceStats } from "../hooks";
 import type { ComplianceStats as ComplianceStatsType } from "../types";
 
@@ -37,7 +39,14 @@ function ComplianceBadge({ pct }: { pct: number }) {
 }
 
 export function ComplianceSection() {
+  const { data: planLimits } = usePlanLimits();
   const { data: stats, isLoading } = useComplianceStats();
+  const hasQuality = planLimits?.limits?.has_quality_monitoring ?? true;
+  const hasCompliance = planLimits?.limits?.has_protocol_compliance ?? true;
+
+  if (!hasQuality && !hasCompliance) {
+    return <FeatureUpgradePrompt featureName="Monitoria de Qualidade e Compliance" />;
+  }
 
   const totalShifts =
     stats?.reduce((acc: number, s: ComplianceStatsType) => acc + s.total_shifts, 0) ?? 0;

@@ -36,6 +36,7 @@ import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 import { ChecklistDialog } from "@/features/checklists/components";
 import type { ChecklistDetail } from "@/features/checklists/types";
 import { ChecklistItemOverrideEditor } from "./checklist-item-override-editor";
+import { usePlanLimits } from "@/features/plan";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "outline"> = {
   draft: "outline",
@@ -60,6 +61,7 @@ export function CarePlanSection({
   const { data: checklistOptions = [] } = useChecklistOptionsForPlan();
   const { data: caregivers = [] } = useCaregiverOptionsForPlan();
   const { data: suggestions } = useChecklistSuggestions(patientId);
+  const { data: planLimits } = usePlanLimits();
   const saveMutation = useSaveCarePlan(patientId, plan?.id);
   const submitMutation = useSubmitCarePlan(patientId);
 
@@ -326,7 +328,9 @@ export function CarePlanSection({
               </div>
             )}
 
-            <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
+            {planLimits?.limits?.has_caregiver_matching !== false && (
+              <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
+            )}
 
             <div className="relative space-y-1.5">
               <Label htmlFor="plan-caregiver">Cuidador responsável</Label>

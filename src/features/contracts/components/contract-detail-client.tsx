@@ -62,6 +62,7 @@ import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 import { usePatient } from "@/features/patients/hooks/use-patients";
 import { PatientDocuments } from "@/features/patients/components/patient-documents";
 import { DeclaredMedications } from "@/features/medications";
+import { usePlanLimits } from "@/features/plan";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
   {
@@ -92,6 +93,7 @@ export function ContractDetailClient() {
   const id = params.id as string;
 
   const { data: contract, isLoading } = useContract(id);
+  const { data: planLimits } = usePlanLimits();
   const { data: patient } = usePatient(contract?.patient ?? "");
   const sendProposal = useSendProposal(id);
   const rejectContract = useRejectContract(id);
@@ -567,6 +569,7 @@ export function ContractDetailClient() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {planLimits?.limits?.has_pricing_suggestions !== false && (
             <div className="rounded-lg border border-dashed p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium">
@@ -639,6 +642,8 @@ export function ContractDetailClient() {
                 </div>
               )}
             </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="billing_mode">Modo de cobrança</Label>
               <Select

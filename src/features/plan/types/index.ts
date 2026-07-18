@@ -45,6 +45,7 @@ export interface PlanLimits {
   has_health_alerts?: boolean;
   has_protocol_compliance?: boolean;
   has_pricing_suggestions?: boolean;
+  has_daily_report?: boolean;
 }
 
 export interface PlanLimitsInfo {
