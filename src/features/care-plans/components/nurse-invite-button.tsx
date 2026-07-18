@@ -17,7 +17,11 @@ import {
 } from "@/components/ui/dialog";
 import { inviteNurseApi } from "@/features/caregivers/services/caregivers.service";
 
-export function NurseInviteButton() {
+interface NurseInviteButtonProps {
+  disabled?: boolean;
+}
+
+export function NurseInviteButton({ disabled }: NurseInviteButtonProps) {
   const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -46,6 +50,7 @@ export function NurseInviteButton() {
     <>
       <Button
         variant="outline"
+        disabled={disabled}
         onClick={() => {
           setEmail("");
           setOpen(true);

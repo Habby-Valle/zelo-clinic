@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -116,6 +117,7 @@ export function CaregiversClient() {
   const { data: planLimits } = usePlanLimits();
   const caregiversUsage = planLimits?.usage?.caregivers ?? 0;
   const maxCaregivers = planLimits?.limits?.max_caregivers ?? 0;
+  const isCaregiverLimitReached = maxCaregivers !== -1 && caregiversUsage >= maxCaregivers;
 
   const { data: caregiversData, isLoading: loadingCaregivers } = useCaregivers({
     search: tab === "caregivers" ? search : "",
@@ -216,6 +218,7 @@ export function CaregiversClient() {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            disabled={isCaregiverLimitReached}
             onClick={() => {
               setCodeOpen(true);
               setCodeResult(null);
@@ -225,12 +228,21 @@ export function CaregiversClient() {
             <Plus className="mr-2 h-4 w-4" />
             Gerar Código
           </Button>
-          <Button onClick={() => setInviteOpen(true)}>
+          <Button disabled={isCaregiverLimitReached} onClick={() => setInviteOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Convidar Cuidador
           </Button>
-          <NurseInviteButton />
+          <NurseInviteButton disabled={isCaregiverLimitReached} />
         </div>
+        {isCaregiverLimitReached && (
+          <p className="flex items-center gap-1 text-xs text-destructive">
+            Limite de cuidadores atingido.{" "}
+            <Link href="/plan" className="underline hover:text-destructive/80">
+              Faça um upgrade do plano
+            </Link>{" "}
+            para convidar mais.
+          </p>
+        )}
       </div>
 
       <Tabs value={tab} onValueChange={onTabChange}>
