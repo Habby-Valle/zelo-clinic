@@ -36,7 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { requestPlanChange, asaasSubscribe, cancelSubscription } from "./actions";
+import { requestPlanChange, asaasSubscribe, cancelSubscription, getMyClinicPlan } from "./actions";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
 
 interface PlanCardProps {
@@ -342,6 +342,7 @@ export function PlanManagementClient({
     prorataCharge?: { value: number; pixQrCode: string; pixPayload: string };
   } | null>(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [pixConfirmed, setPixConfirmed] = useState(false);
   const subscribingRef = useRef(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
   const currentStatus = currentPlan.clinicPlan?.status;
@@ -372,6 +373,30 @@ export function PlanManagementClient({
       router.replace("/plan");
     }
   }, [searchParams, router, queryClient]);
+
+  // Enquanto o QR PIX está na tela e o plano ainda não está ativo, consulta o
+  // status periodicamente até o webhook confirmar o pagamento e ativar a
+  // assinatura — então troca o QR por uma tela de sucesso.
+  useEffect(() => {
+    if (!showPaymentModal || !subscribeResult?.pixQrCode || pixConfirmed) return;
+    // Upgrade (plano já ativo) não gera transição clara de status; mantém o QR.
+    if (currentStatus === "active") return;
+
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      const info = await getMyClinicPlan();
+      if (!cancelled && info?.clinicPlan?.status === "active") {
+        setPixConfirmed(true);
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        router.refresh();
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [showPaymentModal, subscribeResult?.pixQrCode, pixConfirmed, currentStatus, queryClient, router]);
 
   const hasPaidPlan =
     currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
@@ -414,6 +439,7 @@ export function PlanManagementClient({
     subscribingRef.current = true;
     setSubscribing(true);
     setSubscribeResult(null);
+    setPixConfirmed(false);
 
     try {
       const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
@@ -501,6 +527,7 @@ export function PlanManagementClient({
           if (!open) {
             setShowPaymentModal(false);
             setSubscribeResult(null);
+            setPixConfirmed(false);
           }
         }}
       >
@@ -518,6 +545,29 @@ export function PlanManagementClient({
           )}
 
           {subscribeResult?.pixQrCode ? (
+            pixConfirmed ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CheckCircle className="h-14 w-14 text-green-500" />
+              <div>
+                <p className="text-lg font-semibold">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground">
+                  Sua assinatura foi ativada com sucesso.
+                </p>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                  setPixConfirmed(false);
+                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                  router.refresh();
+                }}
+              >
+                Concluir
+              </Button>
+            </div>
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
                 <QrCode className="h-8 w-8 text-primary" />
@@ -604,15 +654,17 @@ export function PlanManagementClient({
                 );
               })()}
 
-              <p className="text-center text-xs text-muted-foreground">
-                A assinatura será ativada automaticamente após a confirmação do pagamento.
-              </p>
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Aguardando confirmação do pagamento…
+              </div>
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => {
                   setShowPaymentModal(false);
                   setSubscribeResult(null);
+                  setPixConfirmed(false);
                   queryClient.invalidateQueries({ queryKey: ["subscription"] });
                   router.refresh();
                 }}
@@ -620,6 +672,7 @@ export function PlanManagementClient({
                 Fechar
               </Button>
             </div>
+            )
           ) : (
             <div className="space-y-3">
               <Button
