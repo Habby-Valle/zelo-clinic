@@ -1,4 +1,4 @@
-export type PlanStatus = "trial" | "active" | "free" | "expired" | "cancelled";
+export type PlanStatus = "trial" | "active" | "free" | "expired" | "cancelled" | "pending";
 
 export type ReportsLevel = "none" | "basic" | "advanced";
 

@@ -188,7 +188,9 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
               ? hasAccessUntilEnd
                 ? "Cancelado"
                 : "Cancelado"
-              : clinicPlan.status;
+              : clinicPlan.status === "pending"
+                ? "Pendente"
+                : clinicPlan.status;
 
   return (
     <Card className={isExpired ? "border-destructive" : ""}>
@@ -208,7 +210,9 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
                     ? "outline"
                     : clinicPlan.status === "cancelled"
                       ? "outline"
-                      : "default"
+                      : clinicPlan.status === "pending"
+                        ? "secondary"
+                        : "default"
             }
           >
             {statusLabel}
@@ -346,6 +350,7 @@ export function PlanManagementClient({
     currentStatus !== undefined &&
     currentStatus !== "free" &&
     currentStatus !== "trial" &&
+    currentStatus !== "pending" &&
     currentPlan.plan !== null;
 
   useEffect(() => {
