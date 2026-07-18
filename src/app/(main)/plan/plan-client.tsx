@@ -163,6 +163,7 @@ interface CurrentPlanInfoProps {
 function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentPlanInfoProps) {
   const isFree = clinicPlan.status === "free" || plan.monthly_price === 0;
   const isTrial = clinicPlan.status === "trial";
+  const isCancelled = clinicPlan.status === "cancelled";
   const startedDate = new Date(clinicPlan.started_at);
   const expiresDate = clinicPlan.expires_at ? new Date(clinicPlan.expires_at) : null;
   const now = new Date();
@@ -172,6 +173,7 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
 
   const isExpired = daysLeft !== null && daysLeft <= 0;
   const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 7;
+  const hasAccessUntilEnd = isCancelled && !isExpired && expiresDate;
 
   const statusLabel =
     clinicPlan.status === "free"
@@ -183,7 +185,9 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           : clinicPlan.status === "expired"
             ? "Expirado"
             : clinicPlan.status === "cancelled"
-              ? "Cancelado"
+              ? hasAccessUntilEnd
+                ? "Cancelado"
+                : "Cancelado"
               : clinicPlan.status;
 
   return (
@@ -196,13 +200,15 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
           <Badge
             variant={
-              isExpired
+              isExpired || (isCancelled && !hasAccessUntilEnd)
                 ? "destructive"
                 : clinicPlan.status === "trial"
                   ? "secondary"
                   : clinicPlan.status === "free"
                     ? "outline"
-                    : "default"
+                    : clinicPlan.status === "cancelled"
+                      ? "outline"
+                      : "default"
             }
           >
             {statusLabel}
@@ -236,7 +242,7 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
-        {!isFree && daysLeft !== null && (
+        {!isFree && daysLeft !== null && !hasAccessUntilEnd && (
           <div
             className={cn(
               "flex items-center gap-2 rounded-lg p-3",
@@ -258,6 +264,16 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
+        {hasAccessUntilEnd && (
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">
+              Acesso mantido até {expiresDate.toLocaleDateString("pt-BR")} (
+              {daysLeft} dia{daysLeft !== 1 ? "s" : ""}). Renove para continuar.
+            </span>
+          </div>
+        )}
+
         {isExpired && !isFree && (
           <div className="rounded-lg bg-destructive/5 p-4 text-center">
             <p className="mb-3 text-sm text-muted-foreground">
@@ -266,7 +282,7 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
-        {!isFree && (
+        {!isFree && !isCancelled && (
           <div className="flex gap-2">
             {!isTrial && onCancel && (
               <Button
@@ -422,7 +438,7 @@ export function PlanManagementClient({
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Assinatura cancelada com sucesso!", {
-        description: "Seu plano foi atualizado para Gratuito.",
+        description: "Você mantém acesso aos recursos pagos até o fim do ciclo vigente.",
         icon: <CheckCircle className="h-5 w-5 text-green-500" />,
       });
       router.refresh();
@@ -451,8 +467,8 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? Sua assinatura será encerrada imediatamente e o plano
-              será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser desfeita.
+              Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso
+              aos recursos pagos até o fim do ciclo vigente (<strong>{currentPlan.clinicPlan?.expires_at ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR") : "—"}</strong>). Depois, o plano será rebaixado para <strong>Gratuito</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
