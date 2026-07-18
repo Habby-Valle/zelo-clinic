@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getPlanPaymentPix, manageGetClinic, type PlanPayment } from "../actions";
+import { getPlanPaymentPix, manageGetClinic, cancelSubscription, type PlanPayment } from "../actions";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Pago",
@@ -156,20 +156,14 @@ export function ManageSubscriptionClient({
     )
       return;
     setCancelling(true);
-    try {
-      const res = await fetch("/asaas/plans/cancel/", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Assinatura cancelada com sucesso!");
-        router.refresh();
-      } else {
-        toast.error(data.error ?? "Erro ao cancelar");
-      }
-    } catch {
-      toast.error("Erro ao cancelar assinatura");
-    } finally {
-      setCancelling(false);
+    const res = await cancelSubscription();
+    if (res.success) {
+      toast.success("Assinatura cancelada com sucesso!");
+      router.refresh();
+    } else {
+      toast.error(res.error ?? "Erro ao cancelar assinatura");
     }
+    setCancelling(false);
   }
 
   return (
