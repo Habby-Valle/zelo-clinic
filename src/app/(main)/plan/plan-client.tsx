@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -338,6 +338,7 @@ export function PlanManagementClient({
     prorataCharge?: { value: number; pixQrCode: string; pixPayload: string };
   } | null>(null);
   const [subscribing, setSubscribing] = useState(false);
+  const subscribingRef = useRef(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
   const currentStatus = currentPlan.clinicPlan?.status;
 
@@ -404,31 +405,34 @@ export function PlanManagementClient({
   }
 
   async function handlePaymentChoice(billingType: "PIX" | "CREDIT_CARD") {
-    if (!selectedPlanId) return;
+    if (!selectedPlanId || subscribingRef.current) return;
+    subscribingRef.current = true;
     setSubscribing(true);
     setSubscribeResult(null);
 
-    const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
+    try {
+      const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
 
-    if (!result.success) {
-      setSubscribeResult({ error: result.error });
+      if (!result.success) {
+        setSubscribeResult({ error: result.error });
+        return;
+      }
+
+      if (result.billingType === "CREDIT_CARD" && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      setSubscribeResult({
+        pixQrCode: result.pixQrCode,
+        pixPayload: result.pixPayload,
+        billingType: result.billingType,
+        prorataCharge: result.prorataCharge,
+      });
+    } finally {
       setSubscribing(false);
-      return;
+      subscribingRef.current = false;
     }
-
-    setSubscribing(false);
-
-    if (result.billingType === "CREDIT_CARD" && result.checkoutUrl) {
-      window.location.href = result.checkoutUrl;
-      return;
-    }
-
-    setSubscribeResult({
-      pixQrCode: result.pixQrCode,
-      pixPayload: result.pixPayload,
-      billingType: result.billingType,
-      prorataCharge: result.prorataCharge,
-    });
   }
 
   async function handleCancelConfirm() {
