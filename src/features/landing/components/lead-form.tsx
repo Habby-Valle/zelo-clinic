@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatPhone } from "@/lib/format";
 import { createLead } from "@/features/landing/services";
 
 const leadSchema = z.object({
@@ -33,6 +34,8 @@ export function LeadForm() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LeadSchema>({ resolver: zodResolver(leadSchema) });
 
@@ -107,8 +110,14 @@ export function LeadForm() {
           <Input
             id="lead-phone"
             placeholder="(00) 00000-0000"
+            inputMode="tel"
             disabled={isSubmitting}
-            {...register("phone")}
+            value={formatPhone(watch("phone"))}
+            onChange={(e) =>
+              setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                shouldValidate: true,
+              })
+            }
           />
         </div>
 
