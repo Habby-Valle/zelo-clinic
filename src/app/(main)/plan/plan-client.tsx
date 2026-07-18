@@ -352,7 +352,8 @@ export function PlanManagementClient({
     checkoutUrl?: string;
     billingType?: string;
     error?: string;
-    prorataCharge?: { value: number; pixQrCode: string; pixPayload: string };
+    planChange?: boolean;
+    prorataValue?: number;
   } | null>(null);
   const [subscribing, setSubscribing] = useState(false);
   const [pixConfirmed, setPixConfirmed] = useState(false);
@@ -467,11 +468,25 @@ export function PlanManagementClient({
         return;
       }
 
+      // Downgrade: sem cobrança agora — passa a valer no próximo ciclo.
+      if (result.scheduled) {
+        setShowPaymentModal(false);
+        setSubscribeResult(null);
+        toast.success("Alteração de plano agendada", {
+          description: "O novo plano passa a valer no próximo ciclo de cobrança.",
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+        });
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        router.refresh();
+        return;
+      }
+
       setSubscribeResult({
         pixQrCode: result.pixQrCode,
         pixPayload: result.pixPayload,
         billingType: result.billingType,
-        prorataCharge: result.prorataCharge,
+        planChange: result.planChange,
+        prorataValue: result.prorataValue,
       });
     } finally {
       setSubscribing(false);
@@ -621,57 +636,25 @@ export function PlanManagementClient({
                   </div>
                 </div>
               )}
-              {(() => {
-                const pc = subscribeResult.prorataCharge;
-                if (!pc) return null;
-                return (
-                  <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm font-medium text-amber-800">
-                      Cobrança adicional proporcional
-                    </p>
-                    <p className="text-xs text-amber-700">
-                      Valor referente à diferença do upgrade proporcional aos dias restantes do
-                      ciclo atual: <strong>R$ {pc.value.toFixed(2)}</strong>
-                    </p>
-                    <div className="flex justify-center">
-                      <img
-                        src={`data:image/png;base64,${pc.pixQrCode}`}
-                        alt="QR Code PIX proporcional"
-                        className="h-40 w-40"
-                      />
-                    </div>
-                    {pc.pixPayload && (
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">
-                          Código PIX (copia e cola)
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            className="flex-1 rounded-lg border bg-white px-3 py-2 font-mono text-xs"
-                            value={pc.pixPayload}
-                            readOnly
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              navigator.clipboard.writeText(pc.pixPayload!);
-                              toast.success("Código PIX copiado!");
-                            }}
-                          >
-                            Copiar
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+              {subscribeResult.planChange && subscribeResult.prorataValue ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  Valor proporcional do upgrade, referente aos dias restantes do ciclo atual:{" "}
+                  <strong>
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(subscribeResult.prorataValue)}
+                  </strong>
+                  . O novo plano já está ativo; o valor cheio passa a ser cobrado no próximo ciclo.
+                </p>
+              ) : null}
 
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Aguardando confirmação do pagamento…
-              </div>
+              {!subscribeResult.planChange && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Aguardando confirmação do pagamento…
+                </div>
+              )}
               <Button
                 variant="outline"
                 className="w-full"
