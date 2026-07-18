@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { usePlanLimits } from "@/features/plan";
+import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { useAcknowledgeHealthAlert, useHealthAlerts, useResolveHealthAlert } from "../hooks";
 import type { HealthAlertSeverity, HealthAlertStatus } from "../types";
 
@@ -89,8 +91,11 @@ interface HealthAlertsSectionProps {
 }
 
 export function HealthAlertsSection({ patientId }: HealthAlertsSectionProps) {
+  const { data: planLimits } = usePlanLimits();
   const [severityFilter, setSeverityFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("open");
+
+  const hasHealthAlerts = planLimits?.limits?.has_health_alerts ?? true;
 
   const filters = {
     patient_id: patientId,
@@ -102,6 +107,10 @@ export function HealthAlertsSection({ patientId }: HealthAlertsSectionProps) {
   const { data: alerts, isLoading } = useHealthAlerts(filters);
   const acknowledge = useAcknowledgeHealthAlert();
   const resolve = useResolveHealthAlert();
+
+  if (!hasHealthAlerts) {
+    return <FeatureUpgradePrompt featureName="Alertas de Saúde" />;
+  }
 
   const sortedAlerts = [...(alerts ?? [])].sort(
     (a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99)
