@@ -14,12 +14,10 @@ function planHighlights(plan: PublicPlan): string[] {
   const items: string[] = [];
   items.push(`Até ${plan.max_patients} pacientes`);
   items.push(`Até ${plan.max_caregivers} cuidadores`);
-  items.push(`${plan.max_family_per_patient} familiares por paciente`);
   if (plan.reports_level !== "none") {
     items.push(plan.reports_level === "advanced" ? "Relatórios avançados" : "Relatórios básicos");
   }
   if (plan.has_data_export) items.push("Exportação de dados");
-  if (plan.has_custom_branding) items.push("Marca personalizada");
   for (const benefit of plan.benefits) {
     items.push(benefit.benefit_label);
   }
