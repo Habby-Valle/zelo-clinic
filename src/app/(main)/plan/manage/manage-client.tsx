@@ -231,10 +231,10 @@ export function ManageSubscriptionClient({
             </div>
 
             <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
-              <p className="font-medium">Gerenciamento pelo ASAAS</p>
+              <p className="font-medium">Trocar forma de pagamento</p>
               <p className="mt-1">
-                Para alterar método de pagamento, visualizar histórico completo ou atualizar dados,
-                acesse o painel de controle do ASAAS.
+                Para mudar entre PIX e cartão, cancele a assinatura atual e assine novamente
+                escolhendo o novo método. Em caso de dúvidas, fale com o suporte.
               </p>
             </div>
 
