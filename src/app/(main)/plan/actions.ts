@@ -251,6 +251,19 @@ export interface PlanPayment {
   created_at: string;
 }
 
+export async function getPlanPaymentPix(
+  paymentId: string
+): Promise<{ pixQrCode: string; pixPayload: string } | null> {
+  try {
+    const data = await apiFetchServer<{ pix_qr_code: string; pix_payload: string }>(
+      `/asaas/plan-payments/${paymentId}/pix/`
+    );
+    return { pixQrCode: data.pix_qr_code, pixPayload: data.pix_payload };
+  } catch {
+    return null;
+  }
+}
+
 export async function manageGetClinic(): Promise<{
   id: string;
   name: string;

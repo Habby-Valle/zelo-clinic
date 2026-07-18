@@ -12,7 +12,7 @@ import {
   XCircle,
   Loader2,
   QrCode,
-  ShieldCheck,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -158,9 +158,16 @@ interface CurrentPlanInfoProps {
   };
   onCancel?: () => void;
   cancelLoading?: boolean;
+  onManage?: () => void;
 }
 
-function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentPlanInfoProps) {
+function CurrentPlanInfo({
+  plan,
+  clinicPlan,
+  onCancel,
+  cancelLoading,
+  onManage,
+}: CurrentPlanInfoProps) {
   const isFree = clinicPlan.status === "free" || plan.monthly_price === 0;
   const isTrial = clinicPlan.status === "trial";
   const isCancelled = clinicPlan.status === "cancelled";
@@ -286,9 +293,15 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
-        {!isFree && !isCancelled && (
-          <div className="flex gap-2">
-            {!isTrial && onCancel && (
+        {!isFree && !isTrial && (
+          <div className="flex flex-wrap gap-2">
+            {onManage && (
+              <Button variant="outline" size="sm" onClick={onManage}>
+                <Settings className="mr-1 h-3 w-3" />
+                Gerenciar assinatura
+              </Button>
+            )}
+            {!isCancelled && onCancel && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -496,6 +509,7 @@ export function PlanManagementClient({
           clinicPlan={currentPlan.clinicPlan}
           onCancel={canCancel ? () => setShowCancelDialog(true) : undefined}
           cancelLoading={cancelLoading}
+          onManage={() => router.push("/plan/manage")}
         />
       )}
 

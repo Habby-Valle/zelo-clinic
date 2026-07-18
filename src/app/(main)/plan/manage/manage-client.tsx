@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CreditCard, QrCode, AlertCircle, Loader2, ChevronLeft, History } from "lucide-react";
+import {
+  CreditCard,
+  QrCode,
+  AlertCircle,
+  Loader2,
+  ChevronLeft,
+  History,
+  CheckCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { PlanPayment } from "../actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { getPlanPaymentPix, manageGetClinic, type PlanPayment } from "../actions";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Pago",
@@ -61,6 +76,52 @@ export function ManageSubscriptionClient({
 }: ManageSubscriptionClientProps) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
+  const [pixPayment, setPixPayment] = useState<PlanPayment | null>(null);
+  const [pixData, setPixData] = useState<{ pixQrCode: string; pixPayload: string } | null>(null);
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixError, setPixError] = useState<string | null>(null);
+  const [pixPaid, setPixPaid] = useState(false);
+
+  async function openPix(payment: PlanPayment) {
+    setPixPayment(payment);
+    setPixData(null);
+    setPixError(null);
+    setPixPaid(false);
+    setPixLoading(true);
+    const data = await getPlanPaymentPix(payment.id);
+    if (data && data.pixQrCode) {
+      setPixData(data);
+    } else {
+      setPixError("Não foi possível carregar o PIX. Tente novamente em instantes.");
+    }
+    setPixLoading(false);
+  }
+
+  function closePix() {
+    setPixPayment(null);
+    setPixData(null);
+    setPixError(null);
+    setPixPaid(false);
+    router.refresh();
+  }
+
+  // Enquanto o modal do PIX está aberto, verifica se o pagamento foi confirmado
+  // (via webhook) para trocar o QR por uma tela de sucesso.
+  useEffect(() => {
+    if (!pixPayment || pixPaid) return;
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      const clinic = await manageGetClinic();
+      const updated = clinic?.payments.find((p) => p.id === pixPayment.id);
+      if (!cancelled && updated?.status === "paid") {
+        setPixPaid(true);
+      }
+    }, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pixPayment, pixPaid]);
 
   const billingTypeLabel =
     subscription?.billing_type === "PIX"
@@ -191,6 +252,7 @@ export function ManageSubscriptionClient({
                         <TableHead>Valor</TableHead>
                         <TableHead>Forma</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -218,6 +280,16 @@ export function ManageSubscriptionClient({
                               {PAYMENT_STATUS_LABELS[p.status] ?? p.status}
                             </Badge>
                           </TableCell>
+                          <TableCell className="text-right">
+                            {(p.status === "pending" || p.status === "overdue") &&
+                            (p.payment_method === "PIX" ||
+                              subscription?.billing_type === "PIX") ? (
+                              <Button variant="outline" size="sm" onClick={() => openPix(p)}>
+                                <QrCode className="mr-1 h-3 w-3" />
+                                Pagar
+                              </Button>
+                            ) : null}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -240,6 +312,83 @@ export function ManageSubscriptionClient({
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={!!pixPayment}
+        onOpenChange={(open) => {
+          if (!open) closePix();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagar via PIX</DialogTitle>
+            <DialogDescription>
+              {pixPayment ? `Cobrança de ${formatBRL(pixPayment.amount)}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {pixPaid ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CheckCircle className="h-14 w-14 text-green-500" />
+              <div>
+                <p className="text-lg font-semibold">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground">
+                  Sua assinatura está em dia.
+                </p>
+              </div>
+              <Button className="w-full" onClick={closePix}>
+                Concluir
+              </Button>
+            </div>
+          ) : pixLoading ? (
+            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Carregando PIX…
+            </div>
+          ) : pixError ? (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {pixError}
+            </div>
+          ) : pixData ? (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <img
+                  src={`data:image/png;base64,${pixData.pixQrCode}`}
+                  alt="QR Code PIX"
+                  className="h-48 w-48"
+                />
+              </div>
+              {pixData.pixPayload && (
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
+                      value={pixData.pixPayload}
+                      readOnly
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(pixData.pixPayload);
+                        toast.success("Código PIX copiado!");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Aguardando confirmação do pagamento…
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
