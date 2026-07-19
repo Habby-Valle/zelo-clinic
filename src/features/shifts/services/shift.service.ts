@@ -51,6 +51,14 @@ export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
       ) ?? [],
     has_active_contract: Boolean(p.has_active_contract),
     contract_start_date: (p.contract_start_date as string | null) ?? null,
+    active_contract_weekly_hours:
+      p.active_contract_weekly_hours != null ? Number(p.active_contract_weekly_hours) : null,
+    contract_preferred_weekdays:
+      (p.contract_preferred_weekdays as number[] | null) ?? null,
+    contract_preferred_start_time:
+      (p.contract_preferred_start_time as string | null) ?? null,
+    contract_preferred_end_time:
+      (p.contract_preferred_end_time as string | null) ?? null,
   }));
 }
 

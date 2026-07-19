@@ -45,6 +45,10 @@ export interface ClinicPatient {
   is_active: boolean;
   contract_start_date: string | null;
   active_contract_id: string | null;
+  active_contract_weekly_hours: number | null;
+  contract_preferred_weekdays: number[] | null;
+  contract_preferred_start_time: string | null;
+  contract_preferred_end_time: string | null;
   emergency_contacts: EmergencyContactInfo[];
   caregiver_assignments: CaregiverAssignment[];
   documents: PatientDocument[];

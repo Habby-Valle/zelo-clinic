@@ -47,6 +47,9 @@ export interface ServiceContract {
   night_surcharge: string;
   night_surcharge_type: "percentage" | "fixed_amount";
   weekly_hours: string;
+  preferred_weekdays: number[] | null;
+  preferred_start_time: string | null;
+  preferred_end_time: string | null;
   notes: string;
   cancellation_reason: string;
   cancelled_by_name: string | null;

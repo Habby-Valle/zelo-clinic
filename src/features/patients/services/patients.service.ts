@@ -33,6 +33,15 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     is_active: r.is_active !== false,
     contract_start_date: r.contract_start_date != null ? String(r.contract_start_date) : null,
     active_contract_id: r.active_contract_id != null ? String(r.active_contract_id) : null,
+    active_contract_weekly_hours:
+      r.active_contract_weekly_hours != null ? Number(r.active_contract_weekly_hours) : null,
+    contract_preferred_weekdays: Array.isArray(r.contract_preferred_weekdays)
+      ? (r.contract_preferred_weekdays as number[])
+      : null,
+    contract_preferred_start_time:
+      r.contract_preferred_start_time != null ? String(r.contract_preferred_start_time) : null,
+    contract_preferred_end_time:
+      r.contract_preferred_end_time != null ? String(r.contract_preferred_end_time) : null,
     emergency_contacts: Array.isArray(r.emergency_contacts)
       ? (r.emergency_contacts as ClinicPatient["emergency_contacts"])
       : [],

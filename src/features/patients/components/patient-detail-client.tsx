@@ -27,6 +27,9 @@ import {
   shiftDateTimes,
   shiftStartFromContract,
   WEEKDAY_LABELS,
+  addHoursToTime,
+  formatDurationLabel,
+  endOfMonthISO,
 } from "@/features/shifts/lib/shift-time";
 import { ShiftCalendar } from "@/features/shifts/components/shift-calendar";
 import {
@@ -330,61 +333,56 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
         {/* Clínico — plano, medicações, alertas (Avaliação Clínica adiada no MVP) */}
         <TabsContent value="clinical" className="mt-6 space-y-6">
           {/* Validação da saúde declarada pela família (antes de iniciar os cuidados) */}
-          {!isNurse &&
-            patient.health_status === "declared" &&
-            patient.active_contract_id && (
-              <Card className="border-amber-300 bg-amber-50">
-                <CardContent className="space-y-4 p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Cadastro de saúde declarado pela família.
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Revise as informações contra a receita e valide antes de iniciar os
-                        cuidados.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() =>
-                        validateHealth.mutate(undefined, {
-                          onSuccess: () =>
-                            validateQueryClient.invalidateQueries({
-                              queryKey: ["patients", id],
-                            }),
-                        })
-                      }
-                      disabled={validateHealth.isPending}
-                      className="shrink-0"
-                    >
-                      {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Validar saúde
-                    </Button>
+          {!isNurse && patient.health_status === "declared" && patient.active_contract_id && (
+            <Card className="border-amber-300 bg-amber-50">
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Revise as informações contra a receita e valide antes de iniciar os cuidados.
+                    </p>
                   </div>
+                  <Button
+                    onClick={() =>
+                      validateHealth.mutate(undefined, {
+                        onSuccess: () =>
+                          validateQueryClient.invalidateQueries({
+                            queryKey: ["patients", id],
+                          }),
+                      })
+                    }
+                    disabled={validateHealth.isPending}
+                    className="shrink-0"
+                  >
+                    {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Validar saúde
+                  </Button>
+                </div>
 
-                  <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
-                    <div>
-                      <span className="font-medium">Condições:</span>{" "}
-                      {patient.health_conditions || "—"}
-                    </div>
-                    <div>
-                      <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
-                    </div>
-                    <div>
-                      <span className="font-medium">Medicamentos:</span>
-                      <DeclaredMedications text={patient.medications} />
-                    </div>
-                    <div>
-                      <span className="font-medium">Receita médica:</span>
-                      <PatientDocuments
-                        documents={patient.documents.filter((d) => d.kind === "prescription")}
-                      />
-                    </div>
+                <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
+                  <div>
+                    <span className="font-medium">Condições:</span>{" "}
+                    {patient.health_conditions || "—"}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div>
+                    <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Medicamentos:</span>
+                    <DeclaredMedications text={patient.medications} />
+                  </div>
+                  <div>
+                    <span className="font-medium">Receita médica:</span>
+                    <PatientDocuments
+                      documents={patient.documents.filter((d) => d.kind === "prescription")}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
           {!isNurse && (
@@ -419,6 +417,10 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
             patientId={id}
             isNurse={isNurse}
             contractStartDate={patient.contract_start_date}
+            weeklyHours={patient.active_contract_weekly_hours}
+            preferredWeekdays={patient.contract_preferred_weekdays}
+            preferredStartTime={patient.contract_preferred_start_time}
+            preferredEndTime={patient.contract_preferred_end_time}
           />
         </TabsContent>
       </Tabs>
@@ -430,10 +432,18 @@ function PatientShiftsSection({
   patientId,
   isNurse,
   contractStartDate,
+  weeklyHours,
+  preferredWeekdays,
+  preferredStartTime,
+  preferredEndTime,
 }: {
   patientId: string;
   isNurse: boolean;
   contractStartDate: string | null;
+  weeklyHours: number | null;
+  preferredWeekdays: number[] | null;
+  preferredStartTime: string | null;
+  preferredEndTime: string | null;
 }) {
   const queryClient = useQueryClient();
   const { data: allCaregivers = [] } = useClinicCaregivers();
@@ -454,17 +464,41 @@ function PatientShiftsSection({
     queryClient.invalidateQueries({ queryKey: ["shifts"] });
   }, [queryClient]);
 
+  // Duração do turno = horas semanais contratadas ÷ nº de dias marcados.
+  // Só no modo recorrente com dias selecionados; turno avulso fica manual.
+  function autoEndTime(start: string, weekdays: number[], repeat: boolean): string | null {
+    if (!repeat || weekdays.length === 0 || !weeklyHours || weeklyHours <= 0) return null;
+    return addHoursToTime(start, weeklyHours / weekdays.length);
+  }
+  const autoDurationHours =
+    formRepeat && formWeekdays.length > 0 && weeklyHours && weeklyHours > 0
+      ? weeklyHours / formWeekdays.length
+      : null;
+
   function openCreate() {
     setCreateOpen(true);
     setFormCaregiver("");
     setFormNotes("");
-    setFormRepeat(false);
-    setFormWeekdays([]);
     setFormRecurEnd("");
-    setFormStartTime("08:00");
-    setFormEndTime("20:00");
+    // Pré-preenche com o que a família declarou no contrato. Quando há dias
+    // declarados, abre em modo recorrente com "Repetir até" = fim do mês
+    // (editável), honrando a intenção semanal sem deixar o botão travado.
+    const days = preferredWeekdays ?? [];
+    const repeat = days.length > 0;
+    const start = preferredStartTime || "08:00";
+    // Fim: horário declarado tem prioridade; senão, weekly_hours ÷ nº de dias.
+    const computedEnd =
+      repeat && weeklyHours && weeklyHours > 0
+        ? addHoursToTime(start, weeklyHours / days.length)
+        : null;
     // Início do cuidado vem do contrato (o que a família pediu).
-    setFormDate(shiftStartFromContract(contractStartDate));
+    const startDate = shiftStartFromContract(contractStartDate);
+    setFormRepeat(repeat);
+    setFormWeekdays(days);
+    setFormStartTime(start);
+    setFormEndTime(preferredEndTime || computedEnd || "20:00");
+    setFormDate(startDate);
+    setFormRecurEnd(repeat ? endOfMonthISO(startDate) : "");
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -586,6 +620,12 @@ function PatientShiftsSection({
                 Preenchida com o início do cuidado do contrato; ajuste se necessário.
               </p>
             </div>
+            {weeklyHours != null && weeklyHours > 0 && (
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Horas semanais solicitadas pela família:{" "}
+                <span className="font-medium text-foreground">{weeklyHours}h/semana</span>.
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start">Horário início</Label>
@@ -593,7 +633,12 @@ function PatientShiftsSection({
                   id="start"
                   type="time"
                   value={formStartTime}
-                  onChange={(e) => setFormStartTime(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormStartTime(v);
+                    const end = autoEndTime(v, formWeekdays, formRepeat);
+                    if (end) setFormEndTime(end);
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -607,9 +652,24 @@ function PatientShiftsSection({
               </div>
             </div>
 
+            {autoDurationHours != null && (
+              <p className="text-xs text-muted-foreground">
+                Fim calculado: {weeklyHours}h ÷ {formWeekdays.length} dia(s) ={" "}
+                {formatDurationLabel(autoDurationHours)}/turno. Ajuste se necessário.
+              </p>
+            )}
+
             <div className="space-y-2 rounded-lg border p-3">
               <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox checked={formRepeat} onCheckedChange={(v) => setFormRepeat(v === true)} />
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => {
+                    const on = v === true;
+                    setFormRepeat(on);
+                    const end = autoEndTime(formStartTime, formWeekdays, on);
+                    if (end) setFormEndTime(end);
+                  }}
+                />
                 Repetir (turno recorrente)
               </label>
               {formRepeat && (
@@ -626,11 +686,14 @@ function PatientShiftsSection({
                             size="sm"
                             variant={on ? "default" : "outline"}
                             className="h-8 w-11 px-0 text-xs"
-                            onClick={() =>
-                              setFormWeekdays((prev) =>
-                                on ? prev.filter((w) => w !== i) : [...prev, i]
-                              )
-                            }
+                            onClick={() => {
+                              const next = on
+                                ? formWeekdays.filter((w) => w !== i)
+                                : [...formWeekdays, i];
+                              setFormWeekdays(next);
+                              const end = autoEndTime(formStartTime, next, formRepeat);
+                              if (end) setFormEndTime(end);
+                            }}
                           >
                             {d}
                           </Button>
@@ -662,6 +725,18 @@ function PatientShiftsSection({
                 placeholder="Instruções adicionais..."
               />
             </div>
+            {formRepeat && (formWeekdays.length === 0 || !formRecurEnd) && (
+              <p className="text-xs text-amber-600">
+                Para criar turnos recorrentes, informe{" "}
+                {[
+                  formWeekdays.length === 0 ? "os dias da semana" : null,
+                  !formRecurEnd ? '"Repetir até"' : null,
+                ]
+                  .filter(Boolean)
+                  .join(" e ")}
+                .
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                 Cancelar

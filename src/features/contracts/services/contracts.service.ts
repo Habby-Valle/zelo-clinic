@@ -25,6 +25,11 @@ function mapContract(r: Record<string, unknown>): ServiceContract {
     night_surcharge: String(r.night_surcharge ?? "0"),
     night_surcharge_type: (r.night_surcharge_type as "percentage" | "fixed_amount") ?? "percentage",
     weekly_hours: String(r.weekly_hours ?? "0"),
+    preferred_weekdays: Array.isArray(r.preferred_weekdays)
+      ? (r.preferred_weekdays as number[])
+      : null,
+    preferred_start_time: r.preferred_start_time != null ? String(r.preferred_start_time) : null,
+    preferred_end_time: r.preferred_end_time != null ? String(r.preferred_end_time) : null,
     notes: String(r.notes ?? ""),
     cancellation_reason: String(r.cancellation_reason ?? ""),
     cancelled_by_name: r.cancelled_by_name != null ? String(r.cancelled_by_name) : null,

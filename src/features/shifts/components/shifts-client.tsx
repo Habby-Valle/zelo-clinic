@@ -74,6 +74,9 @@ import {
   shiftDateTimes,
   shiftStartFromContract,
   WEEKDAY_LABELS,
+  addHoursToTime,
+  formatDurationLabel,
+  endOfMonthISO,
 } from "../lib/shift-time";
 import { shiftBadgeKey, SHIFT_BADGE_LABELS } from "../lib/shift-status";
 import { SkippedShiftsDialog, type SkippedShiftInfo } from "./skipped-shifts-dialog";
@@ -150,6 +153,25 @@ export function ShiftsClient() {
     : [];
   // Só é possível agendar turnos para pacientes com contrato ativo.
   const filteredPatients = caregiverPatients.filter((p) => p.has_active_contract);
+
+  // Duração do turno = horas semanais do contrato do paciente ÷ nº de dias
+  // marcados. Só no modo recorrente com dias selecionados; avulso fica manual.
+  const selectedWeeklyHours =
+    patients.find((p) => p.id === formPatient)?.active_contract_weekly_hours ?? null;
+  function autoEndTime(
+    patientId: string,
+    start: string,
+    weekdays: number[],
+    repeat: boolean
+  ): string | null {
+    const weekly = patients.find((p) => p.id === patientId)?.active_contract_weekly_hours ?? null;
+    if (!repeat || weekdays.length === 0 || !weekly || weekly <= 0) return null;
+    return addHoursToTime(start, weekly / weekdays.length);
+  }
+  const autoDurationHours =
+    formRepeat && formWeekdays.length > 0 && selectedWeeklyHours && selectedWeeklyHours > 0
+      ? selectedWeeklyHours / formWeekdays.length
+      : null;
 
   // Template CRUD dialog
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -736,10 +758,27 @@ export function ShiftsClient() {
                 onValueChange={(v) => {
                   const val = v ?? "";
                   setFormPatient(val);
+                  const p = patients.find((p) => p.id === val);
                   // Início do cuidado vem do contrato (o que a família pediu);
                   // se já passou, usa hoje — não agenda no passado.
-                  const start = patients.find((p) => p.id === val)?.contract_start_date ?? null;
-                  setFormDate(shiftStartFromContract(start));
+                  const startDate = shiftStartFromContract(p?.contract_start_date ?? null);
+                  setFormDate(startDate);
+                  // Pré-preenche com o que a família declarou. Com dias declarados,
+                  // abre recorrente com "Repetir até" = fim do mês (editável).
+                  const days = p?.contract_preferred_weekdays ?? [];
+                  const repeat = days.length > 0;
+                  const start = p?.contract_preferred_start_time || "08:00";
+                  const weekly = p?.active_contract_weekly_hours ?? null;
+                  // Fim: horário declarado tem prioridade; senão, weekly_hours ÷ dias.
+                  const computedEnd =
+                    repeat && weekly && weekly > 0
+                      ? addHoursToTime(start, weekly / days.length)
+                      : null;
+                  setFormRepeat(repeat);
+                  setFormWeekdays(days);
+                  setFormStartTime(start);
+                  setFormEndTime(p?.contract_preferred_end_time || computedEnd || "20:00");
+                  setFormRecurEnd(repeat ? endOfMonthISO(startDate) : "");
                 }}
               >
                 <SelectTrigger>
@@ -796,6 +835,12 @@ export function ShiftsClient() {
                 Preenchida com o início do cuidado do contrato; ajuste se necessário.
               </p>
             </div>
+            {selectedWeeklyHours != null && selectedWeeklyHours > 0 && (
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Horas semanais solicitadas pela família:{" "}
+                <span className="font-medium text-foreground">{selectedWeeklyHours}h/semana</span>.
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="shift-start">Horário início *</Label>
@@ -803,7 +848,12 @@ export function ShiftsClient() {
                   id="shift-start"
                   type="time"
                   value={formStartTime}
-                  onChange={(e) => setFormStartTime(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormStartTime(v);
+                    const end = autoEndTime(formPatient, v, formWeekdays, formRepeat);
+                    if (end) setFormEndTime(end);
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
@@ -817,9 +867,24 @@ export function ShiftsClient() {
               </div>
             </div>
 
+            {autoDurationHours != null && (
+              <p className="text-xs text-muted-foreground">
+                Fim calculado: {selectedWeeklyHours}h ÷ {formWeekdays.length} dia(s) ={" "}
+                {formatDurationLabel(autoDurationHours)}/turno. Ajuste se necessário.
+              </p>
+            )}
+
             <div className="space-y-2 rounded-lg border p-3">
               <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox checked={formRepeat} onCheckedChange={(v) => setFormRepeat(v === true)} />
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => {
+                    const on = v === true;
+                    setFormRepeat(on);
+                    const end = autoEndTime(formPatient, formStartTime, formWeekdays, on);
+                    if (end) setFormEndTime(end);
+                  }}
+                />
                 Repetir (turno recorrente)
               </label>
               {formRepeat && (
@@ -840,11 +905,14 @@ export function ShiftsClient() {
                             size="sm"
                             variant={on ? "default" : "outline"}
                             className="h-8 w-11 px-0 text-xs"
-                            onClick={() =>
-                              setFormWeekdays((prev) =>
-                                on ? prev.filter((w) => w !== i) : [...prev, i]
-                              )
-                            }
+                            onClick={() => {
+                              const next = on
+                                ? formWeekdays.filter((w) => w !== i)
+                                : [...formWeekdays, i];
+                              setFormWeekdays(next);
+                              const end = autoEndTime(formPatient, formStartTime, next, formRepeat);
+                              if (end) setFormEndTime(end);
+                            }}
                           >
                             {d}
                           </Button>
@@ -885,6 +953,19 @@ export function ShiftsClient() {
               </p>
             </div>
 
+            {formRepeat && (!formPatient || formWeekdays.length === 0 || !formRecurEnd) && (
+              <p className="text-xs text-amber-600">
+                Para criar turnos recorrentes, informe{" "}
+                {[
+                  !formPatient ? "o paciente" : null,
+                  formWeekdays.length === 0 ? "os dias da semana" : null,
+                  !formRecurEnd ? '"Repetir até"' : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+                .
+              </p>
+            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                 Cancelar

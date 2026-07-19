@@ -40,6 +40,10 @@ export interface PatientOption {
   caregiver_ids: string[];
   has_active_contract: boolean;
   contract_start_date: string | null;
+  active_contract_weekly_hours: number | null;
+  contract_preferred_weekdays: number[] | null;
+  contract_preferred_start_time: string | null;
+  contract_preferred_end_time: string | null;
 }
 
 export interface CaregiverOption {
