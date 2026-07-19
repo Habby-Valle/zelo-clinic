@@ -232,6 +232,7 @@ export function CarePlanSection({
 
   const isValidated = healthStatus === "validated";
   const isActive = plan?.status === "active";
+  const isPendingReview = plan?.status === "pending_review";
 
   const buildInput = () => ({
     patient_id: patientId,
@@ -257,8 +258,9 @@ export function CarePlanSection({
     })),
   });
 
-  // Só envia para revisão com pelo menos um checklist e um cuidador responsável escolhido.
-  const canSubmit = selected.length > 0 && !!caregiverId;
+  // Só envia para revisão com pelo menos um checklist e um cuidador responsável
+  // escolhido — e desde que o plano não esteja já em revisão pelo enfermeiro.
+  const canSubmit = selected.length > 0 && !!caregiverId && !isPendingReview;
 
   async function handleSave() {
     try {
@@ -318,7 +320,8 @@ export function CarePlanSection({
 
             {plan?.status === "pending_review" && (
               <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
-                Em revisão pelo enfermeiro. Você pode ajustar e reenviar.
+                Em revisão pelo enfermeiro. Aguarde a análise — o plano voltará como rascunho se
+                houver ajustes a fazer.
               </p>
             )}
 
@@ -329,249 +332,332 @@ export function CarePlanSection({
               </div>
             )}
 
-            {planLimits?.limits?.has_caregiver_matching !== false && (
-              <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
+            {/* Plano aprovado: somente leitura — nenhuma ação é permitida. */}
+            {isActive && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label>Cuidador responsável</Label>
+                  <p className="text-sm text-muted-foreground">{plan?.caregiver_name ?? "—"}</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Checklists do plano</Label>
+                  {selected.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nenhum checklist no plano.</p>
+                  ) : (
+                    <div className="space-y-1.5 rounded-lg border p-3">
+                      {checklistOptions
+                        .filter((cl) => selected.includes(cl.id))
+                        .map((cl) => {
+                          const itemOverrides = overridesByChecklist[cl.id] ?? {};
+                          return (
+                            <div key={cl.id}>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{cl.name}</span>
+                                {cl.category && cl.category !== "general" && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {cl.category}
+                                  </Badge>
+                                )}
+                              </div>
+                              {cl.items.length > 0 && (
+                                <ul className="mt-2 ml-6 space-y-1 border-l-2 pl-3">
+                                  {cl.items.map((item) => {
+                                    const isInactive = itemOverrides[item.id]?.is_active === false;
+                                    return (
+                                      <li
+                                        key={item.id}
+                                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                                      >
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                                        <span className={cn(isInactive && "line-through")}>
+                                          {item.name}
+                                        </span>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Metas do Plano</Label>
+                  {goals.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhuma meta cadastrada para este plano.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 rounded-lg border p-3">
+                      {goals.map((goal, index) => (
+                        <div key={goal.id ?? index} className="space-y-1 rounded-md border p-3">
+                          <p className="text-sm">{goal.description}</p>
+                          {goal.target_metric && (
+                            <p className="text-xs text-muted-foreground">
+                              Métrica alvo: {goal.target_metric}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
-            <div className="relative space-y-1.5">
-              <Label htmlFor="plan-caregiver">Cuidador responsável</Label>
-              <Input
-                id="plan-caregiver"
-                value={caregiverQuery}
-                onChange={(e) => {
-                  setCaregiverQuery(e.target.value);
-                  setCaregiverId(null);
-                }}
-                onFocus={() => setCaregiverFocused(true)}
-                onBlur={() => setCaregiverFocused(false)}
-                placeholder="Buscar cuidador pelo nome"
-                autoComplete="off"
-              />
-              <p className="text-xs text-muted-foreground">
-                O cuidador escolhido será vinculado ao paciente quando o plano for aprovado pelo
-                enfermeiro.
-              </p>
-              {caregiverId ? (
-                <p className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle className="h-3 w-3" />
-                  Cuidador vinculado ao plano.
-                </p>
-              ) : caregiverQuery.trim() ? (
-                <p className="flex items-center gap-1 text-xs text-amber-600">
-                  <AlertTriangle className="h-3 w-3" />
-                  Selecione o cuidador na lista para vincular (só o nome digitado não cria o
-                  vínculo).
-                </p>
-              ) : null}
-              {caregiverFocused && caregiverSuggestions.length > 0 && (
-                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
-                  {caregiverSuggestions.map((c) => (
-                    <button
-                      type="button"
-                      key={c.id}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        selectCaregiver(c);
-                      }}
-                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
-                    >
-                      <span>{c.name}</span>
-                      {c.register && (
-                        <span className="text-xs text-muted-foreground">{c.register}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {!isActive && (
+              <>
+                {planLimits?.limits?.has_caregiver_matching !== false && (
+                  <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
+                )}
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Checklists do plano</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setChecklistDialogOpen(true)}
-                >
-                  <Plus className="mr-1 h-3 w-3" />
-                  Criar checklist
-                </Button>
-              </div>
-              {showSuggestionHint && (
-                <p className="text-xs text-muted-foreground">
-                  Pré-selecionados com base{" "}
-                  {suggestionCategories.length > 0
-                    ? `nos diagnósticos (${suggestionCategories.join(", ")})`
-                    : "no perfil do paciente"}
-                  . Ajuste se necessário.
-                </p>
-              )}
-              {checklistOptions.length === 0 ? (
-                <div className="space-y-2 rounded-lg border border-dashed p-3">
+                <div className="relative space-y-1.5">
+                  <Label htmlFor="plan-caregiver">Cuidador responsável</Label>
+                  <Input
+                    id="plan-caregiver"
+                    value={caregiverQuery}
+                    onChange={(e) => {
+                      setCaregiverQuery(e.target.value);
+                      setCaregiverId(null);
+                    }}
+                    onFocus={() => setCaregiverFocused(true)}
+                    onBlur={() => setCaregiverFocused(false)}
+                    placeholder="Buscar cuidador pelo nome"
+                    autoComplete="off"
+                  />
                   <p className="text-xs text-muted-foreground">
-                    Nenhum checklist disponível ainda. Crie um checklist para montar o plano.
+                    O cuidador escolhido será vinculado ao paciente quando o plano for aprovado pelo
+                    enfermeiro.
                   </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setChecklistDialogOpen(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Criar checklist
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-1.5 rounded-lg border p-3">
-                  {checklistOptions.map((cl) => {
-                    const checked = selected.includes(cl.id);
-                    const itemOverrides = overridesByChecklist[cl.id] ?? {};
-                    return (
-                      <div key={cl.id}>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`plan-cl-${cl.id}`}
-                            checked={checked}
-                            onCheckedChange={(v) => handleSelectChecklist(cl.id, v === true)}
-                          />
-                          <Label
-                            htmlFor={`plan-cl-${cl.id}`}
-                            className="flex-1 cursor-pointer text-sm font-normal"
-                          >
-                            {cl.name}
-                          </Label>
-                          {cl.category && cl.category !== "general" && (
-                            <Badge variant="outline" className="text-xs">
-                              {cl.category}
-                            </Badge>
+                  {caregiverId ? (
+                    <p className="flex items-center gap-1 text-xs text-green-600">
+                      <CheckCircle className="h-3 w-3" />
+                      Cuidador vinculado ao plano.
+                    </p>
+                  ) : caregiverQuery.trim() ? (
+                    <p className="flex items-center gap-1 text-xs text-amber-600">
+                      <AlertTriangle className="h-3 w-3" />
+                      Selecione o cuidador na lista para vincular (só o nome digitado não cria o
+                      vínculo).
+                    </p>
+                  ) : null}
+                  {caregiverFocused && caregiverSuggestions.length > 0 && (
+                    <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                      {caregiverSuggestions.map((c) => (
+                        <button
+                          type="button"
+                          key={c.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            selectCaregiver(c);
+                          }}
+                          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
+                        >
+                          <span>{c.name}</span>
+                          {c.register && (
+                            <span className="text-xs text-muted-foreground">{c.register}</span>
                           )}
-                          {checked && cl.items.length > 0 && (
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Checklists do plano</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setChecklistDialogOpen(true)}
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Criar checklist
+                    </Button>
+                  </div>
+                  {showSuggestionHint && (
+                    <p className="text-xs text-muted-foreground">
+                      Pré-selecionados com base{" "}
+                      {suggestionCategories.length > 0
+                        ? `nos diagnósticos (${suggestionCategories.join(", ")})`
+                        : "no perfil do paciente"}
+                      . Ajuste se necessário.
+                    </p>
+                  )}
+                  {checklistOptions.length === 0 ? (
+                    <div className="space-y-2 rounded-lg border border-dashed p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Nenhum checklist disponível ainda. Crie um checklist para montar o plano.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setChecklistDialogOpen(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar checklist
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 rounded-lg border p-3">
+                      {checklistOptions.map((cl) => {
+                        const checked = selected.includes(cl.id);
+                        const itemOverrides = overridesByChecklist[cl.id] ?? {};
+                        return (
+                          <div key={cl.id}>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`plan-cl-${cl.id}`}
+                                checked={checked}
+                                onCheckedChange={(v) => handleSelectChecklist(cl.id, v === true)}
+                              />
+                              <Label
+                                htmlFor={`plan-cl-${cl.id}`}
+                                className="flex-1 cursor-pointer text-sm font-normal"
+                              >
+                                {cl.name}
+                              </Label>
+                              {cl.category && cl.category !== "general" && (
+                                <Badge variant="outline" className="text-xs">
+                                  {cl.category}
+                                </Badge>
+                              )}
+                              {checked && cl.items.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  aria-label={
+                                    expandedChecklist === cl.id
+                                      ? "Ocultar ajustes"
+                                      : "Ajustar itens"
+                                  }
+                                  onClick={() => toggleChecklistExpanded(cl.id)}
+                                >
+                                  {expandedChecklist === cl.id ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+
+                            {checked && expandedChecklist !== cl.id && cl.items.length > 0 && (
+                              <ul className="mt-2 ml-6 space-y-1 border-l-2 pl-3">
+                                {cl.items.map((item) => {
+                                  const isInactive = itemOverrides[item.id]?.is_active === false;
+                                  return (
+                                    <li
+                                      key={item.id}
+                                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                                    >
+                                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                                      <span className={cn(isInactive && "line-through")}>
+                                        {item.name}
+                                      </span>
+                                      {item.required && !isInactive && (
+                                        <span className="text-[10px] text-destructive">
+                                          obrigatório
+                                        </span>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+
+                            {checked && expandedChecklist === cl.id && (
+                              <div className="mt-2 ml-6 space-y-2 border-l-2 pl-3">
+                                {cl.items.map((item) => (
+                                  <ChecklistItemOverrideEditor
+                                    key={item.id}
+                                    item={item}
+                                    override={itemOverrides[item.id]}
+                                    onSetOverride={(o) => setItemOverride(cl.id, item.id, o)}
+                                    onRemoveOverride={() => removeItemOverride(cl.id, item.id)}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Metas do Plano</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addGoal}>
+                      <Plus className="mr-1 h-3 w-3" />
+                      Adicionar meta
+                    </Button>
+                  </div>
+                  {goals.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhuma meta cadastrada. Adicione objetivos mensuráveis para o cuidado.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 rounded-lg border p-3">
+                      {goals.map((goal, index) => (
+                        <div key={goal.id ?? index} className="space-y-2 rounded-md border p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 space-y-1">
+                              <Label className="text-xs">Descrição</Label>
+                              <textarea
+                                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                                rows={2}
+                                value={goal.description}
+                                onChange={(e) => updateGoal(index, "description", e.target.value)}
+                                placeholder="Ex.: Reduzir a dor do paciente para nível leve"
+                              />
+                            </div>
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6"
-                              aria-label={
-                                expandedChecklist === cl.id ? "Ocultar ajustes" : "Ajustar itens"
-                              }
-                              onClick={() => toggleChecklistExpanded(cl.id)}
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => removeGoal(index)}
                             >
-                              {expandedChecklist === cl.id ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
-                          )}
-                        </div>
-
-                        {checked && expandedChecklist !== cl.id && cl.items.length > 0 && (
-                          <ul className="mt-2 ml-6 space-y-1 border-l-2 pl-3">
-                            {cl.items.map((item) => {
-                              const isInactive = itemOverrides[item.id]?.is_active === false;
-                              return (
-                                <li
-                                  key={item.id}
-                                  className="flex items-center gap-2 text-xs text-muted-foreground"
-                                >
-                                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
-                                  <span className={cn(isInactive && "line-through")}>
-                                    {item.name}
-                                  </span>
-                                  {item.required && !isInactive && (
-                                    <span className="text-[10px] text-destructive">
-                                      obrigatório
-                                    </span>
-                                  )}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-
-                        {checked && expandedChecklist === cl.id && (
-                          <div className="mt-2 ml-6 space-y-2 border-l-2 pl-3">
-                            {cl.items.map((item) => (
-                              <ChecklistItemOverrideEditor
-                                key={item.id}
-                                item={item}
-                                override={itemOverrides[item.id]}
-                                onSetOverride={(o) => setItemOverride(cl.id, item.id, o)}
-                                onRemoveOverride={() => removeItemOverride(cl.id, item.id)}
-                              />
-                            ))}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Metas do Plano</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addGoal}>
-                  <Plus className="mr-1 h-3 w-3" />
-                  Adicionar meta
-                </Button>
-              </div>
-              {goals.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Nenhuma meta cadastrada. Adicione objetivos mensuráveis para o cuidado.
-                </p>
-              ) : (
-                <div className="space-y-2 rounded-lg border p-3">
-                  {goals.map((goal, index) => (
-                    <div key={goal.id ?? index} className="space-y-2 rounded-md border p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 space-y-1">
-                          <Label className="text-xs">Descrição</Label>
-                          <textarea
-                            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-                            rows={2}
-                            value={goal.description}
-                            onChange={(e) => updateGoal(index, "description", e.target.value)}
-                            placeholder="Ex.: Reduzir a dor do paciente para nível leve"
-                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Métrica alvo</Label>
+                              <Input
+                                className="h-8 text-xs"
+                                value={goal.target_metric}
+                                onChange={(e) => updateGoal(index, "target_metric", e.target.value)}
+                                placeholder="Ex.: Escala de dor &lt; 3"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Ordem</Label>
+                              <Input
+                                className="h-8 text-xs"
+                                type="number"
+                                value={goal.order}
+                                onChange={(e) => updateGoal(index, "order", Number(e.target.value))}
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 shrink-0"
-                          onClick={() => removeGoal(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Métrica alvo</Label>
-                          <Input
-                            className="h-8 text-xs"
-                            value={goal.target_metric}
-                            onChange={(e) => updateGoal(index, "target_metric", e.target.value)}
-                            placeholder="Ex.: Escala de dor &lt; 3"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Ordem</Label>
-                          <Input
-                            className="h-8 text-xs"
-                            type="number"
-                            value={goal.order}
-                            onChange={(e) => updateGoal(index, "order", Number(e.target.value))}
-                          />
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
 
             {!isActive && (
               <div className="flex flex-col items-end gap-1 pt-1">
