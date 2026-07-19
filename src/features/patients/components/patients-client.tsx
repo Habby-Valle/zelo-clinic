@@ -46,6 +46,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePatients, useDeletePatient } from "../hooks";
 import { usePlanLimits } from "@/features/plan";
 import { PlanUsageBadge } from "@/components/plan-usage-badge";
+import type { UserRole } from "@/types/common";
 
 const GENDER_LABELS: Record<string, string> = {
   M: "Masculino",
@@ -72,7 +73,11 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function PatientsClient() {
+interface PatientsClientProps {
+  role: UserRole;
+}
+
+export function PatientsClient({ role }: PatientsClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -108,7 +113,9 @@ export function PatientsClient() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             Pacientes
-            <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
+            {role === "clinic_admin" && (
+              <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
+            )}
           </h1>
           <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
         </div>
