@@ -95,13 +95,16 @@ export function MedicationSection({
   // Uso contínuo = sem data de término (end_date nulo).
   const [continuous, setContinuous] = useState(true);
   const [showReceita, setShowReceita] = useState(false);
+  // Sugestões já aplicadas nesta sessão (chave = source_text) — some da lista ao
+  // salvar, para percorrer várias doses do mesmo medicamento sem re-adicionar.
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+  const [pendingSuggestionKey, setPendingSuggestionKey] = useState<string | null>(null);
 
   const busy = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  // Sugestões de NOME extraídas do texto declarado pela família. Só aparecem
-  // enquanto não há medicação cadastrada, para não duplicar o que já foi revisado.
-  // A IA (backend) só sugere nomes; se indisponível, cai no parser heurístico local.
-  const canSuggest = medications.length === 0 && !!declaredMedications?.trim();
+  // Sugestões de NOME extraídas do texto declarado pela família. A IA (backend)
+  // só sugere nomes; se indisponível, cai no parser heurístico local.
+  const canSuggest = !!declaredMedications?.trim();
   const { data: aiSuggestions } = useMedicationSuggestions(patientId, canSuggest);
   const suggestions: MedicationSuggestion[] = canSuggest
     ? aiSuggestions?.length
@@ -109,16 +112,62 @@ export function MedicationSection({
       : parseDeclaredMedications(declaredMedications ?? "")
     : [];
 
+  const suggestionKey = (s: MedicationSuggestion) => `${s.name}||${s.source_text}`;
+
+  // Detalhe declarado correspondente à sugestão. Casa primeiro pelo trecho de
+  // origem (source_text = a linha declarada), para que cada dose do mesmo
+  // medicamento resolva o SEU horário/turno; só então recai no nome.
+  function resolveDetail(s: MedicationSuggestion) {
+    const target = stripDose(s.name).toLowerCase();
+    const details = parseDeclaredMedicationDetails(declaredMedications ?? "");
+    return (
+      details.find((d) => d.raw === s.source_text) ??
+      details.find((d) => stripDose(d.name).toLowerCase() === target) ??
+      details.find((d) => s.source_text.toLowerCase().includes(d.name.toLowerCase()))
+    );
+  }
+
+  // Horários que a sugestão representa (do horário declarado ou do turno).
+  function suggestionTimes(s: MedicationSuggestion): string[] {
+    const detail = resolveDetail(s);
+    const raw = detail?.times.length
+      ? detail.times
+      : (detail?.turns ?? []).map((t) => TURN_DEFAULT_TIME[t]).filter(Boolean);
+    return raw.map(normalizeTime);
+  }
+
+  // Já coberta por uma medicação cadastrada? Casa por nome + horário, para que
+  // uma dose salva não esconda as OUTRAS doses do mesmo medicamento (turnos
+  // diferentes). Sem horário declarado, o nome basta.
+  function isCoveredByMedication(s: MedicationSuggestion): boolean {
+    const name = stripDose(s.name).toLowerCase();
+    const times = suggestionTimes(s);
+    return medications.some((m) => {
+      if (stripDose(m.name).toLowerCase() !== name) return false;
+      if (times.length === 0) return true;
+      const medTimes = m.schedule_times.map(normalizeTime);
+      return times.some((t) => medTimes.includes(t));
+    });
+  }
+
+  // Some da lista quando já foi salva (coberta por medicação) ou aplicada nesta
+  // sessão — assim dá para percorrer várias doses do mesmo nome sem re-adicionar.
+  const visibleSuggestions = suggestions.filter(
+    (s) => !dismissedSuggestions.has(suggestionKey(s)) && !isCoveredByMedication(s)
+  );
+
+  // Dica curta de horário/turno exibida no chip para diferenciar doses do mesmo nome.
+  function scheduleHint(s: MedicationSuggestion): string {
+    const detail = resolveDetail(s);
+    if (detail?.times.length) return detail.times.map(normalizeTime).join(", ");
+    if (detail?.turns.length) return detail.turns.join(", ");
+    return "";
+  }
+
   function applySuggestion(s: MedicationSuggestion) {
     // Pré-preenche com o que a família declarou (nome, dose, horários) como
     // rascunho — a enfermeira confere/ajusta na receita antes de salvar.
-    // Match tolerante: a sugestão pode carregar a dose no nome ("Nome (50mg)"),
-    // então normaliza removendo parênteses; cai para o trecho de origem.
-    const target = stripDose(s.name).toLowerCase();
-    const details = parseDeclaredMedicationDetails(declaredMedications ?? "");
-    const detail =
-      details.find((d) => stripDose(d.name).toLowerCase() === target) ??
-      details.find((d) => (s.source_text ?? "").toLowerCase().includes(d.name.toLowerCase()));
+    const detail = resolveDetail(s);
     const rawTimes = detail?.times.length
       ? detail.times
       : (detail?.turns ?? []).map((t) => TURN_DEFAULT_TIME[t]).filter(Boolean);
@@ -132,6 +181,7 @@ export function MedicationSection({
     });
     setTimesCsv(times.join(","));
     setContinuous(true);
+    setPendingSuggestionKey(suggestionKey(s));
     setShowForm(true);
   }
 
@@ -140,6 +190,7 @@ export function MedicationSection({
     setTimesCsv("");
     setContinuous(true);
     setShowForm(false);
+    setPendingSuggestionKey(null);
   }
 
   async function handleCreate() {
@@ -158,6 +209,9 @@ export function MedicationSection({
           .map(normalizeTime),
       });
       toast.success("Medicação adicionada.");
+      if (pendingSuggestionKey) {
+        setDismissedSuggestions((prev) => new Set(prev).add(pendingSuggestionKey));
+      }
       resetForm();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao adicionar medicação.");
@@ -368,26 +422,30 @@ export function MedicationSection({
           </div>
         )}
 
-        {!showForm && suggestions.length > 0 && (
+        {!showForm && visibleSuggestions.length > 0 && (
           <div className="rounded-lg border border-dashed p-3">
             <p className="mb-2 text-xs text-muted-foreground">
               Declarados pela família. Ao aplicar, nome, dose e horários vêm como rascunho — valide
               na receita antes de salvar.
             </p>
             <div className="flex flex-wrap gap-2">
-              {suggestions.map((s, i) => (
-                <Button
-                  key={i}
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => applySuggestion(s)}
-                >
-                  <Plus className="mr-1 h-3 w-3" />
-                  {stripDose(s.name)}
-                </Button>
-              ))}
+              {visibleSuggestions.map((s, i) => {
+                const hint = scheduleHint(s);
+                return (
+                  <Button
+                    key={`${suggestionKey(s)}-${i}`}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => applySuggestion(s)}
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    {stripDose(s.name)}
+                    {hint && <span className="ml-1 text-muted-foreground">· {hint}</span>}
+                  </Button>
+                );
+              })}
             </div>
           </div>
         )}
