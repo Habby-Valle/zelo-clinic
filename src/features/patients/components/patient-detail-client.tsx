@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { ArrowLeft, Loader2, Users, Calendar, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Calendar, Plus, CheckCircle } from "lucide-react";
 import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePatient, useClinicCaregivers, useTogglePatientStatus } from "../hooks";
+import { useValidateHealth } from "@/features/contracts/hooks";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientDocuments } from "./patient-documents";
@@ -90,6 +91,9 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
   const { data: patient, isLoading: patientLoading } = usePatient(id);
 
   const toggleStatus = useTogglePatientStatus(id);
+  // Validação da saúde declarada — ação sobre o contrato ativo do paciente.
+  const validateHealth = useValidateHealth(patient?.active_contract_id ?? "");
+  const validateQueryClient = useQueryClient();
   // Enfermeiro: acesso somente leitura ao cadastro do paciente.
   const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
 
@@ -325,6 +329,63 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
 
         {/* Clínico — plano, medicações, alertas (Avaliação Clínica adiada no MVP) */}
         <TabsContent value="clinical" className="mt-6 space-y-6">
+          {/* Validação da saúde declarada pela família (antes de iniciar os cuidados) */}
+          {!isNurse &&
+            patient.health_status === "declared" &&
+            patient.active_contract_id && (
+              <Card className="border-amber-300 bg-amber-50">
+                <CardContent className="space-y-4 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Cadastro de saúde declarado pela família.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Revise as informações contra a receita e valide antes de iniciar os
+                        cuidados.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() =>
+                        validateHealth.mutate(undefined, {
+                          onSuccess: () =>
+                            validateQueryClient.invalidateQueries({
+                              queryKey: ["patients", id],
+                            }),
+                        })
+                      }
+                      disabled={validateHealth.isPending}
+                      className="shrink-0"
+                    >
+                      {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Validar saúde
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
+                    <div>
+                      <span className="font-medium">Condições:</span>{" "}
+                      {patient.health_conditions || "—"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Medicamentos:</span>
+                      <DeclaredMedications text={patient.medications} />
+                    </div>
+                    <div>
+                      <span className="font-medium">Receita médica:</span>
+                      <PatientDocuments
+                        documents={patient.documents.filter((d) => d.kind === "prescription")}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
           {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
           {!isNurse && (
             <CarePlanSection

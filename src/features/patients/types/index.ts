@@ -44,6 +44,7 @@ export interface ClinicPatient {
   clinic_name: string | null;
   is_active: boolean;
   contract_start_date: string | null;
+  active_contract_id: string | null;
   emergency_contacts: EmergencyContactInfo[];
   caregiver_assignments: CaregiverAssignment[];
   documents: PatientDocument[];

@@ -53,15 +53,11 @@ import {
   useContract,
   useSendProposal,
   useRejectContract,
-  useValidateHealth,
   useTransitionContract,
   usePricingSuggestion,
 } from "../hooks";
 import type { ContractStatus, PricingSuggestion } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
-import { usePatient } from "@/features/patients/hooks/use-patients";
-import { PatientDocuments } from "@/features/patients/components/patient-documents";
-import { DeclaredMedications } from "@/features/medications";
 import { usePlanLimits } from "@/features/plan";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
@@ -94,10 +90,8 @@ export function ContractDetailClient() {
 
   const { data: contract, isLoading } = useContract(id);
   const { data: planLimits } = usePlanLimits();
-  const { data: patient } = usePatient(contract?.patient ?? "");
   const sendProposal = useSendProposal(id);
   const rejectContract = useRejectContract(id);
-  const validateHealth = useValidateHealth(id);
   const transitionContract = useTransitionContract(id);
 
   const [proposalOpen, setProposalOpen] = useState(false);
@@ -174,9 +168,12 @@ export function ContractDetailClient() {
     sendProposal.mutate(
       {
         billing_mode: billingMode,
-        price_per_hour: pricePerHour ? Number(pricePerHour) : undefined,
-        price_per_shift: pricePerShift ? Number(pricePerShift) : undefined,
-        fixed_monthly_amount: fixedMonthlyAmount ? Number(fixedMonthlyAmount) : undefined,
+        price_per_hour:
+          billingMode === "per_hour" && pricePerHour ? Number(pricePerHour) : undefined,
+        price_per_shift:
+          billingMode === "per_shift" && pricePerShift ? Number(pricePerShift) : undefined,
+        fixed_monthly_amount:
+          billingMode === "fixed" && fixedMonthlyAmount ? Number(fixedMonthlyAmount) : undefined,
       },
       {
         onSuccess: () => {
@@ -323,51 +320,6 @@ export function ContractDetailClient() {
         </Card>
       )}
 
-      {contract.status === "active" && contract.patient_health_status === "declared" && (
-        <Card className="border-amber-300 bg-amber-50">
-          <CardContent className="space-y-4 p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
-                <p className="text-xs text-muted-foreground">
-                  Revise as informações contra a receita e valide antes de iniciar os cuidados.
-                </p>
-              </div>
-              <Button
-                onClick={() => validateHealth.mutate()}
-                disabled={validateHealth.isPending}
-                className="shrink-0"
-              >
-                {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Validar saúde
-              </Button>
-            </div>
-
-            {patient && (
-              <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
-                <div>
-                  <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Medicamentos:</span>
-                  <DeclaredMedications text={patient.medications} />
-                </div>
-                <div>
-                  <span className="font-medium">Receita médica:</span>
-                  <PatientDocuments
-                    documents={patient.documents.filter((d) => d.kind === "prescription")}
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -428,8 +380,12 @@ export function ContractDetailClient() {
                 value={formatCurrency(contract.fixed_monthly_amount)}
               />
             )}
-            <Row label="Preço por hora" value={formatCurrency(contract.price_per_hour)} />
-            <Row label="Preço por turno" value={formatCurrency(contract.price_per_shift)} />
+            {contract.billing_mode === "per_hour" && (
+              <Row label="Preço por hora" value={formatCurrency(contract.price_per_hour)} />
+            )}
+            {contract.billing_mode === "per_shift" && (
+              <Row label="Preço por turno" value={formatCurrency(contract.price_per_shift)} />
+            )}
             <Row
               label="Adicional noturno"
               value={
@@ -653,7 +609,16 @@ export function ContractDetailClient() {
                 }
               >
                 <SelectTrigger id="billing_mode">
-                  <SelectValue />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      const labels: Record<string, string> = {
+                        per_shift: "Por turno",
+                        per_hour: "Por hora",
+                        fixed: "Valor fixo mensal",
+                      };
+                      return labels[v ?? ""] ?? v ?? "Por turno";
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="per_shift">Por turno</SelectItem>
@@ -683,34 +648,34 @@ export function ContractDetailClient() {
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="price_per_hour">
-                Preço por hora (R$){billingMode === "per_hour" ? "" : " — referência"}
-              </Label>
-              <Input
-                id="price_per_hour"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={pricePerHour}
-                onChange={(e) => setPricePerHour(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price_per_shift">
-                Preço por turno (R$){billingMode === "per_shift" ? "" : " — referência"}
-              </Label>
-              <Input
-                id="price_per_shift"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={pricePerShift}
-                onChange={(e) => setPricePerShift(e.target.value)}
-              />
-            </div>
+            {billingMode === "per_hour" && (
+              <div className="space-y-2">
+                <Label htmlFor="price_per_hour">Preço por hora (R$)</Label>
+                <Input
+                  id="price_per_hour"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={pricePerHour}
+                  onChange={(e) => setPricePerHour(e.target.value)}
+                />
+              </div>
+            )}
+            {billingMode === "per_shift" && (
+              <div className="space-y-2">
+                <Label htmlFor="price_per_shift">Preço por turno (R$)</Label>
+                <Input
+                  id="price_per_shift"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={pricePerShift}
+                  onChange={(e) => setPricePerShift(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setProposalOpen(false)}>
