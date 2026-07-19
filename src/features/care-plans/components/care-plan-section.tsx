@@ -257,7 +257,8 @@ export function CarePlanSection({
     })),
   });
 
-  const canSubmit = selected.length > 0;
+  // Só envia para revisão com pelo menos um checklist e um cuidador responsável escolhido.
+  const canSubmit = selected.length > 0 && !!caregiverId;
 
   async function handleSave() {
     try {
@@ -573,16 +574,24 @@ export function CarePlanSection({
             </div>
 
             {!isActive && (
-              <div className="flex justify-end gap-2 pt-1">
-                <Button variant="outline" onClick={handleSave} disabled={busy}>
-                  {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar rascunho
-                </Button>
-                <Button onClick={handleSubmit} disabled={busy || !canSubmit}>
-                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Enviar para revisão
-                </Button>
+              <div className="flex flex-col items-end gap-1 pt-1">
+                {selected.length > 0 && !caregiverId && (
+                  <p className="flex items-center gap-1 text-xs text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    Escolha o cuidador responsável para enviar o plano para revisão.
+                  </p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={handleSave} disabled={busy}>
+                    {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Salvar rascunho
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={busy || !canSubmit}>
+                    {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Enviar para revisão
+                  </Button>
+                </div>
               </div>
             )}
           </>
