@@ -37,7 +37,9 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
       }
     });
 
-    const responseBody = res.status === 204 ? null : await res.text();
+    const isBinary = res.headers.get("content-type") === "application/pdf";
+    const responseBody =
+      res.status === 204 ? null : isBinary ? await res.arrayBuffer() : await res.text();
 
     return new NextResponse(responseBody, {
       status: res.status,

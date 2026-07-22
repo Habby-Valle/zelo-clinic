@@ -44,7 +44,9 @@ export function LoginForm({
       {
         onSuccess: ({ user }) => {
           setUser(user);
-          router.push(redirectTo);
+          // Enfermeiro não tem dashboard — vai direto para os planos de cuidado.
+          const dest = user.role === "clinic_nurse" ? "/care-plans" : redirectTo;
+          router.push(dest);
           router.refresh();
         },
       }

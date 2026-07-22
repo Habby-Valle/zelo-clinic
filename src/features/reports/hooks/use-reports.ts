@@ -5,9 +5,13 @@ import {
   fetchReportSummaryApi,
   fetchShiftsReportApi,
   fetchChecklistsReportApi,
+  fetchFamilyMembersGrowthApi,
   fetchPatientsGrowthApi,
   fetchSosReportApi,
   fetchCaregiversReportApi,
+  fetchSatisfactionReportApi,
+  fetchContractsReportApi,
+  fetchBillingReportApi,
 } from "../services";
 import type { DateRange } from "../types";
 
@@ -34,6 +38,13 @@ export function useChecklistsReport(dateRange: DateRange) {
   });
 }
 
+export function useFamilyMembersGrowthReport(months: number = 6) {
+  return useQuery({
+    queryKey: ["reports", "family-members-growth", months],
+    queryFn: () => fetchFamilyMembersGrowthApi(months),
+  });
+}
+
 export function usePatientsGrowthReport(months: number = 6) {
   return useQuery({
     queryKey: ["reports", "patients-growth", months],
@@ -54,5 +65,27 @@ export function useCaregiversReport(dateRange: DateRange) {
     queryKey: ["reports", "caregivers", dateRange],
     queryFn: () => fetchCaregiversReportApi(dateRange),
     enabled: !!dateRange.from && !!dateRange.to,
+  });
+}
+
+export function useSatisfactionReport(dateRange: DateRange) {
+  return useQuery({
+    queryKey: ["reports", "satisfaction", dateRange],
+    queryFn: () => fetchSatisfactionReportApi(dateRange),
+    enabled: !!dateRange.from && !!dateRange.to,
+  });
+}
+
+export function useContractsReport(months: number = 12) {
+  return useQuery({
+    queryKey: ["reports", "contracts", months],
+    queryFn: () => fetchContractsReportApi(months),
+  });
+}
+
+export function useBillingReport(months: number = 12) {
+  return useQuery({
+    queryKey: ["reports", "billing", months],
+    queryFn: () => fetchBillingReportApi(months),
   });
 }

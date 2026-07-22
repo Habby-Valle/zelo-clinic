@@ -2,11 +2,12 @@
 
 import { useTransition } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor, LogOut, ChevronDown } from "lucide-react";
+import { Sun, Moon, Monitor, LogOut, ChevronDown, CircleHelp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useAuthStore } from "@/store/authStore";
+import { useOnboardingStore } from "@/store/onboardingStore";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +23,15 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/format";
+import type { UserRole } from "@/types/common";
 import { MobileSidebar } from "./mobile-sidebar";
 
-export function Topbar() {
+export function Topbar({ role }: { role: UserRole }) {
   const { user, hasHydrated } = useCurrentUser();
   const { setTheme } = useTheme();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const requestTour = useOnboardingStore((s) => s.requestTour);
 
   function handleLogout() {
     startTransition(async () => {
@@ -44,9 +47,20 @@ export function Topbar() {
 
   return (
     <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
-      <MobileSidebar />
+      <MobileSidebar role={role} />
 
       <div className="ml-auto flex items-center gap-2">
+        {role === "clinic_admin" && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={requestTour}
+            title="Tour pelas páginas"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <CircleHelp className="h-5 w-5" />
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={<Button variant="ghost" className="flex items-center gap-2 px-2" />}

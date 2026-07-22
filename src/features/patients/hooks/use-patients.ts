@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchPatients,
   fetchPatientById,
+  fetchPatientRecord,
   fetchClinicCaregivers,
   fetchPendingInvites,
   createPatientApi,
@@ -41,6 +42,14 @@ export function useClinicCaregivers() {
   return useQuery({
     queryKey: ["clinic-caregivers"],
     queryFn: fetchClinicCaregivers,
+  });
+}
+
+export function usePatientRecord(id: string) {
+  return useQuery({
+    queryKey: ["patient-record", id],
+    queryFn: () => fetchPatientRecord(id),
+    enabled: !!id,
   });
 }
 

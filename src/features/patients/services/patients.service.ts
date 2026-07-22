@@ -4,6 +4,7 @@ import type {
   PatientCaregiver,
   PendingInvite,
   CaregiverAssignment,
+  PatientDocument,
   PatientsPage,
 } from "../types";
 
@@ -14,7 +15,6 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
   return {
     id: String(r.id ?? ""),
     clinic_id: r.clinic_id != null ? String(r.clinic_id) : null,
-    guardian_id: r.guardian_id != null ? String(r.guardian_id) : null,
     name: String(r.name ?? ""),
     birth_date: String(r.birth_date ?? ""),
     gender: (r.gender as ClinicPatient["gender"]) ?? "O",
@@ -25,14 +25,27 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
     allergies: String(r.allergies ?? ""),
     medications: String(r.medications ?? ""),
     blood_type: r.blood_type != null ? String(r.blood_type) : null,
+    health_status: String(r.health_status ?? "pending"),
     observations: String(r.observations ?? ""),
     media_id: r.media_id != null ? String(r.media_id) : null,
     media: r.media_url ? { id: String(r.media_id ?? ""), url: String(r.media_url) } : null,
     clinic_name: r.clinic_name != null ? String(r.clinic_name) : null,
     is_active: r.is_active !== false,
+    contract_start_date: r.contract_start_date != null ? String(r.contract_start_date) : null,
+    active_contract_id: r.active_contract_id != null ? String(r.active_contract_id) : null,
+    active_contract_weekly_hours:
+      r.active_contract_weekly_hours != null ? Number(r.active_contract_weekly_hours) : null,
+    contract_preferred_weekdays: Array.isArray(r.contract_preferred_weekdays)
+      ? (r.contract_preferred_weekdays as number[])
+      : null,
+    contract_preferred_start_time:
+      r.contract_preferred_start_time != null ? String(r.contract_preferred_start_time) : null,
+    contract_preferred_end_time:
+      r.contract_preferred_end_time != null ? String(r.contract_preferred_end_time) : null,
     emergency_contacts: Array.isArray(r.emergency_contacts)
       ? (r.emergency_contacts as ClinicPatient["emergency_contacts"])
       : [],
+    documents: Array.isArray(r.documents) ? (r.documents as PatientDocument[]) : [],
     caregiver_assignments,
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),
@@ -76,13 +89,21 @@ export async function fetchPatientById(id: string): Promise<ClinicPatient | null
 export async function fetchClinicCaregivers(): Promise<PatientCaregiver[]> {
   try {
     const data = await apiFetchClient<{
-      results: Array<{ id: string; name: string; email: string }>;
+      results: Array<{
+        id: string;
+        name: string;
+        email: string;
+        verification_status?: string | null;
+      }>;
     }>("/users/?role=caregiver&page_size=200");
-    return (data.results ?? []).map((u) => ({
-      id: String(u.id),
-      name: u.name,
-      email: u.email,
-    }));
+    // Só cuidadores aprovados podem ser vinculados a pacientes (gate de segurança).
+    return (data.results ?? [])
+      .filter((u) => u.verification_status === "approved")
+      .map((u) => ({
+        id: String(u.id),
+        name: u.name,
+        email: u.email,
+      }));
   } catch {
     return [];
   }
@@ -198,11 +219,54 @@ export async function cancelInviteApi(inviteId: string): Promise<void> {
   await apiFetchClient(`/invites/${inviteId}/cancel/`, { method: "POST" });
 }
 
+export interface PatientRecord {
+  patient: {
+    id: string;
+    name: string;
+    birth_date: string;
+    gender: string;
+    blood_type: string | null;
+    health_conditions: string;
+    allergies: string;
+    medications: string;
+    health_status: string;
+    health_validated_at: string | null;
+    observations: string;
+    complexity: string | null;
+    clinic_name: string | null;
+    created_at: string;
+  };
+  contracts: Array<Record<string, unknown>>;
+  care_plan: Record<string, unknown> | null;
+  caregivers: Array<Record<string, unknown>>;
+  emergency_contacts: Array<Record<string, unknown>>;
+  timeline: Array<{
+    event_type: string;
+    timestamp: string;
+    title: string;
+    description: string;
+    actor_name: string;
+    data: Record<string, unknown>;
+  }>;
+}
+
+export async function fetchPatientRecord(id: string): Promise<PatientRecord | null> {
+  try {
+    return await apiFetchClient<PatientRecord>(`/patients/${id}/record/`);
+  } catch {
+    return null;
+  }
+}
+
+export function getPatientRecordExportUrl(id: string): string {
+  return `/api/proxy/patients/${id}/record/export/`;
+}
+
 export async function removeEmergencyContactApi(
   patientId: string,
   contactId: string
 ): Promise<void> {
-  await apiFetchClient(`/patients/${patientId}/emergency-contacts/${contactId}/`, {
+  await apiFetchClient(`/patients/${patientId}/contacts/internal/${contactId}/`, {
     method: "DELETE",
   });
 }

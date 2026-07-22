@@ -21,11 +21,11 @@ export interface ClinicAdminContext {
   user: AuthUser;
 }
 
-export async function requireClinicAdmin(): Promise<ClinicAdminContext> {
+async function requireClinicRole(allowed: UserRole[]): Promise<ClinicAdminContext> {
   const accessToken = await getValidAccessToken();
 
   const payload = decodeJwt(accessToken)!;
-  if (payload.role !== "clinic_admin") redirect("/login");
+  if (!allowed.includes(payload.role as UserRole)) redirect("/login");
 
   let meData;
   try {
@@ -43,8 +43,17 @@ export async function requireClinicAdmin(): Promise<ClinicAdminContext> {
     name: profile.name,
     role: profile.role as UserRole,
     clinic_id: profile.clinic_id,
-    avatar_url: null,
+    avatar_url: profile.avatar_url ?? null,
   };
 
   return { user };
+}
+
+export async function requireClinicAdmin(): Promise<ClinicAdminContext> {
+  return requireClinicRole(["clinic_admin"]);
+}
+
+/** Páginas compartilhadas: admin ou enfermeiro da clínica. */
+export async function requireClinicUser(): Promise<ClinicAdminContext> {
+  return requireClinicRole(["clinic_admin", "clinic_nurse"]);
 }

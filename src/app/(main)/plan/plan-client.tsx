@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, CreditCard, AlertCircle, Crown, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import {
+  Check,
+  CreditCard,
+  AlertCircle,
+  Crown,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  QrCode,
+  Settings,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,15 +26,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { requestPlanChange, syncStripeSubscription, cancelSubscription } from "./actions";
+import { requestPlanChange, asaasSubscribe, cancelSubscription, getMyClinicPlan } from "./actions";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
 
 interface PlanCardProps {
   plan: Plan;
   isCurrentPlan: boolean;
+  hasActivePaidPlan: boolean;
   onSubscribe: (planId: string) => void;
   loadingPlanId: string | null;
   disabled?: boolean;
@@ -41,6 +59,7 @@ function formatPrice(price: number): string {
 function PlanCard({
   plan,
   isCurrentPlan,
+  hasActivePaidPlan,
   onSubscribe,
   loadingPlanId,
   disabled,
@@ -101,7 +120,7 @@ function PlanCard({
         {!isCurrentPlan && (
           <Button
             className="w-full"
-            variant="outline"
+            variant={hasActivePaidPlan ? "default" : "outline"}
             onClick={() => onSubscribe(plan.id)}
             disabled={isLoading || disabled}
           >
@@ -113,7 +132,13 @@ function PlanCard({
             ) : disabled ? (
               (disabledReason ?? "Indisponível")
             ) : plan.monthly_price === 0 ? (
-              "Selecionar plano gratuito"
+              hasActivePaidPlan ? (
+                "Mudar para gratuito"
+              ) : (
+                "Selecionar plano gratuito"
+              )
+            ) : hasActivePaidPlan ? (
+              "Alterar para este plano"
             ) : (
               "Assinar agora"
             )}
@@ -133,11 +158,19 @@ interface CurrentPlanInfoProps {
   };
   onCancel?: () => void;
   cancelLoading?: boolean;
+  onManage?: () => void;
 }
 
-function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentPlanInfoProps) {
+function CurrentPlanInfo({
+  plan,
+  clinicPlan,
+  onCancel,
+  cancelLoading,
+  onManage,
+}: CurrentPlanInfoProps) {
   const isFree = clinicPlan.status === "free" || plan.monthly_price === 0;
   const isTrial = clinicPlan.status === "trial";
+  const isCancelled = clinicPlan.status === "cancelled";
   const startedDate = new Date(clinicPlan.started_at);
   const expiresDate = clinicPlan.expires_at ? new Date(clinicPlan.expires_at) : null;
   const now = new Date();
@@ -147,6 +180,7 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
 
   const isExpired = daysLeft !== null && daysLeft <= 0;
   const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 7;
+  const hasAccessUntilEnd = isCancelled && !isExpired && expiresDate;
 
   const statusLabel =
     clinicPlan.status === "free"
@@ -158,8 +192,12 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           : clinicPlan.status === "expired"
             ? "Expirado"
             : clinicPlan.status === "cancelled"
-              ? "Cancelado"
-              : clinicPlan.status;
+              ? hasAccessUntilEnd
+                ? "Cancelado"
+                : "Cancelado"
+              : clinicPlan.status === "pending"
+                ? "Pendente"
+                : clinicPlan.status;
 
   return (
     <Card className={isExpired ? "border-destructive" : ""}>
@@ -171,13 +209,17 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
           <Badge
             variant={
-              isExpired
+              isExpired || (isCancelled && !hasAccessUntilEnd)
                 ? "destructive"
                 : clinicPlan.status === "trial"
                   ? "secondary"
                   : clinicPlan.status === "free"
                     ? "outline"
-                    : "default"
+                    : clinicPlan.status === "cancelled"
+                      ? "outline"
+                      : clinicPlan.status === "pending"
+                        ? "secondary"
+                        : "default"
             }
           >
             {statusLabel}
@@ -211,7 +253,7 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
-        {!isFree && daysLeft !== null && (
+        {!isFree && daysLeft !== null && !hasAccessUntilEnd && (
           <div
             className={cn(
               "flex items-center gap-2 rounded-lg p-3",
@@ -233,6 +275,16 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
+        {hasAccessUntilEnd && (
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">
+              Acesso mantido até {expiresDate.toLocaleDateString("pt-BR")} (
+              {daysLeft} dia{daysLeft !== 1 ? "s" : ""}). Renove para continuar.
+            </span>
+          </div>
+        )}
+
         {isExpired && !isFree && (
           <div className="rounded-lg bg-destructive/5 p-4 text-center">
             <p className="mb-3 text-sm text-muted-foreground">
@@ -241,9 +293,15 @@ function CurrentPlanInfo({ plan, clinicPlan, onCancel, cancelLoading }: CurrentP
           </div>
         )}
 
-        {!isFree && (
-          <div className="flex gap-2">
-            {!isTrial && onCancel && (
+        {!isFree && !isTrial && (
+          <div className="flex flex-wrap gap-2">
+            {onManage && (
+              <Button variant="outline" size="sm" onClick={onManage}>
+                <Settings className="mr-1 h-3 w-3" />
+                Gerenciar assinatura
+              </Button>
+            )}
+            {!isCancelled && onCancel && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -284,6 +342,22 @@ export function PlanManagementClient({
   const [error, setError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showChangeDialog, setShowChangeDialog] = useState(false);
+  const [changeTargetPlanId, setChangeTargetPlanId] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [subscribeResult, setSubscribeResult] = useState<{
+    pixQrCode?: string;
+    pixPayload?: string;
+    checkoutUrl?: string;
+    billingType?: string;
+    error?: string;
+    planChange?: boolean;
+    prorataValue?: number;
+  } | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
+  const [pixConfirmed, setPixConfirmed] = useState(false);
+  const subscribingRef = useRef(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
   const currentStatus = currentPlan.clinicPlan?.status;
 
@@ -291,12 +365,12 @@ export function PlanManagementClient({
     currentStatus !== undefined &&
     currentStatus !== "free" &&
     currentStatus !== "trial" &&
+    currentStatus !== "pending" &&
     currentPlan.plan !== null;
 
   useEffect(() => {
     const success = searchParams.get("success");
     const canceled = searchParams.get("canceled");
-    const portalReturn = searchParams.get("portal_return");
 
     if (success === "true") {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -311,45 +385,113 @@ export function PlanManagementClient({
         icon: <XCircle className="h-5 w-5 text-muted-foreground" />,
       });
       router.replace("/plan");
-    } else if (portalReturn === "true") {
-      router.replace("/plan");
-      syncStripeSubscription().then(({ synced }) => {
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        if (synced) {
-          toast.success("Assinatura cancelada com sucesso!", {
-            description: "Seu plano foi atualizado para Gratuito.",
-            icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          });
-        } else {
-          toast.info("Retorno do portal de pagamentos", {
-            description: "Suas alterações serão aplicadas em breve.",
-          });
-        }
-        router.refresh();
-      });
     }
   }, [searchParams, router, queryClient]);
 
-  async function handleSubscribe(planId: string) {
-    setLoadingPlanId(planId);
-    setError(null);
+  // Enquanto o QR PIX está na tela e o plano ainda não está ativo, consulta o
+  // status periodicamente até o webhook confirmar o pagamento e ativar a
+  // assinatura — então troca o QR por uma tela de sucesso.
+  useEffect(() => {
+    if (!showPaymentModal || !subscribeResult?.pixQrCode || pixConfirmed) return;
+    // Upgrade (plano já ativo) não gera transição clara de status; mantém o QR.
+    if (currentStatus === "active") return;
 
-    const result = await requestPlanChange(planId, "monthly");
-
-    if (result.success) {
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
-      } else {
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      const info = await getMyClinicPlan();
+      if (!cancelled && info?.clinicPlan?.status === "active") {
+        setPixConfirmed(true);
         queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        toast.success("Plano ativado com sucesso!");
         router.refresh();
       }
-    } else {
-      setError(result.error ?? "Erro ao processar assinatura");
-      toast.error(result.error ?? "Erro ao processar assinatura");
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [showPaymentModal, subscribeResult?.pixQrCode, pixConfirmed, currentStatus, queryClient, router]);
+
+  const hasPaidPlan =
+    currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
+
+  async function handleSubscribe(planId: string) {
+    const result = await requestPlanChange(planId, "monthly");
+    if (!result.success) {
+      setError(result.error ?? "Erro ao processar");
+      toast.error(result.error ?? "Erro ao processar");
+      return;
     }
 
-    setLoadingPlanId(null);
+    if (result.billingType === null) {
+      // Plano gratuito: se tiver plano pago, pede confirmacao
+      if (hasPaidPlan) {
+        setChangeTargetPlanId(planId);
+        setShowChangeDialog(true);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success("Plano ativado com sucesso!");
+      router.refresh();
+      return;
+    }
+
+    // Plano pago: se ja tem outro plano pago, pede confirmacao
+    if (hasPaidPlan) {
+      setChangeTargetPlanId(planId);
+      setShowChangeDialog(true);
+      return;
+    }
+
+    setSelectedPlanId(planId);
+    setSubscribeResult(null);
+    setShowPaymentModal(true);
+  }
+
+  async function handlePaymentChoice(billingType: "PIX" | "CREDIT_CARD") {
+    if (!selectedPlanId || subscribingRef.current) return;
+    subscribingRef.current = true;
+    setSubscribing(true);
+    setSubscribeResult(null);
+    setPixConfirmed(false);
+
+    try {
+      const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
+
+      if (!result.success) {
+        setSubscribeResult({ error: result.error });
+        return;
+      }
+
+      if (result.billingType === "CREDIT_CARD" && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      // Downgrade: sem cobrança agora — passa a valer no próximo ciclo.
+      if (result.scheduled) {
+        setShowPaymentModal(false);
+        setSubscribeResult(null);
+        toast.success("Alteração de plano agendada", {
+          description: "O novo plano passa a valer no próximo ciclo de cobrança.",
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+        });
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        router.refresh();
+        return;
+      }
+
+      setSubscribeResult({
+        pixQrCode: result.pixQrCode,
+        pixPayload: result.pixPayload,
+        billingType: result.billingType,
+        planChange: result.planChange,
+        prorataValue: result.prorataValue,
+      });
+    } finally {
+      setSubscribing(false);
+      subscribingRef.current = false;
+    }
   }
 
   async function handleCancelConfirm() {
@@ -361,7 +503,7 @@ export function PlanManagementClient({
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Assinatura cancelada com sucesso!", {
-        description: "Seu plano foi atualizado para Gratuito.",
+        description: "Você mantém acesso aos recursos pagos até o fim do ciclo vigente.",
         icon: <CheckCircle className="h-5 w-5 text-green-500" />,
       });
       router.refresh();
@@ -382,6 +524,7 @@ export function PlanManagementClient({
           clinicPlan={currentPlan.clinicPlan}
           onCancel={canCancel ? () => setShowCancelDialog(true) : undefined}
           cancelLoading={cancelLoading}
+          onManage={() => router.push("/plan/manage")}
         />
       )}
 
@@ -390,9 +533,8 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? Sua assinatura Stripe será encerrada imediatamente e
-              o plano será rebaixado para <strong>Gratuito</strong>. Esta ação não pode ser
-              desfeita.
+              Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso
+              aos recursos pagos até o fim do ciclo vigente (<strong>{currentPlan.clinicPlan?.expires_at ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR") : "—"}</strong>). Depois, o plano será rebaixado para <strong>Gratuito</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -402,6 +544,219 @@ export function PlanManagementClient({
               className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               Cancelar assinatura
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Payment Method Modal */}
+      <Dialog
+        open={showPaymentModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowPaymentModal(false);
+            setSubscribeResult(null);
+            setPixConfirmed(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Forma de Pagamento</DialogTitle>
+            <DialogDescription>Escolha como deseja pagar sua assinatura.</DialogDescription>
+          </DialogHeader>
+
+          {subscribeResult?.error && (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {subscribeResult.error}
+            </div>
+          )}
+
+          {subscribeResult?.pixQrCode ? (
+            pixConfirmed ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CheckCircle className="h-14 w-14 text-green-500" />
+              <div>
+                <p className="text-lg font-semibold">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground">
+                  Sua assinatura foi ativada com sucesso.
+                </p>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                  setPixConfirmed(false);
+                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                  router.refresh();
+                }}
+              >
+                Concluir
+              </Button>
+            </div>
+            ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
+                <QrCode className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">Pagamento via PIX</p>
+                  <p className="text-sm text-muted-foreground">
+                    Escaneie o QR Code ou copie o código abaixo.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src={`data:image/png;base64,${subscribeResult.pixQrCode}`}
+                  alt="QR Code PIX"
+                  className="h-48 w-48"
+                />
+              </div>
+              {subscribeResult.pixPayload && (
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
+                      value={subscribeResult.pixPayload}
+                      readOnly
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(subscribeResult.pixPayload!);
+                        toast.success("Código PIX copiado!");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {subscribeResult.planChange && subscribeResult.prorataValue ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  Valor proporcional do upgrade, referente aos dias restantes do ciclo atual:{" "}
+                  <strong>
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(subscribeResult.prorataValue)}
+                  </strong>
+                  . O novo plano já está ativo; o valor cheio passa a ser cobrado no próximo ciclo.
+                </p>
+              ) : null}
+
+              {!subscribeResult.planChange && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Aguardando confirmação do pagamento…
+                </div>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                  setPixConfirmed(false);
+                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                  router.refresh();
+                }}
+              >
+                Fechar
+              </Button>
+            </div>
+            )
+          ) : (
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="h-14 w-full justify-start gap-3"
+                onClick={() => handlePaymentChoice("PIX")}
+                disabled={subscribing}
+              >
+                <QrCode className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">PIX</p>
+                  <p className="text-xs text-muted-foreground">Pagamento instantâneo via QR Code</p>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-14 w-full justify-start gap-3"
+                onClick={() => handlePaymentChoice("CREDIT_CARD")}
+                disabled={subscribing}
+              >
+                <CreditCard className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">Cartão de Crédito</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pagamento via checkout seguro ASAAS
+                  </p>
+                </div>
+              </Button>
+              {subscribing && (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processando...
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSubscribeResult(null);
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Change plan confirmation */}
+      <AlertDialog open={showChangeDialog} onOpenChange={setShowChangeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar plano</AlertDialogTitle>
+            <AlertDialogDescription>
+              {hasPaidPlan
+                ? "Você já possui um plano pago ativo. Ao alterar, a diferença proporcional dos dias restantes do ciclo atual será cobrada no PIX (se aplicável). Deseja continuar?"
+                : "Deseja alterar para este plano?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowChangeDialog(false);
+                const pid = changeTargetPlanId;
+                if (!pid) return;
+                const resultPromise = requestPlanChange(pid, "monthly");
+                resultPromise.then((result) => {
+                  if (!result.success) {
+                    setError(result.error ?? "Erro ao processar");
+                    toast.error(result.error ?? "Erro ao processar");
+                    return;
+                  }
+                  if (result.billingType === null) {
+                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                    toast.success("Plano alterado com sucesso!");
+                    router.refresh();
+                  } else {
+                    setSelectedPlanId(pid);
+                    setSubscribeResult(null);
+                    setShowPaymentModal(true);
+                  }
+                });
+              }}
+            >
+              Continuar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -437,6 +792,7 @@ export function PlanManagementClient({
                 key={plan.id}
                 plan={plan}
                 isCurrentPlan={plan.id === currentPlanId}
+                hasActivePaidPlan={hasPaidPlan}
                 onSubscribe={handleSubscribe}
                 loadingPlanId={loadingPlanId}
                 disabled={disabled}

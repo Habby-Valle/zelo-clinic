@@ -10,8 +10,7 @@ export async function createShift(data: {
   end: string;
   notes?: string;
   patient_id?: string;
-  checklist_ids?: string[];
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; warnings?: string[] }> {
   try {
     const { user } = await requireClinicAdmin();
 
@@ -31,31 +30,71 @@ export async function createShift(data: {
       body.shift_patients = [{ patient_id: data.patient_id }];
     }
 
-    const shift = await apiFetchServer<{ id: string }>("/shifts/", {
+    // Os checklists são gerados pelo backend a partir do plano de cuidado ativo
+    // do paciente — não são mais selecionados manualmente por turno.
+    const shift = await apiFetchServer<{ id: string; warnings?: string[] }>("/shifts/", {
       method: "POST",
       body: JSON.stringify(body),
     });
 
-    if (data.checklist_ids && data.checklist_ids.length > 0 && data.patient_id) {
-      for (const checklistId of data.checklist_ids) {
-        await apiFetchServer<unknown>("/checklist-executions/", {
-          method: "POST",
-          body: JSON.stringify({
-            checklist_id: checklistId,
-            shift_id: shift.id,
-            patient_id: data.patient_id,
-            caregiver_id: data.caregiver_id,
-          }),
-        });
-      }
-    }
-
     revalidatePath("/shifts");
-    return { success: true };
+    return { success: true, warnings: shift.warnings ?? [] };
   } catch (err) {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Erro ao criar turno",
+    };
+  }
+}
+
+export async function createRecurringShifts(data: {
+  caregiver_id: string;
+  patient_id: string;
+  start_date: string;
+  end_date: string;
+  weekdays: number[];
+  start_time: string;
+  end_time: string;
+  notes?: string;
+}): Promise<{
+  success: boolean;
+  error?: string;
+  created?: number;
+  skipped?: number;
+  skipped_details?: { date: string; reason: string }[];
+}> {
+  try {
+    await requireClinicAdmin();
+
+    if (
+      !data.caregiver_id ||
+      !data.patient_id ||
+      !data.start_date ||
+      !data.end_date ||
+      data.weekdays.length === 0 ||
+      !data.start_time ||
+      !data.end_time
+    ) {
+      return { success: false, error: "Preencha cuidador, paciente, período, dias e horário." };
+    }
+
+    const result = await apiFetchServer<{
+      created: number;
+      skipped: number;
+      skipped_details?: { date: string; reason: string }[];
+    }>("/shifts/recurring/", { method: "POST", body: JSON.stringify(data) });
+
+    revalidatePath("/shifts");
+    return {
+      success: true,
+      created: result.created,
+      skipped: result.skipped,
+      skipped_details: result.skipped_details ?? [],
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Erro ao criar turnos recorrentes",
     };
   }
 }
@@ -121,7 +160,7 @@ export async function createShiftTemplate(data: {
       return { success: false, error: "Campos obrigatórios não preenchidos" };
     }
 
-    await apiFetchServer<unknown>("/shift-templates/", {
+    await apiFetchServer<unknown>("/shifts/templates/", {
       method: "POST",
       body: JSON.stringify({
         clinic_id: user.clinic_id,
@@ -153,7 +192,7 @@ export async function updateShiftTemplate(data: {
   try {
     await requireClinicAdmin();
 
-    await apiFetchServer<unknown>(`/shift-templates/${data.id}/`, {
+    await apiFetchServer<unknown>(`/shifts/templates/${data.id}/`, {
       method: "PATCH",
       body: JSON.stringify({
         name: data.name.trim(),
@@ -179,7 +218,7 @@ export async function deleteShiftTemplate(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireClinicAdmin();
-    await apiFetchServer<unknown>(`/shift-templates/${id}/`, {
+    await apiFetchServer<unknown>(`/shifts/templates/${id}/`, {
       method: "DELETE",
     });
     revalidatePath("/shifts");

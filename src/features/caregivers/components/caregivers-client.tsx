@@ -1,11 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Mail, XCircle, Clock, Users, CheckCircle2, XOctagon, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Mail,
+  XCircle,
+  Clock,
+  Users,
+  CheckCircle2,
+  XOctagon,
+  Loader2,
+  RefreshCw,
+  Filter,
+} from "lucide-react";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { NurseInviteButton } from "@/features/care-plans/components/nurse-invite-button";
 import {
   Table,
   TableBody,
@@ -34,11 +49,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import {
   useCaregivers,
   useCaregiverInvites,
   useInviteCaregiver,
+  useNurses,
+  useResendInvite,
   useCancelCaregiverInvite,
   useGenerateLinkCode,
 } from "../hooks";
@@ -63,12 +82,25 @@ const STATUS_LABELS: Record<CaregiverInvite["status"], string> = {
   cancelled: "Cancelado",
 };
 
+const VERIFICATION_META: Record<
+  "pending" | "approved" | "rejected",
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
+  pending: { label: "Aguardando", variant: "outline" },
+  approved: { label: "Aprovado", variant: "secondary" },
+  rejected: { label: "Rejeitado", variant: "destructive" },
+};
+
 export function CaregiversClient() {
+  const router = useRouter();
   const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
 
   const [tab, setTab] = useState("caregivers");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [isActiveFilter, setIsActiveFilter] = useState("");
+  const [inviteStatusFilter, setInviteStatusFilter] = useState("");
+  const [inviteRoleFilter, setInviteRoleFilter] = useState<string | null>(null);
   const pageSize = 20;
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -85,35 +117,49 @@ export function CaregiversClient() {
   const { data: planLimits } = usePlanLimits();
   const caregiversUsage = planLimits?.usage?.caregivers ?? 0;
   const maxCaregivers = planLimits?.limits?.max_caregivers ?? 0;
+  const isCaregiverLimitReached = maxCaregivers !== -1 && caregiversUsage >= maxCaregivers;
 
   const { data: caregiversData, isLoading: loadingCaregivers } = useCaregivers({
     search: tab === "caregivers" ? search : "",
     page: tab === "caregivers" ? page : 1,
     pageSize,
+    isActive: tab === "caregivers" ? isActiveFilter : undefined,
+  });
+
+  const { data: nursesData, isLoading: loadingNurses } = useNurses({
+    search: tab === "nurses" ? search : "",
+    page: tab === "nurses" ? page : 1,
+    pageSize,
+    isActive: tab === "nurses" ? isActiveFilter : undefined,
   });
 
   const { data: invitesData, isLoading: loadingInvites } = useCaregiverInvites({
     search: tab === "invites" ? search : "",
     page: tab === "invites" ? page : 1,
     pageSize,
+    status: tab === "invites" ? inviteStatusFilter : undefined,
+    role: tab === "invites" ? inviteRoleFilter : undefined,
   });
 
   const inviteCaregiver = useInviteCaregiver();
   const cancelInvite = useCancelCaregiverInvite();
+  const resendInvite = useResendInvite();
 
   const caregivers = caregiversData?.caregivers ?? [];
   const caregiversTotal = caregiversData?.total ?? 0;
+  const nurses = nursesData?.caregivers ?? [];
+  const nursesTotal = nursesData?.total ?? 0;
   const invites = invitesData?.invites ?? [];
   const invitesTotal = invitesData?.total ?? 0;
-
-  const currentTotal = tab === "caregivers" ? caregiversTotal : invitesTotal;
-  const totalPages = Math.ceil(currentTotal / pageSize);
 
   function onTabChange(value: string | null) {
     if (!value) return;
     setTab(value);
     setSearch("");
     setPage(1);
+    setIsActiveFilter("");
+    setInviteStatusFilter("");
+    setInviteRoleFilter(null);
   }
 
   function handleInvite(e: React.FormEvent) {
@@ -147,8 +193,7 @@ export function CaregiversClient() {
       onSuccess: (data) => {
         setCodeResult({ code: data.code, email: data.email });
       },
-      onError: (err) =>
-        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
+      onError: (err) => setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
     });
   }
 
@@ -156,22 +201,48 @@ export function CaregiversClient() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            Cuidadores
-            <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            {tab === "caregivers" && "Cuidadores"}
+            {tab === "nurses" && "Enfermeiros"}
+            {tab === "invites" && "Convites"}
+            {tab === "caregivers" && (
+              <PlanUsageBadge used={caregiversUsage} total={maxCaregivers} label="cuidadores" />
+            )}
           </h1>
-          <p className="mt-1 text-muted-foreground">Gerencie cuidadores e convites da clínica.</p>
+          <p className="mt-1 text-muted-foreground">
+            {tab === "caregivers" && "Gerencie cuidadores e convites da clínica."}
+            {tab === "nurses" && "Gerencie os enfermeiros da clínica."}
+            {tab === "invites" && "Acompanhe os convites enviados pela clínica."}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); }}>
+          <Button
+            variant="outline"
+            disabled={isCaregiverLimitReached}
+            onClick={() => {
+              setCodeOpen(true);
+              setCodeResult(null);
+              setCodeError(null);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Gerar Código
           </Button>
-          <Button onClick={() => setInviteOpen(true)}>
+          <Button disabled={isCaregiverLimitReached} onClick={() => setInviteOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Convidar Cuidador
           </Button>
+          <NurseInviteButton disabled={isCaregiverLimitReached} />
         </div>
+        {isCaregiverLimitReached && (
+          <p className="flex items-center gap-1 text-xs text-destructive">
+            Limite de cuidadores atingido.{" "}
+            <Link href="/plan" className="underline hover:text-destructive/80">
+              Faça um upgrade do plano
+            </Link>{" "}
+            para convidar mais.
+          </p>
+        )}
       </div>
 
       <Tabs value={tab} onValueChange={onTabChange}>
@@ -179,6 +250,10 @@ export function CaregiversClient() {
           <TabsTrigger value="caregivers">
             <Users className="mr-2 h-4 w-4" />
             Cuidadores
+          </TabsTrigger>
+          <TabsTrigger value="nurses">
+            <Users className="mr-2 h-4 w-4" />
+            Enfermeiros
           </TabsTrigger>
           <TabsTrigger value="invites">
             <Mail className="mr-2 h-4 w-4" />
@@ -188,15 +263,38 @@ export function CaregiversClient() {
 
         {/* ── Cuidadores ── */}
         <TabsContent value="caregivers" className="mt-4 space-y-4">
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-xs"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={isActiveFilter}
+              onValueChange={(v) => {
+                setIsActiveFilter(v ?? "");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <Filter className="mr-1 h-3 w-3" />
+                {isActiveFilter === "true"
+                  ? "Ativo"
+                  : isActiveFilter === "false"
+                    ? "Inativo"
+                    : "Status"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Card>
             <CardContent className="p-0">
@@ -207,6 +305,7 @@ export function CaregiversClient() {
                     <TableHead>Email</TableHead>
                     <TableHead>Pacientes</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Verificação</TableHead>
                     <TableHead>Criado em</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -227,13 +326,16 @@ export function CaregiversClient() {
                           <Skeleton className="h-5 w-16 rounded-full" />
                         </TableCell>
                         <TableCell>
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                        </TableCell>
+                        <TableCell>
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
                       </TableRow>
                     ))
                   ) : caregivers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center">
+                      <TableCell colSpan={6} className="h-32 text-center">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <Users className="h-8 w-8" />
                           <p>Nenhum cuidador encontrado</p>
@@ -242,7 +344,11 @@ export function CaregiversClient() {
                     </TableRow>
                   ) : (
                     caregivers.map((cg) => (
-                      <TableRow key={cg.id}>
+                      <TableRow
+                        key={cg.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/users/${cg.id}`)}
+                      >
                         <TableCell className="font-medium">{cg.name}</TableCell>
                         <TableCell className="text-muted-foreground">{cg.email}</TableCell>
                         <TableCell>
@@ -265,6 +371,12 @@ export function CaregiversClient() {
                             </Badge>
                           )}
                         </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const v = VERIFICATION_META[cg.verification_status ?? "pending"];
+                            return <Badge variant={v.variant}>{v.label}</Badge>;
+                          })()}
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(cg.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
@@ -276,45 +388,201 @@ export function CaregiversClient() {
             </CardContent>
           </Card>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, caregiversTotal)}{" "}
-                de {caregiversTotal} cuidadores
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={caregiversTotal}
+            onPageChange={setPage}
+            label="cuidadores"
+          />
+        </TabsContent>
+
+        {/* ── Enfermeiros ── */}
+        <TabsContent value="nurses" className="mt-4 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={isActiveFilter}
+              onValueChange={(v) => {
+                setIsActiveFilter(v ?? "");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <Filter className="mr-1 h-3 w-3" />
+                {isActiveFilter === "true"
+                  ? "Ativo"
+                  : isActiveFilter === "false"
+                    ? "Inativo"
+                    : "Status"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Registro</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Criado em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingNurses ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton className="h-4 w-36" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-48" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : nurses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <Users className="h-8 w-8" />
+                          <p>Nenhum enfermeiro encontrado</p>
+                          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+                            Convidar primeiro enfermeiro
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    nurses.map((nurse) => (
+                      <TableRow
+                        key={nurse.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/users/${nurse.id}/nurse`)}
+                      >
+                        <TableCell className="font-medium">{nurse.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{nurse.email}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {nurse.professional_register ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          {nurse.is_active ? (
+                            <Badge variant="secondary" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Ativo
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1">
+                              <XOctagon className="h-3 w-3" />
+                              Inativo
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(nurse.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={nursesTotal}
+            onPageChange={setPage}
+            label="enfermeiros"
+          />
         </TabsContent>
 
         {/* ── Convites ── */}
         <TabsContent value="invites" className="mt-4 space-y-4">
-          <Input
-            placeholder="Buscar por email..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-xs"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar por email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+            />
+            <Select
+              value={inviteRoleFilter ?? ""}
+              onValueChange={(v) => {
+                setInviteRoleFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[160px]">
+                <Filter className="mr-1 h-3 w-3" />
+                {inviteRoleFilter === "caregiver"
+                  ? "Cuidador"
+                  : inviteRoleFilter === "clinic_nurse"
+                    ? "Enfermeiro(a)"
+                    : "Tipo"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="caregiver">Cuidador</SelectItem>
+                <SelectItem value="clinic_nurse">Enfermeiro(a)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={inviteStatusFilter}
+              onValueChange={(v) => {
+                setInviteStatusFilter(v ?? "");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[160px]">
+                <Filter className="mr-1 h-3 w-3" />
+                {inviteStatusFilter === "pending"
+                  ? "Pendente"
+                  : inviteStatusFilter === "accepted"
+                    ? "Aceito"
+                    : inviteStatusFilter === "expired"
+                      ? "Expirado"
+                      : inviteStatusFilter === "cancelled"
+                        ? "Cancelado"
+                        : "Status"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="accepted">Aceito</SelectItem>
+                <SelectItem value="expired">Expirado</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Card>
             <CardContent className="p-0">
@@ -381,16 +649,36 @@ export function CaregiversClient() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {invite.status === "pending" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => setCancelId(invite.id)}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {invite.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground"
+                                  onClick={() => {
+                                    resendInvite.mutate(invite.id, {
+                                      onSuccess: () => toast.success("Convite reenviado"),
+                                      onError: (err) =>
+                                        toast.error(
+                                          err instanceof Error ? err.message : "Erro ao reenviar"
+                                        ),
+                                    });
+                                  }}
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => setCancelId(invite.id)}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -400,32 +688,13 @@ export function CaregiversClient() {
             </CardContent>
           </Card>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, invitesTotal)} de{" "}
-                {invitesTotal} convites
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={invitesTotal}
+            onPageChange={setPage}
+            label="convites"
+          />
         </TabsContent>
       </Tabs>
 
@@ -475,31 +744,48 @@ export function CaregiversClient() {
       </Dialog>
 
       {/* Dialog gerar código */}
-      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
+      <Dialog
+        open={codeOpen}
+        onOpenChange={(v) => {
+          setCodeOpen(v);
+          if (!v) {
+            setCodeResult(null);
+            setCodeError(null);
+            setCodeEmail("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Gerar Código de Vínculo</DialogTitle>
             <DialogDescription>
-              Gere um código para um cuidador que já possui conta no Zelo. Um email com o código será enviado automaticamente.
+              Gere um código para um cuidador que já possui conta no Zelo. Um email com o código
+              será enviado automaticamente.
             </DialogDescription>
           </DialogHeader>
 
           {codeResult ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
-                <p className="font-medium mb-4">{codeResult.email}</p>
+                <p className="mb-2 text-sm text-muted-foreground">Código gerado para</p>
+                <p className="mb-4 font-medium">{codeResult.email}</p>
                 <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
-                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
+                  <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">
                     {codeResult.code}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="mt-4 text-xs text-muted-foreground">
                   Um email com este código foi enviado para o cuidador.
                 </p>
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
+                <Button
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeEmail("");
+                  }}
+                >
                   Fechar
                 </Button>
               </div>
@@ -523,7 +809,12 @@ export function CaregiversClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeResult(null);
+                    setCodeError(null);
+                    setCodeEmail("");
+                  }}
                 >
                   Cancelar
                 </Button>

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   const role = data.user.profile?.role;
-  if (role !== "clinic_admin") {
+  if (role !== "clinic_admin" && role !== "clinic_nurse") {
     return NextResponse.json({ error: "Acesso não permitido para este perfil." }, { status: 403 });
   }
 
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       name: data.user.profile?.name ?? "",
       role: data.user.profile?.role ?? "",
       clinic_id: data.user.profile?.clinic_id ?? null,
+      avatar_url: data.user.profile?.avatar_url ?? null,
     },
   });
 

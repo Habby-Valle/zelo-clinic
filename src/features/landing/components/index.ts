@@ -1,0 +1,9 @@
+export { LandingPage } from "./landing-page";
+export { LandingHeader } from "./landing-header";
+export { LandingHero } from "./landing-hero";
+export { LandingFeatures } from "./landing-features";
+export { LandingPricing } from "./landing-pricing";
+export { LandingContact } from "./landing-contact";
+export { LandingFaq } from "./landing-faq";
+export { LandingFooter } from "./landing-footer";
+export { LeadForm } from "./lead-form";

@@ -58,6 +58,13 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
   select: "Seleção",
 };
 
+const FREQUENCY_LABELS: Record<string, string> = {
+  as_needed: "Se necessário",
+  per_shift: "Por turno",
+  daily: "Diário",
+  fixed_times: "Horários fixos",
+};
+
 interface Props {
   id: string;
 }
@@ -180,6 +187,15 @@ export function ChecklistDetailClient({ id }: Props) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Versão</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{checklist.version}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Criado em</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -214,6 +230,10 @@ export function ChecklistDetailClient({ id }: Props) {
                     <TableHead>#</TableHead>
                     <TableHead>Item</TableHead>
                     <TableHead>Tipo</TableHead>
+                    <TableHead>Faixa</TableHead>
+                    <TableHead>Criticalidade</TableHead>
+                    <TableHead>Foto</TableHead>
+                    <TableHead>Frequência</TableHead>
                     <TableHead>Obrigatório</TableHead>
                     <TableHead>Observação</TableHead>
                     <TableHead>Opções</TableHead>
@@ -230,6 +250,39 @@ export function ChecklistDetailClient({ id }: Props) {
                           <Badge variant="outline">
                             {ITEM_TYPE_LABELS[item.type] ?? item.type}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {item.type === "number" &&
+                          (item.expected_min != null || item.expected_max != null) ? (
+                            <span>
+                              {item.expected_min ?? "—"} {item.unit} — {item.expected_max ?? "—"}{" "}
+                              {item.unit}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {item.criticality === "high" ? (
+                            <Badge variant="destructive">Alta</Badge>
+                          ) : item.criticality === "medium" ? (
+                            <Badge variant="default">Média</Badge>
+                          ) : (
+                            <Badge variant="secondary">Baixa</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {item.requires_photo ? (
+                            <Badge variant="default">Sim</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Não</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {FREQUENCY_LABELS[item.frequency] ?? item.frequency}
+                          {item.frequency === "fixed_times" && item.scheduled_times?.length > 0 && (
+                            <span className="block text-xs">{item.scheduled_times.join(", ")}</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {item.required ? (

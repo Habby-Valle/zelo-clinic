@@ -18,6 +18,9 @@ export async function fetchShiftsApi(
   const qs = new URLSearchParams();
   if (params.search) qs.set("search", params.search);
   if (params.status) qs.set("status", params.status);
+  if (params.patient_id) qs.set("patient_id", params.patient_id);
+  if (params.date_from) qs.set("date_from", params.date_from);
+  if (params.date_to) qs.set("date_to", params.date_to);
   qs.set("page", String(params.page ?? 1));
   qs.set("page_size", String(params.page_size ?? 20));
   const data = await apiFetchClient<ListResult<ShiftItem>>(`/shifts/?${qs}`);
@@ -30,7 +33,7 @@ export async function fetchShiftApi(id: string): Promise<ShiftItem> {
 
 export async function fetchShiftTemplatesApi(): Promise<ShiftTemplateItem[]> {
   const data = await apiFetchClient<ListResult<ShiftTemplateItem>>(
-    "/shift-templates/?page_size=100"
+    "/shifts/templates/?page_size=100"
   );
   return data.results;
 }
@@ -46,6 +49,16 @@ export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
       (p.caregiver_assignments as Array<Record<string, unknown>>)?.map(
         (a) => a.caregiver_id as string
       ) ?? [],
+    has_active_contract: Boolean(p.has_active_contract),
+    contract_start_date: (p.contract_start_date as string | null) ?? null,
+    active_contract_weekly_hours:
+      p.active_contract_weekly_hours != null ? Number(p.active_contract_weekly_hours) : null,
+    contract_preferred_weekdays:
+      (p.contract_preferred_weekdays as number[] | null) ?? null,
+    contract_preferred_start_time:
+      (p.contract_preferred_start_time as string | null) ?? null,
+    contract_preferred_end_time:
+      (p.contract_preferred_end_time as string | null) ?? null,
   }));
 }
 
@@ -53,7 +66,8 @@ export async function fetchClinicCaregiversApi(): Promise<CaregiverOption[]> {
   const data = await apiFetchClient<ListResult<CaregiverOption>>(
     "/users/?role=caregiver&page_size=100"
   );
-  return data.results;
+  // Só cuidadores aprovados podem ser escalados em turnos (gate de segurança).
+  return data.results.filter((c) => c.verification_status === "approved");
 }
 
 export async function fetchChecklistOptionsApi(): Promise<{ id: string; name: string }[]> {

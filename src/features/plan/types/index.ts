@@ -1,4 +1,4 @@
-export type PlanStatus = "trial" | "active" | "free" | "expired" | "cancelled";
+export type PlanStatus = "trial" | "active" | "free" | "expired" | "cancelled" | "pending";
 
 export type ReportsLevel = "none" | "basic" | "advanced";
 
@@ -38,6 +38,14 @@ export interface PlanLimits {
   audit_log_days: number;
   has_custom_branding: boolean;
   has_data_export: boolean;
+  has_family_chat_bot?: boolean;
+  has_caregiver_chat_bot?: boolean;
+  has_quality_monitoring?: boolean;
+  has_caregiver_matching?: boolean;
+  has_health_alerts?: boolean;
+  has_protocol_compliance?: boolean;
+  has_pricing_suggestions?: boolean;
+  has_daily_report?: boolean;
 }
 
 export interface PlanLimitsInfo {

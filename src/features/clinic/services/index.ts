@@ -10,6 +10,19 @@ export interface UpdateClinicData {
   document?: string;
   media_id?: string | null;
   theme_color?: string | null;
+  email?: string;
+  website?: string;
+  description?: string;
+  responsible_name?: string;
+  whatsapp?: string;
+  business_hours?: Record<string, unknown>;
+  social_media?: Record<string, unknown>;
+  cnes?: string;
+  specialty?: string;
+  onboarding_completed?: boolean;
+  daily_report_enabled?: boolean;
+  visit_notification_enabled?: boolean;
+  satisfaction_survey_enabled?: boolean;
   address?: {
     zip_code?: string;
     street?: string;

@@ -12,5 +12,5 @@ export interface SystemConfigPublic {
 }
 
 export async function fetchSystemConfigPublic(): Promise<SystemConfigPublic> {
-  return apiFetchClient<SystemConfigPublic>("/system-config/public/");
+  return apiFetchClient<SystemConfigPublic>("/public/system/");
 }

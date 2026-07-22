@@ -34,12 +34,14 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     siteName: "Zelo Clinic",
     title: "Zelo Clinic",
-    description: "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
+    description:
+      "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
   },
   twitter: {
     card: "summary",
     title: "Zelo Clinic",
-    description: "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
+    description:
+      "Painel de Gestão da Clínica — Gerencie pacientes, cuidadores, turnos e checklists.",
   },
   icons: {
     icon: "/logo.ico",

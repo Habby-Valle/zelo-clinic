@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import {
   Plus,
   Clock,
@@ -13,6 +14,8 @@ import {
   FileText,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/authStore";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -54,15 +57,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useShifts,
-  useShiftTemplates,
-  useClinicPatients,
-  useClinicCaregivers,
-  useChecklistOptions,
-} from "../hooks";
+import { useShifts, useShiftTemplates, useClinicPatients, useClinicCaregivers } from "../hooks";
 import {
   createShift,
+  createRecurringShifts,
   finishShift,
   cancelShift,
   deleteShift,
@@ -71,19 +69,25 @@ import {
   deleteShiftTemplate,
 } from "@/app/(main)/shifts/actions";
 import type { ShiftTemplateItem, ShiftFilters } from "../types";
+import {
+  todayISO,
+  shiftDateTimes,
+  shiftStartFromContract,
+  WEEKDAY_LABELS,
+  addHoursToTime,
+  formatDurationLabel,
+  endOfMonthISO,
+} from "../lib/shift-time";
+import { shiftBadgeKey, SHIFT_BADGE_LABELS } from "../lib/shift-status";
+import { SkippedShiftsDialog, type SkippedShiftInfo } from "./skipped-shifts-dialog";
+import { ShiftCalendar } from "./shift-calendar";
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
   cancelled: "destructive",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: "Agendado",
-  in_progress: "Em andamento",
-  completed: "Concluído",
-  cancelled: "Cancelado",
+  not_performed: "destructive",
 };
 
 function formatDateTime(dateStr: string): string {
@@ -108,7 +112,10 @@ function formatDuration(start: string, end: string): string {
 
 export function ShiftsClient() {
   const queryClient = useQueryClient();
+  // Enfermeiro tem acesso somente leitura aos turnos.
+  const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
   const [tab, setTab] = useState("shifts");
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -119,29 +126,52 @@ export function ShiftsClient() {
   const templatesQuery = useShiftTemplates();
   const patientsQuery = useClinicPatients();
   const caregiversQuery = useClinicCaregivers();
-  const checklistsQuery = useChecklistOptions();
 
   const shifts = shiftsQuery.data?.shifts ?? [];
   const shiftsTotal = shiftsQuery.data?.total ?? 0;
   const templates = templatesQuery.data ?? [];
   const patients = patientsQuery.data ?? [];
   const caregivers = caregiversQuery.data ?? [];
-  const checklistOptions = checklistsQuery.data ?? [];
 
   // Create shift dialog
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [selectedChecklists, setSelectedChecklists] = useState<string[]>([]);
   const [formPatient, setFormPatient] = useState("");
   const [formCaregiver, setFormCaregiver] = useState("");
-  const [formTemplate, setFormTemplate] = useState("");
-  const [formStart, setFormStart] = useState("");
-  const [formEnd, setFormEnd] = useState("");
+  const [formDate, setFormDate] = useState(""); // YYYY-MM-DD — início (do contrato)
+  const [formStartTime, setFormStartTime] = useState("08:00");
+  const [formEndTime, setFormEndTime] = useState("20:00");
   const [formNotes, setFormNotes] = useState("");
+  // Recorrência: repete o turno nos dias da semana marcados até a data final.
+  const [formRepeat, setFormRepeat] = useState(false);
+  const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
+  const [formRecurEnd, setFormRecurEnd] = useState("");
+  const [skippedInfo, setSkippedInfo] = useState<SkippedShiftInfo | null>(null);
 
-  const filteredPatients = formCaregiver
+  const caregiverPatients = formCaregiver
     ? patients.filter((p) => p.caregiver_ids.includes(formCaregiver))
     : [];
+  // Só é possível agendar turnos para pacientes com contrato ativo.
+  const filteredPatients = caregiverPatients.filter((p) => p.has_active_contract);
+
+  // Duração do turno = horas semanais do contrato do paciente ÷ nº de dias
+  // marcados. Só no modo recorrente com dias selecionados; avulso fica manual.
+  const selectedWeeklyHours =
+    patients.find((p) => p.id === formPatient)?.active_contract_weekly_hours ?? null;
+  function autoEndTime(
+    patientId: string,
+    start: string,
+    weekdays: number[],
+    repeat: boolean
+  ): string | null {
+    const weekly = patients.find((p) => p.id === patientId)?.active_contract_weekly_hours ?? null;
+    if (!repeat || weekdays.length === 0 || !weekly || weekly <= 0) return null;
+    return addHoursToTime(start, weekly / weekdays.length);
+  }
+  const autoDurationHours =
+    formRepeat && formWeekdays.length > 0 && selectedWeeklyHours && selectedWeeklyHours > 0
+      ? selectedWeeklyHours / formWeekdays.length
+      : null;
 
   // Template CRUD dialog
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -176,54 +206,72 @@ export function ShiftsClient() {
     setCreateOpen(true);
     setFormPatient("");
     setFormCaregiver("");
-    setFormTemplate("");
     setFormNotes("");
-    setSelectedChecklists([]);
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const later = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    setFormStart(now.toISOString().slice(0, 16));
-    setFormEnd(later.toISOString().slice(0, 16));
-  }
-
-  function handleTemplateSelect(value: string | null) {
-    const v = value ?? "";
-    setFormTemplate(v);
-    const tpl = templates.find((t) => String(t.id) === v);
-    if (tpl) {
-      setFormNotes(tpl.instructions ?? "");
-      const now = new Date();
-      const [sh, sm] = tpl.start_time.split(":");
-      const [eh, em] = tpl.end_time.split(":");
-      now.setHours(parseInt(sh), parseInt(sm), 0, 0);
-      const startStr = now.toISOString().slice(0, 16);
-      now.setHours(parseInt(eh), parseInt(em), 0, 0);
-      const endStr = now.toISOString().slice(0, 16);
-      if (
-        parseInt(eh) > parseInt(sh) ||
-        (parseInt(eh) === parseInt(sh) && parseInt(em) > parseInt(sm))
-      ) {
-        setFormStart(startStr);
-        setFormEnd(endStr);
-      }
-    }
+    setFormRepeat(false);
+    setFormWeekdays([]);
+    setFormRecurEnd("");
+    setFormDate(todayISO());
+    setFormStartTime("08:00");
+    setFormEndTime("20:00");
   }
 
   async function handleCreateShift(e: React.FormEvent) {
     e.preventDefault();
-    if (!formCaregiver || !formStart || !formEnd) return;
+    if (!formCaregiver || !formDate || !formStartTime || !formEndTime) return;
+
+    if (formRepeat) {
+      if (!formPatient) {
+        toast.error("Selecione o paciente para o turno recorrente.");
+        return;
+      }
+      if (formWeekdays.length === 0 || !formRecurEnd) {
+        toast.error("Marque os dias da semana e a data final da recorrência.");
+        return;
+      }
+      setCreateLoading(true);
+      const result = await createRecurringShifts({
+        caregiver_id: formCaregiver,
+        patient_id: formPatient,
+        start_date: formDate,
+        end_date: formRecurEnd,
+        weekdays: formWeekdays,
+        start_time: formStartTime,
+        end_time: formEndTime,
+        notes: formNotes || undefined,
+      });
+      if (result.success) {
+        setCreateOpen(false);
+        invalidateShifts();
+        if (result.skipped && result.skipped > 0) {
+          setSkippedInfo({
+            created: result.created ?? 0,
+            skipped: result.skipped_details ?? [],
+          });
+        } else {
+          toast.success(`${result.created} turno(s) criado(s).`);
+        }
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+      setCreateLoading(false);
+      return;
+    }
+
     setCreateLoading(true);
+    const { start, end } = shiftDateTimes(formDate, formStartTime, formEndTime);
     const result = await createShift({
       caregiver_id: formCaregiver,
-      start: new Date(formStart).toISOString(),
-      end: new Date(formEnd).toISOString(),
+      start,
+      end,
       notes: formNotes || undefined,
       patient_id: formPatient || undefined,
-      checklist_ids: selectedChecklists.length > 0 ? selectedChecklists : undefined,
     });
     if (result.success) {
       setCreateOpen(false);
       invalidateShifts();
+      result.warnings?.forEach((w) => toast.warning(w));
+    } else if (result.error) {
+      toast.error(result.error);
     }
     setCreateLoading(false);
   }
@@ -311,8 +359,6 @@ export function ShiftsClient() {
     invalidateTemplates();
   }
 
-  const shiftsTotalPages = Math.ceil(shiftsTotal / pageSize);
-
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -320,13 +366,13 @@ export function ShiftsClient() {
           <h1 className="text-2xl font-bold tracking-tight">Turnos</h1>
           <p className="mt-1 text-muted-foreground">Gestão de turnos de cuidado da clínica.</p>
         </div>
-        {tab === "shifts" && (
+        {tab === "shifts" && !isNurse && (
           <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Turno
           </Button>
         )}
-        {tab === "templates" && (
+        {tab === "templates" && !isNurse && (
           <Button onClick={openTemplateCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Template
@@ -348,16 +394,38 @@ export function ShiftsClient() {
 
         {/* Turnos tab */}
         <TabsContent value="shifts" className="mt-4 space-y-4">
-          <div className="flex flex-wrap gap-3">
-            <Input
-              placeholder="Buscar cuidador..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="max-w-xs"
-            />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-md border p-0.5">
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                className="h-7"
+                onClick={() => setViewMode("calendar")}
+              >
+                Calendário
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "list" ? "default" : "ghost"}
+                className="h-7"
+                onClick={() => setViewMode("list")}
+              >
+                Lista
+              </Button>
+            </div>
+            {viewMode === "list" && (
+              <Input
+                placeholder="Buscar cuidador..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="max-w-xs"
+              />
+            )}
             <Select
               value={statusFilter || "all"}
               onValueChange={(v) => {
@@ -389,155 +457,155 @@ export function ShiftsClient() {
             </Select>
           </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Cuidador</TableHead>
-                    <TableHead>Início</TableHead>
-                    <TableHead>Fim</TableHead>
-                    <TableHead>Duração</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shiftsQuery.isLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-36" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-16" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-5 w-24 rounded-full" />
-                        </TableCell>
-                        <TableCell />
+          {viewMode === "calendar" ? (
+            <Card>
+              <CardContent className="pt-6">
+                <ShiftCalendar status={statusFilter} showPatient />
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Paciente</TableHead>
+                        <TableHead>Cuidador</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Fim</TableHead>
+                        <TableHead>Duração</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[100px]" />
                       </TableRow>
-                    ))
-                  ) : shifts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-8 w-8" />
-                          <p>Nenhum turno encontrado</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    shifts.map((shift) => (
-                      <TableRow key={shift.id}>
-                        <TableCell className="font-medium">
-                          {shift.shift_patients[0]?.patient_name ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {shift.caregiver_name}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTime(shift.start)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTime(shift.end)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDuration(shift.start, shift.end)}
-                        </TableCell>
-                        <TableCell>
-                          {shift.status === "scheduled" && new Date(shift.start) > new Date() ? (
-                            <Badge variant="outline">Aguardando início</Badge>
-                          ) : (
-                            <Badge variant={STATUS_VARIANTS[shift.status] ?? "outline"}>
-                              {STATUS_LABELS[shift.status] ?? shift.status}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {shift.status === "in_progress" && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-green-600"
-                                onClick={() =>
-                                  setConfirmAction({ type: "finish", shiftId: shift.id })
-                                }
-                                title="Finalizar"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-                                onClick={() =>
-                                  setConfirmAction({ type: "cancel", shiftId: shift.id })
-                                }
-                                title="Cancelar"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
+                    </TableHeader>
+                    <TableBody>
+                      {shiftsQuery.isLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <Skeleton className="h-4 w-36" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-5 w-24 rounded-full" />
+                            </TableCell>
+                            <TableCell />
+                          </TableRow>
+                        ))
+                      ) : shifts.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-32 text-center">
+                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-8 w-8" />
+                              <p>Nenhum turno encontrado</p>
                             </div>
-                          )}
-                          {shift.status === "scheduled" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() =>
-                                setConfirmAction({ type: "delete", shiftId: shift.id })
-                              }
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        shifts.map((shift) => (
+                          <TableRow key={shift.id}>
+                            <TableCell className="font-medium">
+                              {shift.shift_patients[0]?.patient_name ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {shift.caregiver_name}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDateTime(shift.start)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDateTime(shift.end)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDuration(shift.start, shift.end)}
+                            </TableCell>
+                            <TableCell>
+                              {shift.status === "scheduled" &&
+                              new Date(shift.start) > new Date() ? (
+                                <Badge variant="outline">Aguardando início</Badge>
+                              ) : (
+                                <Badge
+                                  variant={
+                                    STATUS_VARIANTS[
+                                      shiftBadgeKey(shift.status, shift.auto_cancelled)
+                                    ] ?? "outline"
+                                  }
+                                >
+                                  {SHIFT_BADGE_LABELS[
+                                    shiftBadgeKey(shift.status, shift.auto_cancelled)
+                                  ] ?? shift.status}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {!isNurse && shift.status === "in_progress" && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-green-600"
+                                    onClick={() =>
+                                      setConfirmAction({ type: "finish", shiftId: shift.id })
+                                    }
+                                    title="Finalizar"
+                                  >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive"
+                                    onClick={() =>
+                                      setConfirmAction({ type: "cancel", shiftId: shift.id })
+                                    }
+                                    title="Cancelar"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                              {!isNurse && shift.status === "scheduled" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() =>
+                                    setConfirmAction({ type: "delete", shiftId: shift.id })
+                                  }
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
 
-          {shiftsTotalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, shiftsTotal)} de{" "}
-                {shiftsTotal} turnos
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= shiftsTotalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
+              <DataTablePagination
+                page={page}
+                pageSize={pageSize}
+                total={shiftsTotal}
+                onPageChange={setPage}
+                label="turnos"
+              />
+            </>
           )}
         </TabsContent>
 
@@ -644,39 +712,6 @@ export function ShiftsClient() {
           </DialogHeader>
           <form onSubmit={handleCreateShift} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Template (opcional)</Label>
-              <Select value={formTemplate} onValueChange={handleTemplateSelect}>
-                <SelectTrigger>
-                  <SelectValue>
-                    {(v: string | null) => {
-                      if (!v || v === "_empty") return "Selecione um template";
-                      const t = templates.find((t) => String(t.id) === v);
-                      return t?.name ?? v;
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.filter((t) => t.is_active).length === 0 ? (
-                    <SelectItem value="_empty" disabled>
-                      Nenhum template disponível
-                    </SelectItem>
-                  ) : (
-                    templates
-                      .filter((t) => t.is_active)
-                      .map((t) => (
-                        <SelectItem key={t.id} value={String(t.id)}>
-                          {t.name}
-                        </SelectItem>
-                      ))
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Preenche horário e observações automaticamente
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
               <Label>Cuidador *</Label>
               <Select
                 value={formCaregiver}
@@ -685,9 +720,7 @@ export function ShiftsClient() {
                   setFormCaregiver(val);
                   if (
                     formPatient &&
-                    !patients
-                      .find((p) => p.id === formPatient)
-                      ?.caregiver_ids.includes(val)
+                    !patients.find((p) => p.id === formPatient)?.caregiver_ids.includes(val)
                   ) {
                     setFormPatient("");
                   }
@@ -720,12 +753,41 @@ export function ShiftsClient() {
 
             <div className="space-y-1.5">
               <Label>Paciente</Label>
-              <Select value={formPatient} onValueChange={(v) => setFormPatient(v ?? "")}>
+              <Select
+                value={formPatient}
+                onValueChange={(v) => {
+                  const val = v ?? "";
+                  setFormPatient(val);
+                  const p = patients.find((p) => p.id === val);
+                  // Início do cuidado vem do contrato (o que a família pediu);
+                  // se já passou, usa hoje — não agenda no passado.
+                  const startDate = shiftStartFromContract(p?.contract_start_date ?? null);
+                  setFormDate(startDate);
+                  // Pré-preenche com o que a família declarou. Com dias declarados,
+                  // abre recorrente com "Repetir até" = fim do mês (editável).
+                  const days = p?.contract_preferred_weekdays ?? [];
+                  const repeat = days.length > 0;
+                  const start = p?.contract_preferred_start_time || "08:00";
+                  const weekly = p?.active_contract_weekly_hours ?? null;
+                  // Fim: horário declarado tem prioridade; senão, weekly_hours ÷ dias.
+                  const computedEnd =
+                    repeat && weekly && weekly > 0
+                      ? addHoursToTime(start, weekly / days.length)
+                      : null;
+                  setFormRepeat(repeat);
+                  setFormWeekdays(days);
+                  setFormStartTime(start);
+                  setFormEndTime(p?.contract_preferred_end_time || computedEnd || "20:00");
+                  setFormRecurEnd(repeat ? endOfMonthISO(startDate) : "");
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue>
                     {(v: string | null) => {
                       if (!v || v === "_empty") {
-                        return formCaregiver ? "Selecione o paciente" : "Selecione um cuidador primeiro";
+                        return formCaregiver
+                          ? "Selecione o paciente"
+                          : "Selecione um cuidador primeiro";
                       }
                       const p = patients.find((p) => String(p.id) === v);
                       return p?.name ?? v;
@@ -739,7 +801,9 @@ export function ShiftsClient() {
                     </SelectItem>
                   ) : filteredPatients.length === 0 ? (
                     <SelectItem value="_empty" disabled>
-                      Nenhum paciente vinculado a este cuidador
+                      {caregiverPatients.length === 0
+                        ? "Nenhum paciente vinculado a este cuidador"
+                        : "Nenhum paciente com contrato ativo"}
                     </SelectItem>
                   ) : (
                     filteredPatients.map((p) => (
@@ -752,30 +816,123 @@ export function ShiftsClient() {
               </Select>
               {formCaregiver && filteredPatients.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Vincule pacientes a este cuidador na tela do paciente.
+                  {caregiverPatients.length === 0
+                    ? "Vincule pacientes a este cuidador na tela do paciente."
+                    : "Só é possível agendar turnos para pacientes com contrato ativo."}
                 </p>
               )}
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="shift-date">{formRepeat ? "Data de início" : "Data"} *</Label>
+              <Input
+                id="shift-date"
+                type="date"
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Preenchida com o início do cuidado do contrato; ajuste se necessário.
+              </p>
+            </div>
+            {selectedWeeklyHours != null && selectedWeeklyHours > 0 && (
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Horas semanais solicitadas pela família:{" "}
+                <span className="font-medium text-foreground">{selectedWeeklyHours}h/semana</span>.
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="shift-start">Início *</Label>
+                <Label htmlFor="shift-start">Horário início *</Label>
                 <Input
                   id="shift-start"
-                  type="datetime-local"
-                  value={formStart}
-                  onChange={(e) => setFormStart(e.target.value)}
+                  type="time"
+                  value={formStartTime}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormStartTime(v);
+                    const end = autoEndTime(formPatient, v, formWeekdays, formRepeat);
+                    if (end) setFormEndTime(end);
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="shift-end">Fim *</Label>
+                <Label htmlFor="shift-end">Horário fim *</Label>
                 <Input
                   id="shift-end"
-                  type="datetime-local"
-                  value={formEnd}
-                  onChange={(e) => setFormEnd(e.target.value)}
+                  type="time"
+                  value={formEndTime}
+                  onChange={(e) => setFormEndTime(e.target.value)}
                 />
               </div>
+            </div>
+
+            {autoDurationHours != null && (
+              <p className="text-xs text-muted-foreground">
+                Fim calculado: {selectedWeeklyHours}h ÷ {formWeekdays.length} dia(s) ={" "}
+                {formatDurationLabel(autoDurationHours)}/turno. Ajuste se necessário.
+              </p>
+            )}
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => {
+                    const on = v === true;
+                    setFormRepeat(on);
+                    const end = autoEndTime(formPatient, formStartTime, formWeekdays, on);
+                    if (end) setFormEndTime(end);
+                  }}
+                />
+                Repetir (turno recorrente)
+              </label>
+              {formRepeat && (
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Usa o <strong>horário</strong> acima e a <strong>data de início</strong> como
+                    primeiro dia; repete nos dias marcados até a data final.
+                  </p>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Dias da semana</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {WEEKDAY_LABELS.map((d, i) => {
+                        const on = formWeekdays.includes(i);
+                        return (
+                          <Button
+                            key={i}
+                            type="button"
+                            size="sm"
+                            variant={on ? "default" : "outline"}
+                            className="h-8 w-11 px-0 text-xs"
+                            onClick={() => {
+                              const next = on
+                                ? formWeekdays.filter((w) => w !== i)
+                                : [...formWeekdays, i];
+                              setFormWeekdays(next);
+                              const end = autoEndTime(formPatient, formStartTime, next, formRepeat);
+                              if (end) setFormEndTime(end);
+                            }}
+                          >
+                            {d}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="shift-recur-end" className="text-xs">
+                      Repetir até
+                    </Label>
+                    <Input
+                      id="shift-recur-end"
+                      type="date"
+                      value={formRecurEnd}
+                      onChange={(e) => setFormRecurEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -789,50 +946,50 @@ export function ShiftsClient() {
               />
             </div>
 
-            {checklistOptions.length > 0 && (
-              <div className="space-y-2 rounded-lg border p-3">
-                <Label>Checklists para o cuidador</Label>
-                <p className="text-xs text-muted-foreground">
-                  Selecione os checklists que o cuidador deve executar neste turno.
-                </p>
-                <div className="space-y-1.5">
-                  {checklistOptions.map((cl) => (
-                    <div key={cl.id} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`cl-${cl.id}`}
-                        checked={selectedChecklists.includes(cl.id)}
-                        onCheckedChange={(v) => {
-                          if (v === true) {
-                            setSelectedChecklists((prev) => [...prev, cl.id]);
-                          } else {
-                            setSelectedChecklists((prev) => prev.filter((id) => id !== cl.id));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`cl-${cl.id}`} className="cursor-pointer text-sm font-normal">
-                        {cl.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="rounded-lg border border-dashed p-3">
+              <p className="text-xs text-muted-foreground">
+                Os checklists deste turno são gerados automaticamente a partir do
+                <strong> plano de cuidado ativo</strong> do paciente.
+              </p>
+            </div>
 
+            {formRepeat && (!formPatient || formWeekdays.length === 0 || !formRecurEnd) && (
+              <p className="text-xs text-amber-600">
+                Para criar turnos recorrentes, informe{" "}
+                {[
+                  !formPatient ? "o paciente" : null,
+                  formWeekdays.length === 0 ? "os dias da semana" : null,
+                  !formRecurEnd ? '"Repetir até"' : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+                .
+              </p>
+            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                disabled={createLoading || !formCaregiver || !formStart || !formEnd}
+                disabled={
+                  createLoading ||
+                  !formCaregiver ||
+                  !formDate ||
+                  !formStartTime ||
+                  !formEndTime ||
+                  (formRepeat && (!formPatient || formWeekdays.length === 0 || !formRecurEnd))
+                }
               >
                 {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Criar Turno
+                {formRepeat ? "Criar Turnos" : "Criar Turno"}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
+
+      <SkippedShiftsDialog info={skippedInfo} onClose={() => setSkippedInfo(null)} />
 
       {/* Template CRUD Dialog */}
       <Dialog

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Plus, Users, MoreHorizontal, Pencil, Trash2, CheckCircle2, XOctagon } from "lucide-react";
+import { Users, MoreHorizontal, Pencil, Trash2, CheckCircle2, XOctagon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -45,6 +46,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePatients, useDeletePatient } from "../hooks";
 import { usePlanLimits } from "@/features/plan";
 import { PlanUsageBadge } from "@/components/plan-usage-badge";
+import type { UserRole } from "@/types/common";
 
 const GENDER_LABELS: Record<string, string> = {
   M: "Masculino",
@@ -71,7 +73,11 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function PatientsClient() {
+interface PatientsClientProps {
+  role: UserRole;
+}
+
+export function PatientsClient({ role }: PatientsClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -91,7 +97,6 @@ export function PatientsClient() {
 
   const patients = data?.patients ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
 
   function updateParams(updates: Record<string, string>) {
     const current = new URLSearchParams(searchParams.toString());
@@ -105,17 +110,15 @@ export function PatientsClient() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              Pacientes
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            Pacientes
+            {role === "clinic_admin" && (
               <PlanUsageBadge used={patientsUsage} total={maxPatients} label="pacientes" />
-            </h1>
-            <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
-          </div>
-        <Link href="/patients/new" className={cn(buttonVariants())}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Paciente
-        </Link>
+            )}
+          </h1>
+          <p className="mt-1 text-muted-foreground">Gestão de pacientes da clínica.</p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -134,7 +137,11 @@ export function PatientsClient() {
           <SelectTrigger className="w-36">
             <SelectValue>
               {(v: string | null) => {
-                const labels: Record<string, string> = { all: "Todos", true: "Ativo", false: "Inativo" };
+                const labels: Record<string, string> = {
+                  all: "Todos",
+                  true: "Ativo",
+                  false: "Inativo",
+                };
                 return labels[v ?? ""] ?? v ?? "Status";
               }}
             </SelectValue>
@@ -191,12 +198,6 @@ export function PatientsClient() {
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Users className="h-8 w-8" />
                       <p>Nenhum paciente encontrado</p>
-                      <Link
-                        href="/patients/new"
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                      >
-                        Cadastrar primeiro paciente
-                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -278,32 +279,13 @@ export function PatientsClient() {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} a {Math.min(page * pageSize, total)} de {total}{" "}
-            pacientes
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page - 1) })}
-              disabled={page <= 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateParams({ page: String(page + 1) })}
-              disabled={page >= totalPages}
-            >
-              Próxima
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(p) => updateParams({ page: String(p) })}
+        label="pacientes"
+      />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

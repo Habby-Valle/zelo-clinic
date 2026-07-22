@@ -1,37 +1,60 @@
 "use client";
 
-import { useState, useEffect, startTransition } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Check, X, Users, Send, Plus } from "lucide-react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { ArrowLeft, Loader2, Users, Calendar, Plus, CheckCircle } from "lucide-react";
+import { formatPhone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { usePatient, useClinicCaregivers, useTogglePatientStatus } from "../hooks";
+import { useValidateHealth } from "@/features/contracts/hooks";
+import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
+import { MedicationSection, DeclaredMedications } from "@/features/medications";
+import { PatientDocuments } from "./patient-documents";
+import { PatientRecordSection } from "./patient-record-section";
 import { useAuthStore } from "@/store/authStore";
+import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { createShift, createRecurringShifts } from "@/app/(main)/shifts/actions";
 import {
-  usePatient,
-  useClinicCaregivers,
-  usePendingInvites,
-  useAssignCaregivers,
-  useInviteFamily,
-  useCancelInvite,
-  useRemoveEmergencyContact,
-  useTogglePatientStatus,
-  useGenerateFamilyLinkCode,
-} from "../hooks";
+  shiftDateTimes,
+  shiftStartFromContract,
+  WEEKDAY_LABELS,
+  addHoursToTime,
+  formatDurationLabel,
+  endOfMonthISO,
+} from "@/features/shifts/lib/shift-time";
+import { ShiftCalendar } from "@/features/shifts/components/shift-calendar";
+import {
+  SkippedShiftsDialog,
+  type SkippedShiftInfo,
+} from "@/features/shifts/components/skipped-shifts-dialog";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -68,87 +91,27 @@ interface PatientDetailClientProps {
 }
 
 export function PatientDetailClient({ id }: PatientDetailClientProps) {
-  const clinicId = useAuthStore((state) => state.user?.clinic_id ?? null);
-
   const { data: patient, isLoading: patientLoading } = usePatient(id);
-  const { data: allCaregivers = [] } = useClinicCaregivers();
-  const { data: pendingInvites = [] } = usePendingInvites(id);
 
-  const assignCaregivers = useAssignCaregivers(id);
-  const inviteFamily = useInviteFamily(id);
-  const cancelInvite = useCancelInvite(id);
-  const removeContact = useRemoveEmergencyContact(id);
   const toggleStatus = useTogglePatientStatus(id);
+  // Validação da saúde declarada — ação sobre o contrato ativo do paciente.
+  const validateHealth = useValidateHealth(patient?.active_contract_id ?? "");
+  const validateQueryClient = useQueryClient();
+  // Enfermeiro: acesso somente leitura ao cadastro do paciente.
+  const isNurse = useAuthStore((s) => s.user?.role === "clinic_nurse");
 
-  const [selectedCaregivers, setSelectedCaregivers] = useState<string[]>([]);
-  const [caregiverMsg, setCaregiverMsg] = useState<string | null>(null);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
+  // Aba ativa espelhada na URL (?tab=) — sobrevive a refresh e é compartilhável.
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab") ?? "overview";
 
-  const [codeOpen, setCodeOpen] = useState(false);
-  const [codeEmail, setCodeEmail] = useState("");
-  const [codeResult, setCodeResult] = useState<{ code: string; email: string } | null>(null);
-  const [codeError, setCodeError] = useState<string | null>(null);
-  const generateFamilyCode = useGenerateFamilyLinkCode();
-
-  useEffect(() => {
-    if (patient?.caregiver_assignments) {
-      startTransition(() => {
-        setSelectedCaregivers(patient.caregiver_assignments.map((a) => String(a.caregiver_id)));
-      });
-    }
-  }, [patient]);
-
-  function toggleCaregiver(cgId: string) {
-    setSelectedCaregivers((prev) =>
-      prev.includes(cgId) ? prev.filter((c) => c !== cgId) : [...prev, cgId]
-    );
-  }
-
-  function handleSaveCaregivers() {
-    if (!patient) return;
-    setCaregiverMsg(null);
-    assignCaregivers.mutate(
-      {
-        caregiverIds: selectedCaregivers,
-        currentAssignments: patient.caregiver_assignments,
-      },
-      {
-        onSuccess: () => setCaregiverMsg("Vínculos salvos com sucesso!"),
-        onError: (err) => setCaregiverMsg(err instanceof Error ? err.message : "Erro ao salvar"),
-      }
-    );
-  }
-
-  function handleInviteFamily(e: React.FormEvent) {
-    e.preventDefault();
-    if (!inviteEmail.trim() || !clinicId) return;
-    setInviteMsg(null);
-    inviteFamily.mutate(
-      { clinicId, email: inviteEmail.trim() },
-      {
-        onSuccess: () => {
-          setInviteMsg("Convite enviado com sucesso!");
-          setInviteEmail("");
-        },
-        onError: (err) =>
-          setInviteMsg(err instanceof Error ? err.message : "Erro ao enviar convite"),
-      }
-    );
-  }
-
-  function handleGenerateFamilyCode(e: React.FormEvent) {
-    e.preventDefault();
-    if (!codeEmail.trim()) return;
-    setCodeError(null);
-    setCodeResult(null);
-    generateFamilyCode.mutate(codeEmail.trim(), {
-      onSuccess: (data) => {
-        setCodeResult({ code: data.code, email: data.email });
-      },
-      onError: (err) =>
-        setCodeError(err instanceof Error ? err.message : "Erro ao gerar código"),
-    });
+  function handleTabChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "overview") params.delete("tab");
+    else params.set("tab", value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
   }
 
   if (patientLoading) {
@@ -207,316 +170,597 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
             <p className="text-muted-foreground">Detalhes do paciente</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          {isActive ? (
-            <Button
-              variant="outline"
-              disabled={toggleStatus.isPending}
-              onClick={() => toggleStatus.mutate(false)}
-            >
-              {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Desativar
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              disabled={toggleStatus.isPending}
-              onClick={() => toggleStatus.mutate(true)}
-            >
-              {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reativar
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Info Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>Dados do paciente</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Nome</p>
-                <p>{patient.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Idade</p>
-                <p>{calculateAge(patient.birth_date)} anos</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Data de Nascimento</p>
-                <p>{formatDate(patient.birth_date)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Criado em</p>
-                <p>{formatDate(patient.created_at)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Saúde</CardTitle>
-            <CardDescription>Informações clínicas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div>
-              <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Medicamentos:</span> {patient.medications || "—"}
-            </div>
-            <div>
-              <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cuidadores */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Cuidadores Vinculados
-          </CardTitle>
-          <CardDescription>Selecione os cuidadores que atendem este paciente.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {allCaregivers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum cuidador cadastrado na clínica.</p>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {allCaregivers.map((cg) => {
-                const isSelected = selectedCaregivers.includes(cg.id);
-                return (
-                  <label
-                    key={cg.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
-                      isSelected ? "border-primary bg-primary/5" : ""
-                    }`}
-                  >
-                    <Checkbox checked={isSelected} onCheckedChange={() => toggleCaregiver(cg.id)} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{cg.name}</p>
-                      <p className="text-xs text-muted-foreground">{cg.email}</p>
-                    </div>
-                    {isSelected && <Check className="h-4 w-4 text-primary" />}
-                  </label>
-                );
-              })}
-            </div>
-          )}
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSaveCaregivers} disabled={assignCaregivers.isPending}>
-              {assignCaregivers.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar vínculos
-            </Button>
-            {caregiverMsg && (
-              <Alert
-                variant={caregiverMsg.includes("sucesso") ? "default" : "destructive"}
-                className="flex-1 py-2"
+        {!isNurse && (
+          <div className="flex gap-2">
+            {isActive ? (
+              <Button
+                variant="outline"
+                disabled={toggleStatus.isPending}
+                onClick={() => toggleStatus.mutate(false)}
               >
-                <AlertDescription>{caregiverMsg}</AlertDescription>
-              </Alert>
+                {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Desativar
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={toggleStatus.isPending}
+                onClick={() => toggleStatus.mutate(true)}
+              >
+                {toggleStatus.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Reativar
+              </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      {/* Familiares / Contatos de Emergência */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Contatos de Emergência (Familiares)</CardTitle>
-          <CardDescription>
-            Convide familiares para receber alertas sobre o paciente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleInviteFamily} className="flex items-end gap-3">
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor="invite-email">Convidar familiar por email</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                disabled={inviteFamily.isPending}
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={inviteFamily.isPending || !inviteEmail.trim() || !clinicId}
-            >
-              {inviteFamily.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              Convidar
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => { setCodeOpen(true); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Gerar Código
-            </Button>
-          </form>
-          {inviteMsg && (
-            <p
-              className={`text-sm ${
-                inviteMsg.includes("sucesso") ? "text-green-600" : "text-destructive"
-              }`}
-            >
-              {inviteMsg}
-            </p>
-          )}
+      <Tabs value={tab} onValueChange={handleTabChange}>
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="clinical">Clínico</TabsTrigger>
+          <TabsTrigger value="shifts">Turnos</TabsTrigger>
+          <TabsTrigger value="record">Prontuário</TabsTrigger>
+        </TabsList>
 
-          {pendingInvites.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Convites Pendentes</p>
-              <div className="space-y-2">
-                {pendingInvites.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      <span className="text-sm">{inv.email}</span>
-                      <Badge variant="outline" className="text-xs">
-                        Pendente
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelInvite.mutate(inv.id)}
-                      disabled={cancelInvite.isPending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+        {/* Visão Geral — cadastro, saúde declarada, vínculos */}
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          {/* Info Cards */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+                <CardDescription>Dados do paciente</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Nome</p>
+                    <p>{patient.name}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Idade</p>
+                    <p>{calculateAge(patient.birth_date)} anos</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Data de Nascimento</p>
+                    <p>{formatDate(patient.birth_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Criado em</p>
+                    <p>{formatDate(patient.created_at)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {emergencyContacts.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Familiares Vinculados</p>
-              <div className="space-y-2">
-                {emergencyContacts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Saúde</CardTitle>
+                <CardDescription>Informações clínicas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium">Condições:</span> {patient.health_conditions || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Medicamentos:</span>
+                  <DeclaredMedications text={patient.medications} />
+                </div>
+                <div>
+                  <span className="font-medium">Tipo sanguíneo:</span> {patient.blood_type || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Receita médica:</span>
+                  <PatientDocuments
+                    documents={patient.documents.filter((d) => d.kind === "prescription")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Familiares Vinculados */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Familiares Vinculados
+              </CardTitle>
+              <CardDescription>Familiares que acompanham este paciente.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {emergencyContacts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum familiar vinculado.</p>
+              ) : (
+                <div className="space-y-2">
+                  {emergencyContacts.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                         <Users className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">{c.profile_family_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {c.profile_family_phone} · Prioridade {c.priority}
+                          {formatPhone(c.profile_family_phone)} · Prioridade {c.priority}
                         </p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeContact.mutate(c.id)}
-                      disabled={removeContact.isPending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {emergencyContacts.length === 0 && pendingInvites.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum familiar vinculado. Use o campo acima para enviar um convite.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialog gerar código familiar */}
-      <Dialog open={codeOpen} onOpenChange={(v) => { setCodeOpen(v); if (!v) { setCodeResult(null); setCodeError(null); setCodeEmail(""); } }}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>Gerar Código de Vínculo</DialogTitle>
-            <DialogDescription>
-              Gere um código para um familiar que já possui conta no Zelo. Um email com o código será enviado automaticamente.
-            </DialogDescription>
-          </DialogHeader>
-
-          {codeResult ? (
-            <div className="space-y-4">
-              <div className="rounded-lg border bg-muted/30 p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Código gerado para</p>
-                <p className="font-medium mb-4">{codeResult.email}</p>
-                <div className="inline-block rounded-md bg-primary/5 px-8 py-4">
-                  <span className="text-3xl font-bold tracking-[0.3em] text-primary font-mono">
-                    {codeResult.code}
-                  </span>
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
-                  Um email com este código foi enviado para o familiar.
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeEmail(""); }}>
-                  Fechar
-                </Button>
-              </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cuidadores — vínculo definido na aprovação do plano de cuidado */}
+          {!isNurse && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Cuidadores
+                </CardTitle>
+                <CardDescription>
+                  Cuidadores vinculados a este paciente. O vínculo é definido no plano de cuidado.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {patient.caregiver_assignments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum cuidador vinculado. Defina o cuidador responsável no plano de cuidado.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {patient.caregiver_assignments.map((a) => (
+                      <div
+                        key={a.caregiver_id}
+                        className="flex items-center gap-3 rounded-lg border p-3"
+                      >
+                        <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <p className="text-sm font-medium">{a.caregiver_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Clínico — plano, medicações, alertas (Avaliação Clínica adiada no MVP) */}
+        <TabsContent value="clinical" className="mt-6 space-y-6">
+          {/* Validação da saúde declarada pela família (antes de iniciar os cuidados) */}
+          {!isNurse && patient.health_status === "declared" && patient.active_contract_id && (
+            <Card className="border-amber-300 bg-amber-50">
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Cadastro de saúde declarado pela família.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Revise as informações contra a receita e valide antes de iniciar os cuidados.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      validateHealth.mutate(undefined, {
+                        onSuccess: () =>
+                          validateQueryClient.invalidateQueries({
+                            queryKey: ["patients", id],
+                          }),
+                      })
+                    }
+                    disabled={validateHealth.isPending}
+                    className="shrink-0"
+                  >
+                    {validateHealth.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Validar saúde
+                  </Button>
+                </div>
+
+                <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
+                  <div>
+                    <span className="font-medium">Condições:</span>{" "}
+                    {patient.health_conditions || "—"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Alergias:</span> {patient.allergies || "—"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Medicamentos:</span>
+                    <DeclaredMedications text={patient.medications} />
+                  </div>
+                  <div>
+                    <span className="font-medium">Receita médica:</span>
+                    <PatientDocuments
+                      documents={patient.documents.filter((d) => d.kind === "prescription")}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Plano de Cuidado — montado pelo admin; enfermeiro revisa em Planos de Cuidado */}
+          {!isNurse && (
+            <CarePlanSection
+              patientId={id}
+              healthStatus={patient.health_status}
+              healthConditions={patient.health_conditions}
+            />
+          )}
+
+          {/* Medicações (MAR) */}
+          {!isNurse && (
+            <MedicationSection
+              patientId={id}
+              declaredMedications={patient.medications}
+              prescriptions={patient.documents.filter((d) => d.kind === "prescription")}
+            />
+          )}
+
+          {/* Alertas de Saúde */}
+          <HealthAlertsSection patientId={id} />
+        </TabsContent>
+
+        {/* Prontuário */}
+        <TabsContent value="record" className="mt-6 space-y-6">
+          <PatientRecordSection patientId={id} />
+        </TabsContent>
+
+        {/* Turnos */}
+        <TabsContent value="shifts" className="mt-6 space-y-6">
+          <PatientShiftsSection
+            patientId={id}
+            isNurse={isNurse}
+            contractStartDate={patient.contract_start_date}
+            weeklyHours={patient.active_contract_weekly_hours}
+            preferredWeekdays={patient.contract_preferred_weekdays}
+            preferredStartTime={patient.contract_preferred_start_time}
+            preferredEndTime={patient.contract_preferred_end_time}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function PatientShiftsSection({
+  patientId,
+  isNurse,
+  contractStartDate,
+  weeklyHours,
+  preferredWeekdays,
+  preferredStartTime,
+  preferredEndTime,
+}: {
+  patientId: string;
+  isNurse: boolean;
+  contractStartDate: string | null;
+  weeklyHours: number | null;
+  preferredWeekdays: number[] | null;
+  preferredStartTime: string | null;
+  preferredEndTime: string | null;
+}) {
+  const queryClient = useQueryClient();
+  const { data: allCaregivers = [] } = useClinicCaregivers();
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [formCaregiver, setFormCaregiver] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formStartTime, setFormStartTime] = useState("08:00");
+  const [formEndTime, setFormEndTime] = useState("20:00");
+  const [formNotes, setFormNotes] = useState("");
+  const [formRepeat, setFormRepeat] = useState(false);
+  const [formWeekdays, setFormWeekdays] = useState<number[]>([]);
+  const [formRecurEnd, setFormRecurEnd] = useState("");
+  const [skippedInfo, setSkippedInfo] = useState<SkippedShiftInfo | null>(null);
+
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["shifts"] });
+  }, [queryClient]);
+
+  // Duração do turno = horas semanais contratadas ÷ nº de dias marcados.
+  // Só no modo recorrente com dias selecionados; turno avulso fica manual.
+  function autoEndTime(start: string, weekdays: number[], repeat: boolean): string | null {
+    if (!repeat || weekdays.length === 0 || !weeklyHours || weeklyHours <= 0) return null;
+    return addHoursToTime(start, weeklyHours / weekdays.length);
+  }
+  const autoDurationHours =
+    formRepeat && formWeekdays.length > 0 && weeklyHours && weeklyHours > 0
+      ? weeklyHours / formWeekdays.length
+      : null;
+
+  function openCreate() {
+    setCreateOpen(true);
+    setFormCaregiver("");
+    setFormNotes("");
+    setFormRecurEnd("");
+    // Pré-preenche com o que a família declarou no contrato. Quando há dias
+    // declarados, abre em modo recorrente com "Repetir até" = fim do mês
+    // (editável), honrando a intenção semanal sem deixar o botão travado.
+    const days = preferredWeekdays ?? [];
+    const repeat = days.length > 0;
+    const start = preferredStartTime || "08:00";
+    // Fim: horário declarado tem prioridade; senão, weekly_hours ÷ nº de dias.
+    const computedEnd =
+      repeat && weeklyHours && weeklyHours > 0
+        ? addHoursToTime(start, weeklyHours / days.length)
+        : null;
+    // Início do cuidado vem do contrato (o que a família pediu).
+    const startDate = shiftStartFromContract(contractStartDate);
+    setFormRepeat(repeat);
+    setFormWeekdays(days);
+    setFormStartTime(start);
+    setFormEndTime(preferredEndTime || computedEnd || "20:00");
+    setFormDate(startDate);
+    setFormRecurEnd(repeat ? endOfMonthISO(startDate) : "");
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formCaregiver || !formDate || !formStartTime || !formEndTime) return;
+
+    if (formRepeat) {
+      if (formWeekdays.length === 0 || !formRecurEnd) {
+        toast.error("Marque os dias da semana e a data final da recorrência.");
+        return;
+      }
+      setCreateLoading(true);
+      const result = await createRecurringShifts({
+        caregiver_id: formCaregiver,
+        patient_id: patientId,
+        start_date: formDate,
+        end_date: formRecurEnd,
+        weekdays: formWeekdays,
+        start_time: formStartTime,
+        end_time: formEndTime,
+        notes: formNotes || undefined,
+      });
+      if (result.success) {
+        setCreateOpen(false);
+        invalidate();
+        if (result.skipped && result.skipped > 0) {
+          setSkippedInfo({
+            created: result.created ?? 0,
+            skipped: result.skipped_details ?? [],
+          });
+        } else {
+          toast.success(`${result.created} turno(s) criado(s).`);
+        }
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+      setCreateLoading(false);
+      return;
+    }
+
+    setCreateLoading(true);
+    const { start, end } = shiftDateTimes(formDate, formStartTime, formEndTime);
+    const result = await createShift({
+      caregiver_id: formCaregiver,
+      start,
+      end,
+      notes: formNotes || undefined,
+      patient_id: patientId,
+    });
+    if (result.success) {
+      setCreateOpen(false);
+      invalidate();
+      result.warnings?.forEach((w) => toast.warning(w));
+    } else if (result.error) {
+      toast.error(result.error);
+    }
+    setCreateLoading(false);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              Turnos do Paciente
+            </CardTitle>
+            <CardDescription>Turnos agendados para este paciente.</CardDescription>
+          </div>
+          {!isNurse && (
+            <Button onClick={openCreate} size="sm">
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Turno
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ShiftCalendar patientId={patientId} showGaps />
+      </CardContent>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Turno</DialogTitle>
+            <DialogDescription>Agende um turno para este paciente.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="caregiver">Cuidador</Label>
+              <Select value={formCaregiver} onValueChange={(v) => v && setFormCaregiver(v)}>
+                <SelectTrigger id="caregiver">
+                  <SelectValue>
+                    {() => {
+                      const cg = allCaregivers.find((c) => c.id === formCaregiver);
+                      return cg?.name ?? "Selecione um cuidador";
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {allCaregivers.map((cg) => (
+                    <SelectItem key={cg.id} value={cg.id}>
+                      {cg.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <form onSubmit={handleGenerateFamilyCode} className="space-y-4">
-              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
-              <div className="space-y-1.5">
-                <Label htmlFor="family-code-email">Email do familiar *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="shift-date">{formRepeat ? "Data de início" : "Data"}</Label>
+              <Input
+                id="shift-date"
+                type="date"
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Preenchida com o início do cuidado do contrato; ajuste se necessário.
+              </p>
+            </div>
+            {weeklyHours != null && weeklyHours > 0 && (
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Horas semanais solicitadas pela família:{" "}
+                <span className="font-medium text-foreground">{weeklyHours}h/semana</span>.
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start">Horário início</Label>
                 <Input
-                  id="family-code-email"
-                  type="email"
-                  placeholder="familiar@exemplo.com"
-                  value={codeEmail}
-                  onChange={(e) => setCodeEmail(e.target.value)}
-                  disabled={generateFamilyCode.isPending}
-                  required
+                  id="start"
+                  type="time"
+                  value={formStartTime}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormStartTime(v);
+                    const end = autoEndTime(v, formWeekdays, formRepeat);
+                    if (end) setFormEndTime(end);
+                  }}
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => { setCodeOpen(false); setCodeResult(null); setCodeError(null); setCodeEmail(""); }}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={generateFamilyCode.isPending}>
-                  {generateFamilyCode.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Gerar Código
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="end">Horário fim</Label>
+                <Input
+                  id="end"
+                  type="time"
+                  value={formEndTime}
+                  onChange={(e) => setFormEndTime(e.target.value)}
+                />
               </div>
-            </form>
-          )}
+            </div>
+
+            {autoDurationHours != null && (
+              <p className="text-xs text-muted-foreground">
+                Fim calculado: {weeklyHours}h ÷ {formWeekdays.length} dia(s) ={" "}
+                {formatDurationLabel(autoDurationHours)}/turno. Ajuste se necessário.
+              </p>
+            )}
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={formRepeat}
+                  onCheckedChange={(v) => {
+                    const on = v === true;
+                    setFormRepeat(on);
+                    const end = autoEndTime(formStartTime, formWeekdays, on);
+                    if (end) setFormEndTime(end);
+                  }}
+                />
+                Repetir (turno recorrente)
+              </label>
+              {formRepeat && (
+                <div className="space-y-3 pt-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Dias da semana</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {WEEKDAY_LABELS.map((d, i) => {
+                        const on = formWeekdays.includes(i);
+                        return (
+                          <Button
+                            key={i}
+                            type="button"
+                            size="sm"
+                            variant={on ? "default" : "outline"}
+                            className="h-8 w-11 px-0 text-xs"
+                            onClick={() => {
+                              const next = on
+                                ? formWeekdays.filter((w) => w !== i)
+                                : [...formWeekdays, i];
+                              setFormWeekdays(next);
+                              const end = autoEndTime(formStartTime, next, formRepeat);
+                              if (end) setFormEndTime(end);
+                            }}
+                          >
+                            {d}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="shift-recur-end" className="text-xs">
+                      Repetir até
+                    </Label>
+                    <Input
+                      id="shift-recur-end"
+                      type="date"
+                      value={formRecurEnd}
+                      onChange={(e) => setFormRecurEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                rows={2}
+                placeholder="Instruções adicionais..."
+              />
+            </div>
+            {formRepeat && (formWeekdays.length === 0 || !formRecurEnd) && (
+              <p className="text-xs text-amber-600">
+                Para criar turnos recorrentes, informe{" "}
+                {[
+                  formWeekdays.length === 0 ? "os dias da semana" : null,
+                  !formRecurEnd ? '"Repetir até"' : null,
+                ]
+                  .filter(Boolean)
+                  .join(" e ")}
+                .
+              </p>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  createLoading ||
+                  !formCaregiver ||
+                  !formDate ||
+                  !formStartTime ||
+                  !formEndTime ||
+                  (formRepeat && (formWeekdays.length === 0 || !formRecurEnd))
+                }
+              >
+                {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {formRepeat ? "Criar Turnos" : "Criar Turno"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
-    </div>
+
+      <SkippedShiftsDialog info={skippedInfo} onClose={() => setSkippedInfo(null)} />
+    </Card>
   );
 }

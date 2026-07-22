@@ -1,7 +1,7 @@
 export type UserRole =
   | "super_admin"
   | "clinic_admin"
-  | "guardian"
+  | "clinic_nurse"
   | "caregiver"
   | "family"
   | "emergency_contact";

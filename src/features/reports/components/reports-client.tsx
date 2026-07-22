@@ -8,16 +8,26 @@ import {
   useShiftsReport,
   useChecklistsReport,
   usePatientsGrowthReport,
+  useFamilyMembersGrowthReport,
   useSosReport,
   useCaregiversReport,
+  useSatisfactionReport,
+  useContractsReport,
+  useBillingReport,
 } from "../hooks/use-reports";
 import { ReportsFilters } from "./reports-filters";
 import { SummaryCards } from "./summary-cards";
 import { ShiftsReport } from "./shifts-report";
 import { ChecklistsReport } from "./checklists-report";
 import { PatientsGrowthReport } from "./patients-growth-report";
+import { FamilyMembersGrowthReport } from "./family-members-growth-report";
 import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
+import { SatisfactionReport } from "./satisfaction-report";
+import { ContractsReport } from "./contracts-report";
+import { BillingReport } from "./billing-report";
+import { ComplianceSection } from "@/features/quality";
+import { OnboardingSection } from "@/features/onboarding";
 import { usePlanLimits } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
@@ -46,8 +56,8 @@ function buildCsv(headers: string[], rows: string[][]): string {
 
 function SummaryCardsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {Array.from({ length: 5 }).map((_, i) => (
         <Card key={i}>
           <CardContent className="pt-6">
             <Skeleton className="h-8 w-16" />
@@ -69,8 +79,12 @@ export function ReportsClient() {
   const shiftsQuery = useShiftsReport(dateRange);
   const checklistsQuery = useChecklistsReport(dateRange);
   const patientsQuery = usePatientsGrowthReport(6);
+  const familyMembersQuery = useFamilyMembersGrowthReport(6);
   const sosQuery = useSosReport(dateRange);
   const caregiversQuery = useCaregiversReport(dateRange);
+  const satisfactionQuery = useSatisfactionReport(dateRange);
+  const contractsQuery = useContractsReport(12);
+  const billingQuery = useBillingReport(12);
 
   const isPending = shiftsQuery.isLoading || checklistsQuery.isLoading || patientsQuery.isLoading;
 
@@ -97,6 +111,14 @@ export function ReportsClient() {
       (checklistsQuery.data ?? []).map((d) => [d.date, String(d.completed), String(d.pending)])
     );
     downloadCsv(csv, "relatorio-checklists.csv");
+  }
+
+  function exportFamilyMembersCsv() {
+    const csv = buildCsv(
+      ["Mês", "Total", "Novos"],
+      (familyMembersQuery.data ?? []).map((d) => [d.month, String(d.total), String(d.new)])
+    );
+    downloadCsv(csv, "relatorio-clientes.csv");
   }
 
   function exportPatientsCsv() {
@@ -136,6 +158,31 @@ export function ReportsClient() {
     downloadCsv(csv, "relatorio-cuidadores.csv");
   }
 
+  function exportSatisfactionCsv() {
+    const csv = buildCsv(
+      ["Cuidador", "Avaliações", "Média", "NPS"],
+      (satisfactionQuery.data?.byCaregiver ?? []).map((d) => [
+        d.caregiverName,
+        String(d.total),
+        d.avgSatisfaction != null ? String(d.avgSatisfaction) : "",
+        d.nps != null ? String(d.nps) : "",
+      ])
+    );
+    downloadCsv(csv, "relatorio-satisfacao.csv");
+  }
+
+  function exportContractsCsv() {
+    if (!contractsQuery.data) return;
+    const rows = contractsQuery.data.byMonth.map((m) => [m.month, String(m.new), String(m.total)]);
+    downloadCsv(buildCsv(["Mês", "Novos", "Total"], rows), "contratos.csv");
+  }
+
+  function exportBillingCsv() {
+    if (!billingQuery.data) return;
+    const rows = billingQuery.data.byMonth.map((m) => [m.month, m.revenue, m.paid, m.pending]);
+    downloadCsv(buildCsv(["Mês", "Receita", "Recebido", "Pendente"], rows), "faturamento.csv");
+  }
+
   return (
     <div className="space-y-6">
       {!canAccessReports && <FeatureUpgradePrompt featureName="Relatórios" />}
@@ -143,56 +190,90 @@ export function ReportsClient() {
       {canAccessReports && (
         <>
           {summaryQuery.isLoading ? (
-        <SummaryCardsSkeleton />
-      ) : (
-        summaryQuery.data && <SummaryCards summary={summaryQuery.data} />
-      )}
+            <SummaryCardsSkeleton />
+          ) : (
+            summaryQuery.data && <SummaryCards summary={summaryQuery.data} />
+          )}
 
-      <ReportsFilters onFilterChange={handleFilterChange} />
+          <ReportsFilters onFilterChange={handleFilterChange} />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <ShiftsReport
-          data={shiftsQuery.data ?? []}
-          loading={isPending}
-          onExport={exportShiftsCsv}
-        />
-        <ChecklistsReport
-          data={checklistsQuery.data ?? []}
-          loading={isPending}
-          onExport={exportChecklistsCsv}
-        />
-      </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <ShiftsReport
+              data={shiftsQuery.data ?? []}
+              loading={isPending}
+              onExport={exportShiftsCsv}
+            />
+            <ChecklistsReport
+              data={checklistsQuery.data ?? []}
+              loading={isPending}
+              onExport={exportChecklistsCsv}
+            />
+          </div>
 
-      <PatientsGrowthReport
-        data={patientsQuery.data ?? []}
-        loading={isPending}
-        onExport={exportPatientsCsv}
-      />
+          <PatientsGrowthReport
+            data={patientsQuery.data ?? []}
+            loading={isPending}
+            onExport={exportPatientsCsv}
+          />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <SosReport
-          data={
-            sosQuery.data ?? {
-              summary: {
-                total: 0,
-                active: 0,
-                acknowledged: 0,
-                resolved: 0,
-                avgResponseTimeMinutes: null,
-              },
-              byPatient: [],
-              byDate: [],
+          <FamilyMembersGrowthReport
+            data={familyMembersQuery.data ?? []}
+            loading={familyMembersQuery.isLoading}
+            onExport={exportFamilyMembersCsv}
+          />
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <SosReport
+              data={
+                sosQuery.data ?? {
+                  summary: {
+                    total: 0,
+                    active: 0,
+                    acknowledged: 0,
+                    resolved: 0,
+                    avgResponseTimeMinutes: null,
+                  },
+                  byPatient: [],
+                  byDate: [],
+                }
+              }
+              loading={sosQuery.isLoading}
+              onExport={exportSosCsv}
+            />
+            <CaregiversReport
+              data={caregiversQuery.data ?? []}
+              loading={caregiversQuery.isLoading}
+              onExport={exportCaregiversCsv}
+            />
+          </div>
+
+          <SatisfactionReport
+            data={
+              satisfactionQuery.data ?? {
+                summary: { avgSatisfaction: null, nps: null, totalRatings: 0 },
+                byCaregiver: [],
+                byDate: [],
+              }
             }
-          }
-          loading={sosQuery.isLoading}
-          onExport={exportSosCsv}
-        />
-        <CaregiversReport
-          data={caregiversQuery.data ?? []}
-          loading={caregiversQuery.isLoading}
-          onExport={exportCaregiversCsv}
-        />
-      </div>
+            loading={satisfactionQuery.isLoading}
+            onExport={exportSatisfactionCsv}
+          />
+
+          <ContractsReport
+            data={contractsQuery.data ?? null}
+            loading={contractsQuery.isLoading}
+            onExport={exportContractsCsv}
+          />
+
+          <BillingReport
+            data={billingQuery.data ?? null}
+            loading={billingQuery.isLoading}
+            onExport={exportBillingCsv}
+          />
+
+          <ComplianceSection />
+
+          <OnboardingSection />
         </>
       )}
     </div>

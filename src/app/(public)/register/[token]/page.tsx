@@ -120,6 +120,27 @@ export default function RegisterPage() {
     setTimeout(() => router.push("/login"), 3000);
   }
 
+  async function onNurseSubmit(values: RegisterClinicAdminStep1Values) {
+    setSubmitError(null);
+    const { confirm_password, ...personal } = values;
+    void confirm_password;
+
+    const res = await fetch(`/api/register/${params.token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(personal),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setSubmitError(data.error ?? "Erro ao criar conta");
+      return;
+    }
+
+    setSuccess(true);
+    setTimeout(() => router.push("/login"), 3000);
+  }
+
   async function handleCepSearch() {
     const digits = cepValue.replace(/\D/g, "");
     if (digits.length !== 8) return;
@@ -152,7 +173,8 @@ export default function RegisterPage() {
         <h1 className="text-xl font-bold">Convite inválido</h1>
         <p className="text-muted-foreground">{loadError}</p>
         <p className="text-sm text-muted-foreground">
-          Este link pode ter expirado ou já ter sido utilizado. Entre em contato com o administrador.
+          Este link pode ter expirado ou já ter sido utilizado. Entre em contato com o
+          administrador.
         </p>
       </div>
     );
@@ -170,6 +192,89 @@ export default function RegisterPage() {
     );
   }
 
+  // Enfermeiro (e demais papéis do painel que não são admin de clínica):
+  // cadastro simples de 1 passo, sem criar clínica/endereço.
+  if (inviteInfo && inviteInfo.role !== "clinic_admin") {
+    return (
+      <div className="mx-auto max-w-md space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Criar sua conta</h1>
+          {inviteInfo.email && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Email: <strong>{inviteInfo.email}</strong>
+              {inviteInfo.clinic_name ? ` · ${inviteInfo.clinic_name}` : ""}
+            </p>
+          )}
+        </div>
+
+        {submitError && (
+          <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+            {submitError}
+          </div>
+        )}
+
+        <form onSubmit={form1.handleSubmit(onNurseSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-name">Nome completo *</Label>
+            <Input id="nurse-name" placeholder="Seu nome completo" {...form1.register("name")} />
+            {form1.formState.errors.name && (
+              <p className="text-xs text-destructive">{form1.formState.errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-phone">Telefone *</Label>
+            <Input
+              id="nurse-phone"
+              placeholder="(11) 99999-9999"
+              value={formatPhone(form1.watch("phone"))}
+              onChange={(e) =>
+                form1.setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
+                  shouldValidate: true,
+                })
+              }
+            />
+            {form1.formState.errors.phone && (
+              <p className="text-xs text-destructive">{form1.formState.errors.phone.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-password">Senha *</Label>
+            <Input
+              id="nurse-password"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              {...form1.register("password")}
+            />
+            {form1.formState.errors.password && (
+              <p className="text-xs text-destructive">{form1.formState.errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nurse-confirm">Confirmar senha *</Label>
+            <Input
+              id="nurse-confirm"
+              type="password"
+              placeholder="Repita a senha"
+              {...form1.register("confirm_password")}
+            />
+            {form1.formState.errors.confirm_password && (
+              <p className="text-xs text-destructive">
+                {form1.formState.errors.confirm_password.message}
+              </p>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full">
+            Criar conta
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   const stepTitle =
     step === 1 ? "Criar sua conta" : step === 2 ? "Cadastrar sua clínica" : "Endereço da clínica";
 
@@ -179,7 +284,9 @@ export default function RegisterPage() {
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <span className={step === 1 ? "font-semibold text-foreground" : ""}>1. Seus dados</span>
           <span>→</span>
-          <span className={step === 2 ? "font-semibold text-foreground" : ""}>2. Dados da clínica</span>
+          <span className={step === 2 ? "font-semibold text-foreground" : ""}>
+            2. Dados da clínica
+          </span>
           <span>→</span>
           <span className={step === 3 ? "font-semibold text-foreground" : ""}>3. Endereço</span>
         </div>
@@ -192,7 +299,9 @@ export default function RegisterPage() {
       </div>
 
       {submitError && (
-        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">{submitError}</div>
+        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+          {submitError}
+        </div>
       )}
 
       {step === 1 && (
@@ -260,9 +369,15 @@ export default function RegisterPage() {
         <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="clinic_name">Nome da clínica *</Label>
-            <Input id="clinic_name" placeholder="Ex: Clínica Bem Cuidar" {...form2.register("clinic_name")} />
+            <Input
+              id="clinic_name"
+              placeholder="Ex: Clínica Bem Cuidar"
+              {...form2.register("clinic_name")}
+            />
             {form2.formState.errors.clinic_name && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_name.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_name.message}
+              </p>
             )}
           </div>
 
@@ -279,7 +394,9 @@ export default function RegisterPage() {
               }
             />
             {form2.formState.errors.clinic_document && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_document.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_document.message}
+              </p>
             )}
           </div>
 
@@ -296,7 +413,9 @@ export default function RegisterPage() {
               }
             />
             {form2.formState.errors.clinic_phone && (
-              <p className="text-xs text-destructive">{form2.formState.errors.clinic_phone.message}</p>
+              <p className="text-xs text-destructive">
+                {form2.formState.errors.clinic_phone.message}
+              </p>
             )}
           </div>
 
@@ -321,7 +440,9 @@ export default function RegisterPage() {
                   id="zip_code"
                   placeholder="00000-000"
                   value={formatCep(cepValue)}
-                  onChange={(e) => form3.setValue("zip_code", e.target.value, { shouldValidate: true })}
+                  onChange={(e) =>
+                    form3.setValue("zip_code", e.target.value, { shouldValidate: true })
+                  }
                   className="flex-1"
                 />
                 <Button
@@ -341,7 +462,9 @@ export default function RegisterPage() {
                 </Button>
               </div>
               {form3.formState.errors.zip_code && (
-                <p className="text-xs text-destructive">{form3.formState.errors.zip_code.message}</p>
+                <p className="text-xs text-destructive">
+                  {form3.formState.errors.zip_code.message}
+                </p>
               )}
             </div>
             <div className="w-24 space-y-1.5">
@@ -366,7 +489,9 @@ export default function RegisterPage() {
               <Label htmlFor="neighborhood">Bairro *</Label>
               <Input id="neighborhood" placeholder="Centro" {...form3.register("neighborhood")} />
               {form3.formState.errors.neighborhood && (
-                <p className="text-xs text-destructive">{form3.formState.errors.neighborhood.message}</p>
+                <p className="text-xs text-destructive">
+                  {form3.formState.errors.neighborhood.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -395,7 +520,11 @@ export default function RegisterPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="complement">Complemento</Label>
-            <Input id="complement" placeholder="Sala 5 (opcional)" {...form3.register("complement")} />
+            <Input
+              id="complement"
+              placeholder="Sala 5 (opcional)"
+              {...form3.register("complement")}
+            />
           </div>
 
           <div className="flex gap-2">

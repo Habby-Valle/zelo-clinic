@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, CheckSquare, Users, UserCheck } from "lucide-react";
+import { Activity, CheckSquare, Users, UserCheck, Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ClinicReportSummary } from "../types";
@@ -14,7 +14,7 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
     summary.totalShifts > 0 ? Math.round((summary.completedShifts / summary.totalShifts) * 100) : 0;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -49,6 +49,17 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
         <CardContent>
           <p className="text-2xl font-bold">{summary.totalPatients}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Cadastrados</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Clientes</CardTitle>
+          <Heart className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">{summary.totalFamilyMembers}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Familiares</p>
         </CardContent>
       </Card>
 

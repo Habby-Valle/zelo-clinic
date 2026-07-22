@@ -6,9 +6,10 @@ import {
   AlertTriangle,
   ClipboardCheck,
   Clock,
+  TrendingUp,
   ArrowRight,
   CheckCircle2,
-  TrendingUp,
+  Star,
 } from "lucide-react";
 import { requireClinicAdmin } from "@/lib/auth";
 import { fetchDashboard, fetchRecentShifts } from "@/features/dashboard";
@@ -178,14 +179,21 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI principal — 4 cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI cards — 3 linhas de 3 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpis ? (
           <>
             <KpiCard
               label="Pacientes"
               value={kpis.totalPatients}
               sub={`+${kpis.newPatientsThisMonth} este mês`}
+              icon={Users}
+              highlight="blue"
+            />
+            <KpiCard
+              label="Clientes"
+              value={kpis.totalFamilyMembers}
+              sub="familiares cadastrados"
               icon={Users}
               highlight="blue"
             />
@@ -204,6 +212,27 @@ export default async function DashboardPage() {
               highlight={kpis.shiftsToday > 0 ? "green" : "default"}
             />
             <KpiCard
+              label="Pendentes Hoje"
+              value={kpis.pendingToday}
+              sub="ainda em aberto"
+              icon={TrendingUp}
+              highlight={kpis.pendingToday > 0 ? "blue" : "default"}
+            />
+            <KpiCard
+              label="Checklists Hoje"
+              value={kpis.checklistsToday}
+              sub="concluídos"
+              icon={ClipboardCheck}
+              highlight={kpis.checklistsToday > 0 ? "green" : "default"}
+            />
+            <KpiCard
+              label="Em Andamento"
+              value={kpis.activeShifts}
+              sub="turnos agora"
+              icon={Clock}
+              highlight={kpis.activeShifts > 0 ? "blue" : "default"}
+            />
+            <KpiCard
               label="SOS Ativos"
               value={kpis.activeSosAlerts}
               sub={
@@ -214,9 +243,20 @@ export default async function DashboardPage() {
               icon={AlertTriangle}
               highlight={kpis.activeSosAlerts > 0 ? "red" : "default"}
             />
+            <KpiCard
+              label="Satisfação"
+              value={kpis.avgSatisfaction != null ? `${kpis.avgSatisfaction.toFixed(1)}★` : "—"}
+              sub={
+                kpis.totalRatings > 0
+                  ? `NPS ${kpis.nps} · ${kpis.totalRatings} avaliação${kpis.totalRatings > 1 ? "ões" : ""}`
+                  : "sem avaliações"
+              }
+              icon={Star}
+              highlight={kpis.avgSatisfaction != null ? "green" : "default"}
+            />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 9 }).map((_, i) => (
             <div
               key={i}
               className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
@@ -228,33 +268,6 @@ export default async function DashboardPage() {
           ))
         )}
       </div>
-
-      {/* KPI secundário — 3 cards */}
-      {kpis && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <KpiCard
-            label="Em Andamento"
-            value={kpis.activeShifts}
-            sub="turnos agora"
-            icon={Clock}
-            highlight={kpis.activeShifts > 0 ? "blue" : "default"}
-          />
-          <KpiCard
-            label="Checklists Hoje"
-            value={kpis.checklistsToday}
-            sub="concluídos"
-            icon={ClipboardCheck}
-            highlight={kpis.checklistsToday > 0 ? "green" : "default"}
-          />
-          <KpiCard
-            label="Pendentes Hoje"
-            value={kpis.pendingToday}
-            sub="ainda em aberto"
-            icon={TrendingUp}
-            highlight={kpis.pendingToday > 0 ? "blue" : "default"}
-          />
-        </div>
-      )}
 
       {/* Conteúdo principal */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -292,10 +305,10 @@ export default async function DashboardPage() {
                     {recentShifts.map((shift) => (
                       <TableRow key={shift.id}>
                         <TableCell className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {shift.patients[0]?.name ?? "—"}
+                          {shift.patient_name ?? "—"}
                         </TableCell>
                         <TableCell className="text-zinc-600 dark:text-zinc-400">
-                          {shift.caregiver?.name ?? "—"}
+                          {shift.caregiver_name ?? "—"}
                         </TableCell>
                         <TableCell className="text-zinc-500 dark:text-zinc-400">
                           {fmtDate(shift.started_at)}
@@ -323,12 +336,6 @@ export default async function DashboardPage() {
               </h2>
             </div>
             <div className="space-y-2 p-4">
-              <QuickActionLink
-                href="/patients/new"
-                icon={Users}
-                label="Novo Paciente"
-                description="Cadastrar paciente na clínica"
-              />
               <QuickActionLink
                 href="/users"
                 icon={UserCog}
