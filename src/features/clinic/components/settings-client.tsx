@@ -104,8 +104,10 @@ export function SettingsClient() {
 
   useEffect(() => {
     if (asaasConfig) {
-      setAsaasApiKey(asaasConfig.api_key ?? "");
-      setAsaasWalletId(asaasConfig.wallet_id ?? "");
+      startTransition(() => {
+        setAsaasApiKey(asaasConfig.api_key ?? "");
+        setAsaasWalletId(asaasConfig.wallet_id ?? "");
+      });
     }
   }, [asaasConfig]);
 

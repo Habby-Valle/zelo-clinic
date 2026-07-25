@@ -16,11 +16,28 @@ import {
   X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePatientRecord } from "../hooks";
 import { getPatientRecordExportUrl } from "../services";
+import type { PatientRecord } from "../services";
+
+type TimelineEvent = PatientRecord["timeline"][number];
+
+interface ChecklistExecItem {
+  item_name?: string;
+  checked?: boolean | null;
+  value?: unknown;
+  observation?: string;
+}
+
+interface RecordContract {
+  id: string;
+  contract_number: string;
+  weekly_hours: number;
+  price_per_hour: string;
+  start_date: string;
+  status: string;
+}
 
 const EVENT_ICONS: Record<string, React.ReactNode> = {
   checklist_completed: <ClipboardList className="h-4 w-4 text-green-600" />,
@@ -71,18 +88,7 @@ function formatTimestamp(ts: string): string {
   });
 }
 
-function TimelineEntry({
-  entry,
-}: {
-  entry: {
-    event_type: string;
-    timestamp: string;
-    title: string;
-    description: string;
-    actor_name: string;
-    data: Record<string, unknown>;
-  };
-}) {
+function TimelineEntry({ entry }: { entry: TimelineEvent }) {
   const [expanded, setExpanded] = useState(false);
   const d = entry.data as Record<string, unknown>;
   const hasExtra =
@@ -120,7 +126,7 @@ function TimelineEntry({
           {Array.isArray(d.items) && (
             <div>
               <p className="mt-1 font-medium">Itens:</p>
-              {(d.items as Array<any>).map((item: any, i: number) => (
+              {(d.items as ChecklistExecItem[]).map((item, i) => (
                 <div key={i} className="ml-2">
                   <span>{String(item.item_name ?? "")}: </span>
                   {item.checked !== null && item.checked !== undefined ? (
@@ -152,19 +158,9 @@ const TYPE_FILTERS = [
   { value: "rating", label: "Avaliações" },
 ];
 
-function filterTimeline(
-  timeline: Array<{ event_type: string }>,
-  filter: string
-): Array<{
-  event_type: string;
-  timestamp: string;
-  title: string;
-  description: string;
-  actor_name: string;
-  data: Record<string, unknown>;
-}> {
-  if (!filter) return timeline as any;
-  return (timeline as any[]).filter((e) => e.event_type.startsWith(filter));
+function filterTimeline(timeline: TimelineEvent[], filter: string): TimelineEvent[] {
+  if (!filter) return timeline;
+  return timeline.filter((e) => e.event_type.startsWith(filter));
 }
 
 interface PatientRecordSectionProps {
@@ -287,7 +283,7 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
           <div>
             <h4 className="mb-2 text-sm font-semibold">Contratos</h4>
             <div className="space-y-2">
-              {record.contracts.map((c: any) => (
+              {(record.contracts as unknown as RecordContract[]).map((c) => (
                 <div
                   key={c.id}
                   className="flex items-center justify-between rounded-lg border p-3 text-sm"
@@ -309,8 +305,8 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
         {record.care_plan && (
           <div className="rounded-lg bg-green-50 p-4 text-sm">
             <h4 className="mb-1 font-semibold text-green-900">Plano de Cuidado</h4>
-            <p>Responsável: {(record.care_plan as any).responsible_name}</p>
-            <p>Registro: {(record.care_plan as any).responsible_register}</p>
+            <p>Responsável: {String(record.care_plan.responsible_name ?? "")}</p>
+            <p>Registro: {String(record.care_plan.responsible_register ?? "")}</p>
           </div>
         )}
 
