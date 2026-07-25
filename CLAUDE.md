@@ -199,4 +199,12 @@ npm run typecheck  # TypeScript
 
 ---
 
+## Fluxo de Git
+
+- **Nova feature**: sempre criar uma branch nova a partir da `dev` antes de começar (ex.: `git switch dev && git pull && git switch -c feat/nome-da-feature`)
+- **Ao finalizar**: abrir um Pull Request da branch para a `dev`; não fazer merge/commit direto na `dev`
+- **Nomeação**: usar prefixos `feat/`, `fix/`, `chore/`, `refactor/` conforme o tipo de mudança
+
+---
+
 _Última atualização: 2026-06-18_
