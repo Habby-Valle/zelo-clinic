@@ -23,7 +23,6 @@ export interface Invoice {
   status_display?: string;
   paid_at: string | null;
   notes: string;
-  pix_status: string | null;
   items: InvoiceLineItem[];
   created_at: string;
   updated_at: string;
