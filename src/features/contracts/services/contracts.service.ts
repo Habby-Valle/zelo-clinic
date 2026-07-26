@@ -112,22 +112,3 @@ export async function updateContractApi(
     body: JSON.stringify(data),
   });
 }
-
-export async function inviteFamilyMemberApi(
-  contractId: string,
-  data: { email: string; name?: string }
-): Promise<void> {
-  const contract = await fetchContractById(contractId);
-  if (!contract) throw new Error("Contrato não encontrado");
-
-  await apiFetchClient(`/invites/`, {
-    method: "POST",
-    body: JSON.stringify({
-      email: data.email,
-      name: data.name ?? "",
-      role: "family",
-      clinic_id: contract.clinic,
-      patient_id: contract.patient,
-    }),
-  });
-}
