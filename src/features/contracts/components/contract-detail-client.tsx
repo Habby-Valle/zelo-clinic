@@ -9,6 +9,8 @@ import {
   PauseCircle,
   PlayCircle,
   Ban,
+  UserPlus,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -40,9 +42,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
-import { useContract,
+import {
+  useContract,
   useTransitionContract,
 } from "../hooks";
+import { inviteFamilyMemberApi } from "../services";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -84,6 +88,23 @@ export function ContractDetailClient() {
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
   const [genMonth, setGenMonth] = useState(new Date().getMonth());
   const [genYear, setGenYear] = useState(new Date().getFullYear());
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+
+  const inviteMutation = useMutation({
+    mutationFn: () =>
+      inviteFamilyMemberApi(id, {
+        email: inviteEmail.trim(),
+        name: inviteName.trim(),
+      }),
+    onSuccess: () => {
+      setInviteOpen(false);
+      setInviteEmail("");
+      setInviteName("");
+    },
+  });
 
   const router = useRouter();
 
@@ -275,6 +296,19 @@ export function ContractDetailClient() {
             />
             <Row label="Solicitante" value={contract.requested_by_name ?? contract.payer_name} />
             <Row label="Contratante" value={contract.payer_name} />
+            {contract.status === "active" && (
+              <div className="pt-2 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => setInviteOpen(true)}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Convidar familiar acompanhante
+                </Button>
+              </div>
+            )}
             <Row label="Clínica" value={contract.clinic_name} />
           </CardContent>
         </Card>
@@ -493,6 +527,61 @@ export function ContractDetailClient() {
             <Button onClick={() => generateInvoice.mutate()} disabled={generateInvoice.isPending}>
               {generateInvoice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Gerar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convidar familiar acompanhante</DialogTitle>
+            <DialogDescription>
+              Envie um convite para que outro familiar acompanhe o cuidado do paciente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="invite-email">Email *</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="familiar@email.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-name">Nome</Label>
+              <Input
+                id="invite-name"
+                placeholder="Nome do familiar"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+              />
+            </div>
+          </div>
+          {inviteMutation.error && (
+            <p className="text-sm text-destructive">
+              {inviteMutation.error instanceof Error
+                ? inviteMutation.error.message
+                : "Erro ao enviar convite"}
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => inviteMutation.mutate()}
+              disabled={!inviteEmail.trim() || inviteMutation.isPending}
+            >
+              {inviteMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="mr-2 h-4 w-4" />
+              )}
+              Enviar Convite
             </Button>
           </DialogFooter>
         </DialogContent>
