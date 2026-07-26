@@ -772,7 +772,7 @@ export function PlanManagementClient({
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {availablePlans.map((plan) => {
             const isFree = plan.monthly_price === 0;
-            const isTrial = plan.name === "Trial";
+            const isTrial = plan.is_trial === true;
             const trialDisabled = isTrial && !!hasUsedTrial;
             const paidDisabled = !plansEnabled && !isFree;
             const disabled = trialDisabled || paidDisabled;

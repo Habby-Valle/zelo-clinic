@@ -17,6 +17,7 @@ export interface Plan {
   monthly_price: number;
   yearly_price: number | null;
   is_active: boolean;
+  is_trial?: boolean;
   benefits: PlanBenefitRelation[];
 }
 
