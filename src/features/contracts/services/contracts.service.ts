@@ -7,8 +7,8 @@ function mapContract(r: Record<string, unknown>): ServiceContract {
     contract_number: String(r.contract_number ?? ""),
     payer: String(r.payer ?? ""),
     payer_name: String(r.payer_name ?? ""),
-    requested_by: r.requested_by != null ? String(r.requested_by) : null,
-    requested_by_name: r.requested_by_name != null ? String(r.requested_by_name) : null,
+    requested_by: null,
+    requested_by_name: null,
     patient: String(r.patient ?? ""),
     patient_name: String(r.patient_name ?? ""),
     patient_health_status:
@@ -70,30 +70,6 @@ export async function fetchContractById(id: string): Promise<ServiceContract | n
   } catch {
     return null;
   }
-}
-
-export async function sendProposalApi(
-  id: string,
-  data: {
-    billing_mode?: "per_shift" | "per_hour" | "fixed";
-    price_per_hour?: number;
-    price_per_shift?: number;
-    fixed_monthly_amount?: number;
-    night_surcharge?: number;
-    night_surcharge_type?: string;
-  }
-): Promise<void> {
-  await apiFetchClient(`/contracts/${id}/proposal/`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export async function rejectContractApi(id: string): Promise<void> {
-  await apiFetchClient(`/contracts/${id}/transition/`, {
-    method: "POST",
-    body: JSON.stringify({ status: "cancelled" }),
-  });
 }
 
 /** Transição de ciclo de vida (suspender/reativar/encerrar) pela clínica. */

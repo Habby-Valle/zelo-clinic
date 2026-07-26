@@ -131,12 +131,6 @@ function PlanCard({
               </>
             ) : disabled ? (
               (disabledReason ?? "Indisponível")
-            ) : plan.monthly_price === 0 ? (
-              hasActivePaidPlan ? (
-                "Mudar para gratuito"
-              ) : (
-                "Selecionar plano gratuito"
-              )
             ) : hasActivePaidPlan ? (
               "Alterar para este plano"
             ) : (
@@ -168,7 +162,7 @@ function CurrentPlanInfo({
   cancelLoading,
   onManage,
 }: CurrentPlanInfoProps) {
-  const isFree = clinicPlan.status === "free" || plan.monthly_price === 0;
+  const isFree = clinicPlan.status === "free";
   const isTrial = clinicPlan.status === "trial";
   const isCancelled = clinicPlan.status === "cancelled";
   const startedDate = new Date(clinicPlan.started_at);
@@ -184,7 +178,7 @@ function CurrentPlanInfo({
 
   const statusLabel =
     clinicPlan.status === "free"
-      ? "Gratuito"
+      ? "Sem plano"
       : clinicPlan.status === "trial"
         ? "Trial"
         : clinicPlan.status === "active"
@@ -248,7 +242,7 @@ function CurrentPlanInfo({
         {isFree && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
-              Plano gratuito com funcionalidades básicas.
+              Sem plano ativo. Assine um plano para continuar usando todos os recursos.
             </p>
           </div>
         )}
@@ -424,7 +418,7 @@ export function PlanManagementClient({
     }
 
     if (result.billingType === null) {
-      // Plano gratuito: se tiver plano pago, pede confirmacao
+      // Sem plano: se tiver plano pago, pede confirmacao
       if (hasPaidPlan) {
         setChangeTargetPlanId(planId);
         setShowChangeDialog(true);
@@ -534,7 +528,7 @@ export function PlanManagementClient({
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso
-              aos recursos pagos até o fim do ciclo vigente (<strong>{currentPlan.clinicPlan?.expires_at ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR") : "—"}</strong>). Depois, o plano será rebaixado para <strong>Gratuito</strong>.
+              aos recursos pagos até o fim do ciclo vigente (<strong>{currentPlan.clinicPlan?.expires_at ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR") : "—"}</strong>). Depois, o plano será bloqueado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

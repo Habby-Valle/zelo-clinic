@@ -4,29 +4,17 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  CheckCircle,
-  XCircle,
   Loader2,
   Receipt,
   PauseCircle,
   PlayCircle,
   Ban,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useMutation } from "@tanstack/react-query";
 import { generateInvoiceApi } from "@/features/billing/services";
 import {
@@ -39,6 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -47,24 +38,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  useContract,
-  useSendProposal,
-  useRejectContract,
-  useTransitionContract,
-  usePricingSuggestion,
-} from "../hooks";
-import type { ContractStatus, PricingSuggestion } from "../types";
-import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
-import { usePlanLimits } from "@/features/plan";
+import { Input } from "@/components/ui/input";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
+import { useContract,
+  useTransitionContract,
+} from "../hooks";
+import type { ContractStatus } from "../types";
+import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
   {
-    requested: "secondary",
-    proposal_sent: "secondary",
     draft: "outline",
     active: "default",
     suspended: "outline",
@@ -90,19 +73,8 @@ export function ContractDetailClient() {
   const id = params.id as string;
 
   const { data: contract, isLoading } = useContract(id);
-  const { data: planLimits } = usePlanLimits();
-  const sendProposal = useSendProposal(id);
-  const rejectContract = useRejectContract(id);
   const transitionContract = useTransitionContract(id);
 
-  const [proposalOpen, setProposalOpen] = useState(false);
-
-  const handleProposalOpenChange = (open: boolean) => {
-    setProposalOpen(open);
-    if (!open) {
-      setPricingEnabled(false);
-    }
-  };
   const [rejectOpen, setRejectOpen] = useState(false);
   // Ciclo de vida: 'suspend' | 'reactivate' | 'cancel' | null
   const [lifecycleAction, setLifecycleAction] = useState<
@@ -110,16 +82,6 @@ export function ContractDetailClient() {
   >(null);
   const [lifecycleReason, setLifecycleReason] = useState("");
   const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
-  const [pricePerHour, setPricePerHour] = useState("");
-  const [pricePerShift, setPricePerShift] = useState("");
-  const [billingMode, setBillingMode] = useState<"per_shift" | "per_hour" | "fixed">("per_shift");
-  const [fixedMonthlyAmount, setFixedMonthlyAmount] = useState("");
-  const [pricingEnabled, setPricingEnabled] = useState(false);
-
-  const { data: pricingSuggestion, isLoading: pricingLoading } = usePricingSuggestion(
-    id,
-    pricingEnabled
-  );
   const [genMonth, setGenMonth] = useState(new Date().getMonth());
   const [genYear, setGenYear] = useState(new Date().getFullYear());
 
@@ -165,39 +127,15 @@ export function ContractDetailClient() {
     );
   }
 
-  const handleSendProposal = () => {
-    sendProposal.mutate(
-      {
-        billing_mode: billingMode,
-        price_per_hour:
-          billingMode === "per_hour" && pricePerHour ? Number(pricePerHour) : undefined,
-        price_per_shift:
-          billingMode === "per_shift" && pricePerShift ? Number(pricePerShift) : undefined,
-        fixed_monthly_amount:
-          billingMode === "fixed" && fixedMonthlyAmount ? Number(fixedMonthlyAmount) : undefined,
-      },
+  const handleReject = () => {
+    transitionContract.mutate(
+      { status: "cancelled", reason: "Recusado pela clínica" },
       {
         onSuccess: () => {
-          setProposalOpen(false);
+          setRejectOpen(false);
         },
       }
     );
-  };
-
-  // Campo obrigatório conforme o modo de cobrança escolhido.
-  const proposalReady =
-    billingMode === "fixed"
-      ? !!fixedMonthlyAmount
-      : billingMode === "per_hour"
-        ? !!pricePerHour
-        : !!pricePerShift;
-
-  const handleReject = () => {
-    rejectContract.mutate(undefined, {
-      onSuccess: () => {
-        setRejectOpen(false);
-      },
-    });
   };
 
   const closeLifecycle = () => {
@@ -282,44 +220,6 @@ export function ContractDetailClient() {
             </CardContent>
           </Card>
         )}
-
-      {contract.status === "requested" && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex items-center justify-between p-4">
-            <p className="text-sm font-medium">Esta solicitação aguarda uma proposta de valores.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setRejectOpen(true)}>
-                <XCircle className="mr-2 h-4 w-4" />
-                Recusar
-              </Button>
-              <Button onClick={() => setProposalOpen(true)}>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Enviar proposta
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {contract.status === "proposal_sent" && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex items-center justify-between p-4">
-            <p className="text-sm font-medium">
-              Proposta enviada. Aguardando a resposta da família.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setPricePerHour(contract.price_per_hour ?? "");
-                setPricePerShift(contract.price_per_shift ?? "");
-                setProposalOpen(true);
-              }}
-            >
-              Revisar proposta
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -535,203 +435,6 @@ export function ContractDetailClient() {
           )}
         </DialogContent>
       </Dialog>
-
-      <Dialog open={proposalOpen} onOpenChange={handleProposalOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enviar Proposta</DialogTitle>
-            <DialogDescription>
-              Defina os valores. A família recebe a proposta e decide se aceita.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            {planLimits?.limits?.has_pricing_suggestions !== false && (
-              <div className="rounded-lg border border-dashed p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    Precificação Inteligente
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pricingLoading}
-                    onClick={() => setPricingEnabled(true)}
-                  >
-                    {pricingLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    Sugerir preços
-                  </Button>
-                </div>
-                {pricingSuggestion && (
-                  <div className="mt-3 space-y-2 rounded-md bg-muted/50 p-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Preço/h sugerido:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(Number(pricingSuggestion.price_per_hour_suggested))}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Preço/turno sugerido:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(Number(pricingSuggestion.price_per_shift_suggested))}
-                      </span>
-                    </div>
-                    {pricingSuggestion.factors.region && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Região de referência:</span>
-                        <span>{pricingSuggestion.factors.region}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Confiança:</span>
-                      <Badge
-                        variant={pricingSuggestion.confidence === "high" ? "default" : "secondary"}
-                      >
-                        {pricingSuggestion.confidence === "high" ? "Alta" : "Média"}
-                      </Badge>
-                    </div>
-                    {pricingSuggestion.explanation && (
-                      <p className="mt-1 text-xs text-muted-foreground italic">
-                        {pricingSuggestion.explanation}
-                      </p>
-                    )}
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => {
-                        setPricePerHour(pricingSuggestion.price_per_hour_suggested);
-                        setPricePerShift(pricingSuggestion.price_per_shift_suggested);
-                      }}
-                    >
-                      Aplicar sugestão
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="billing_mode">Modo de cobrança</Label>
-              <Select
-                value={billingMode}
-                onValueChange={(v) =>
-                  setBillingMode((v ?? "per_shift") as "per_shift" | "per_hour" | "fixed")
-                }
-              >
-                <SelectTrigger id="billing_mode">
-                  <SelectValue>
-                    {(v: string | null) => {
-                      const labels: Record<string, string> = {
-                        per_shift: "Por turno",
-                        per_hour: "Por hora",
-                        fixed: "Valor fixo mensal",
-                      };
-                      return labels[v ?? ""] ?? v ?? "Por turno";
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_shift">Por turno</SelectItem>
-                  <SelectItem value="per_hour">Por hora</SelectItem>
-                  <SelectItem value="fixed">Valor fixo mensal</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {billingMode === "per_shift"
-                  ? "Cada turno concluído é cobrado pelo preço por turno."
-                  : billingMode === "per_hour"
-                    ? "Cobra as horas efetivamente trabalhadas × preço por hora."
-                    : "Cobra um valor fixo por mês, independente dos turnos."}
-              </p>
-            </div>
-            {billingMode === "fixed" && (
-              <div className="space-y-2">
-                <Label htmlFor="fixed_monthly_amount">Valor fixo mensal (R$)</Label>
-                <Input
-                  id="fixed_monthly_amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={fixedMonthlyAmount}
-                  onChange={(e) => setFixedMonthlyAmount(e.target.value)}
-                />
-              </div>
-            )}
-            {billingMode === "per_hour" && (
-              <div className="space-y-2">
-                <Label htmlFor="price_per_hour">Preço por hora (R$)</Label>
-                <Input
-                  id="price_per_hour"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={pricePerHour}
-                  onChange={(e) => setPricePerHour(e.target.value)}
-                />
-              </div>
-            )}
-            {billingMode === "per_shift" && (
-              <div className="space-y-2">
-                <Label htmlFor="price_per_shift">Preço por turno (R$)</Label>
-                <Input
-                  id="price_per_shift"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={pricePerShift}
-                  onChange={(e) => setPricePerShift(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setProposalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSendProposal}
-              disabled={sendProposal.isPending || !proposalReady}
-            >
-              {sendProposal.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar Proposta
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Recusar Contrato</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja recusar este contrato? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={rejectContract.isPending}
-              onClick={handleReject}
-            >
-              {rejectContract.isPending ? "Recusando..." : "Sim, Recusar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={genInvoiceOpen} onOpenChange={setGenInvoiceOpen}>
         <DialogContent>

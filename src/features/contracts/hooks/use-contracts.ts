@@ -5,8 +5,6 @@ import {
   fetchContracts,
   fetchContractById,
   fetchPricingSuggestion,
-  sendProposalApi,
-  rejectContractApi,
   transitionContractApi,
   updateContractApi,
   validateHealthApi,
@@ -36,35 +34,6 @@ export function useUpdateContract(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Parameters<typeof updateContractApi>[1]) => updateContractApi(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contracts", id] });
-      queryClient.invalidateQueries({ queryKey: ["contracts"] });
-    },
-  });
-}
-
-export function useSendProposal(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: {
-      billing_mode?: "per_shift" | "per_hour" | "fixed";
-      price_per_hour?: number;
-      price_per_shift?: number;
-      fixed_monthly_amount?: number;
-      night_surcharge?: number;
-      night_surcharge_type?: string;
-    }) => sendProposalApi(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contracts", id] });
-      queryClient.invalidateQueries({ queryKey: ["contracts"] });
-    },
-  });
-}
-
-export function useRejectContract(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => rejectContractApi(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts", id] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });

@@ -31,8 +31,6 @@ import { CONTRACT_STATUS_LABELS } from "../types";
 
 const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destructive" | "outline"> =
   {
-    requested: "secondary",
-    proposal_sent: "secondary",
     draft: "outline",
     active: "default",
     suspended: "outline",
@@ -42,8 +40,6 @@ const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destruc
 
 const STATUS_TABS = [
   { value: "", label: "Todos" },
-  { value: "requested", label: "Pendentes" },
-  { value: "proposal_sent", label: "Proposta enviada" },
   { value: "active", label: "Ativos" },
 ] as const;
 

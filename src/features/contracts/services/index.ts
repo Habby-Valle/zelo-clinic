@@ -2,8 +2,6 @@ export {
   fetchContracts,
   fetchContractById,
   fetchPricingSuggestion,
-  sendProposalApi,
-  rejectContractApi,
   transitionContractApi,
   updateContractApi,
   validateHealthApi,

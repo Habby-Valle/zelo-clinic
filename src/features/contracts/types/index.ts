@@ -1,6 +1,4 @@
 export type ContractStatus =
-  | "requested"
-  | "proposal_sent"
   | "draft"
   | "active"
   | "suspended"
@@ -8,8 +6,6 @@ export type ContractStatus =
   | "expired";
 
 export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
-  requested: "Solicitado",
-  proposal_sent: "Proposta enviada",
   draft: "Rascunho",
   active: "Ativo",
   suspended: "Suspenso",

@@ -60,9 +60,9 @@ const tourSteps: TourStep[] = [
     title: "Contratos",
     description: "Gerencie contratos de serviço com pacientes.",
     details: [
-      "Solicitações e propostas de valores",
-      "Ciclo de vida: ativo, suspenso, cancelado",
-      "Precificação inteligente com sugestão de valores via IA",
+      "Ciclo de vida: rascunho, ativo, suspenso, cancelado",
+      "Validação de declaração de saúde",
+      "Geração de faturas por período",
     ],
   },
   {

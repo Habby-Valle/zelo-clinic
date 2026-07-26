@@ -147,7 +147,7 @@ export function ManageSubscriptionClient({
   async function handleCancel() {
     if (
       !confirm(
-        "Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso aos recursos pagos até o fim do ciclo vigente. Depois, o plano será rebaixado para Gratuito."
+        "Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso aos recursos pagos até o fim do ciclo vigente. Depois, o plano será bloqueado."
       )
     )
       return;
