@@ -5,47 +5,32 @@ import { useRouter } from "next/navigation";
 import {
   Building2,
   Image as ImageIcon,
-  QrCode,
   Camera,
   Loader2,
   ArrowRight,
   ArrowLeft,
   Check,
-  Wifi,
-  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
-import {
-  useAsaasConfig,
-  useUpdateAsaasConfig,
-  useTestAsaasConnection,
-} from "@/features/clinic/hooks/use-asaas-config";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getInitials, formatCnpj, formatPhone, formatCep, unformat } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   { id: 1, label: "Dados da clínica", icon: Building2 },
   { id: 2, label: "Logo", icon: ImageIcon },
-  { id: 3, label: "Pagamentos", icon: QrCode },
 ] as const;
 
 export function OnboardingWizard() {
   const router = useRouter();
   const { data: clinic, isLoading } = useClinic();
   const updateClinic = useUpdateClinic();
-
-  const { data: asaasConfig, isLoading: asaasLoading } = useAsaasConfig();
-  const updateAsaas = useUpdateAsaasConfig();
-  const testAsaas = useTestAsaasConnection();
 
   const [step, setStep] = useState(1);
   const [finishing, setFinishing] = useState(false);
@@ -70,11 +55,7 @@ export function OnboardingWizard() {
   const [description, setDescription] = useState("");
   const [responsibleName, setResponsibleName] = useState("");
 
-  // ── Passo 3: ASAAS ──
-  const [asaasApiKey, setAsaasApiKey] = useState("");
-  const [asaasWalletId, setAsaasWalletId] = useState("");
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-
+  // ── Passo 1: dados da clínica ──
   useEffect(() => {
     if (!clinic) return;
     startTransition(() => {
@@ -97,12 +78,6 @@ export function OnboardingWizard() {
       setSpecialty(clinic.specialty ?? "");
     });
   }, [clinic]);
-
-  useEffect(() => {
-    if (asaasConfig) {
-      startTransition(() => setAsaasWalletId(asaasConfig.wallet_id ?? ""));
-    }
-  }, [asaasConfig]);
 
   const clinicName = clinic?.name ?? "";
   const clinicLogo = clinic?.media_url ?? null;
@@ -152,28 +127,9 @@ export function OnboardingWizard() {
     }
   }
 
-  async function handleTestAsaas() {
-    setTestResult(null);
-    try {
-      const result = await testAsaas.mutateAsync(asaasApiKey);
-      setTestResult(result);
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
-    } catch {
-      toast.error("Erro ao testar conexão");
-    }
-  }
-
   async function completeOnboarding() {
     setFinishing(true);
     try {
-      // Salva a config ASAAS se o admin preencheu algo neste passo.
-      if (asaasApiKey || asaasWalletId) {
-        await updateAsaas.mutateAsync({
-          api_key: asaasApiKey || undefined,
-          wallet_id: asaasWalletId || undefined,
-        });
-      }
       await updateClinic.mutateAsync({ onboarding_completed: true });
       toast.success("Configuração concluída!");
       router.replace("/dashboard");
@@ -507,108 +463,13 @@ export function OnboardingWizard() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar
               </Button>
-              <Button onClick={() => setStep(3)}>
-                <ArrowRight className="mr-2 h-4 w-4" />
-                Continuar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ───── Passo 3: ASAAS ───── */}
-      {step === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Recebimento via PIX (ASAAS)
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Configure a chave de API do ASAAS para receber pagamentos das famílias via PIX.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {asaasLoading ? (
-              <Skeleton className="h-24 w-full" />
-            ) : (
-              <>
-                {testResult && (
-                  <Alert variant={testResult.success ? "default" : "destructive"}>
-                    <AlertDescription>{testResult.message}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-1.5">
-                  <Label htmlFor="asaas-api-key">Chave de API (sandbox/produção)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="asaas-api-key"
-                      type="password"
-                      placeholder={
-                        asaasConfig?.has_api_key
-                          ? "Chave já configurada — digite para substituir"
-                          : "asaas_api_key_..."
-                      }
-                      value={asaasApiKey}
-                      onChange={(e) => setAsaasApiKey(e.target.value)}
-                      className="flex-1"
-                    />
-                    {asaasConfig?.has_api_key && (
-                      <Badge
-                        variant="outline"
-                        className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
-                      >
-                        Configurada
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="asaas-wallet-id">Wallet ID (opcional)</Label>
-                  <Input
-                    id="asaas-wallet-id"
-                    placeholder="wallet_id_..."
-                    value={asaasWalletId}
-                    onChange={(e) => setAsaasWalletId(e.target.value)}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleTestAsaas}
-                  disabled={!asaasApiKey || testAsaas.isPending}
-                >
-                  {testAsaas.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wifi className="mr-2 h-4 w-4" />
-                  )}
-                  Testar conexão
-                </Button>
-
-                {!asaasConfig?.has_api_key && !asaasApiKey && (
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      Sem a integração ASAAS você não conseguirá receber pagamentos via PIX. É
-                      possível configurar depois em Configurações → Pagamentos.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </>
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={() => setStep(2)} disabled={finishing}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
-              </Button>
               <Button onClick={completeOnboarding} disabled={finishing}>
                 {finishing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Check className="mr-2 h-4 w-4" />
                 )}
-                {asaasApiKey || asaasConfig?.has_api_key ? "Concluir" : "Concluir sem configurar"}
+                Concluir
               </Button>
             </div>
           </CardContent>

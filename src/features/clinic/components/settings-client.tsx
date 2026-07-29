@@ -10,11 +10,8 @@ import {
   FileText,
   CalendarCheck,
   Star,
-  QrCode,
-  Wifi,
   Building2,
   Bell,
-  CreditCard,
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,11 +21,6 @@ import { z } from "zod";
 
 import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
 import { usePlanLimits } from "@/features/plan";
-import {
-  useAsaasConfig,
-  useUpdateAsaasConfig,
-  useTestAsaasConnection,
-} from "@/features/clinic/hooks/use-asaas-config";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -95,26 +87,7 @@ export function SettingsClient() {
 
   const [saving, setSaving] = useState(false);
 
-  const { data: asaasConfig, isLoading: asaasLoading } = useAsaasConfig();
-  const updateAsaas = useUpdateAsaasConfig();
-  const testAsaas = useTestAsaasConnection();
-  const [asaasApiKey, setAsaasApiKey] = useState("");
-  const [asaasWalletId, setAsaasWalletId] = useState("");
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  useEffect(() => {
-    if (asaasConfig) {
-      startTransition(() => {
-        setAsaasApiKey(asaasConfig.api_key ?? "");
-        setAsaasWalletId(asaasConfig.wallet_id ?? "");
-      });
-    }
-  }, [asaasConfig]);
-
-  const [passwordResult, setPasswordResult] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
+  const validTabs = ["geral", "notificacoes", "seguranca"];
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -224,33 +197,6 @@ export function SettingsClient() {
     }
   }
 
-  async function handleSaveAsaas() {
-    try {
-      await updateAsaas.mutateAsync({
-        api_key: asaasApiKey,
-        wallet_id: asaasWalletId,
-      });
-      toast.success("Configuração ASAAS salva");
-    } catch {
-      toast.error("Erro ao salvar configuração ASAAS");
-    }
-  }
-
-  async function handleTestAsaas() {
-    setTestResult(null);
-    try {
-      const result = await testAsaas.mutateAsync(asaasApiKey);
-      setTestResult(result);
-      if (result.success) {
-        toast.success(result.message);
-      } else {
-        toast.error(result.message);
-      }
-    } catch {
-      toast.error("Erro ao testar conexão");
-    }
-  }
-
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -354,10 +300,6 @@ export function SettingsClient() {
         <TabsTrigger value="notificacoes">
           <Bell className="h-4 w-4" />
           Notificações
-        </TabsTrigger>
-        <TabsTrigger value="pagamentos">
-          <CreditCard className="h-4 w-4" />
-          Pagamentos
         </TabsTrigger>
         <TabsTrigger value="seguranca">
           <Shield className="h-4 w-4" />
@@ -887,90 +829,6 @@ export function SettingsClient() {
                 disabled={updateClinic.isPending}
               />
             </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* ───── Pagamentos ───── */}
-      <TabsContent value="pagamentos" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-4 w-4" />
-              Integração ASAAS (PIX)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Configure a chave de API do ASAAS para receber pagamentos via PIX dos familiares.
-            </p>
-            {asaasLoading ? (
-              <Skeleton className="h-24 w-full" />
-            ) : (
-              <>
-                {testResult && (
-                  <Alert variant={testResult.success ? "default" : "destructive"}>
-                    <AlertDescription>{testResult.message}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-1.5">
-                  <Label htmlFor="asaas-api-key">Chave de API (sandbox/produção)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="asaas-api-key"
-                      type="password"
-                      placeholder={
-                        asaasConfig?.has_api_key
-                          ? "Chave já configurada — digite para substituir"
-                          : "asaas_api_key_..."
-                      }
-                      value={asaasApiKey}
-                      onChange={(e) => setAsaasApiKey(e.target.value)}
-                      className="flex-1"
-                    />
-                    {asaasConfig?.has_api_key && (
-                      <Badge
-                        variant="outline"
-                        className="shrink-0 self-center border-emerald-300 text-xs text-emerald-700"
-                      >
-                        Configurada
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="asaas-wallet-id">Wallet ID (opcional)</Label>
-                  <Input
-                    id="asaas-wallet-id"
-                    placeholder="wallet_id_..."
-                    value={asaasWalletId}
-                    onChange={(e) => setAsaasWalletId(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleTestAsaas}
-                    disabled={!asaasApiKey || testAsaas.isPending}
-                  >
-                    {testAsaas.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Wifi className="mr-2 h-4 w-4" />
-                    )}
-                    Testar conexão
-                  </Button>
-                  <Button onClick={handleSaveAsaas} disabled={updateAsaas.isPending}>
-                    {updateAsaas.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="mr-2 h-4 w-4" />
-                    )}
-                    Salvar
-                  </Button>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
       </TabsContent>
