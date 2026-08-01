@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, CheckCircle2 } from "lucide-react";
@@ -34,10 +34,12 @@ export function LeadForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<LeadSchema>({ resolver: zodResolver(leadSchema) });
+
+  const phone = useWatch({ control, name: "phone" }) ?? "";
 
   async function onSubmit(data: LeadSchema) {
     setServerError(null);
@@ -112,7 +114,7 @@ export function LeadForm() {
             placeholder="(00) 00000-0000"
             inputMode="tel"
             disabled={isSubmitting}
-            value={formatPhone(watch("phone"))}
+            value={formatPhone(phone)}
             onChange={(e) =>
               setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
                 shouldValidate: true,

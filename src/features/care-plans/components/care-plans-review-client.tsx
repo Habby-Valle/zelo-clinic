@@ -177,12 +177,12 @@ export function CarePlansReviewClient() {
       };
     });
     try {
-      // Persiste seleção + ajustes de itens do enfermeiro antes de aprovar.
+      // Persiste seleção + ajustes de itens antes de ativar.
       await updateChecklists.mutateAsync({ planId: plan.id, checklists });
       await approve.mutateAsync(plan.id);
       toast.success("Plano aprovado e ativado.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao aprovar plano.");
+      toast.error(err instanceof Error ? err.message : "Erro ao ativar plano.");
     }
   }
 
@@ -206,7 +206,6 @@ export function CarePlansReviewClient() {
           Revise os planos, ajuste os checklists se necessário, e aprove ou devolva.
         </p>
       </div>
-
       {isLoading ? (
         <div className="space-y-4">
           <Skeleton className="h-40 w-full" />

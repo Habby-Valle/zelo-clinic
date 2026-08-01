@@ -13,7 +13,6 @@ import {
   useCaregiversReport,
   useSatisfactionReport,
   useContractsReport,
-  useBillingReport,
 } from "../hooks/use-reports";
 import { ReportsFilters } from "./reports-filters";
 import { SummaryCards } from "./summary-cards";
@@ -25,7 +24,6 @@ import { SosReport } from "./sos-report";
 import { CaregiversReport } from "./caregivers-report";
 import { SatisfactionReport } from "./satisfaction-report";
 import { ContractsReport } from "./contracts-report";
-import { BillingReport } from "./billing-report";
 import { ComplianceSection } from "@/features/quality";
 import { OnboardingSection } from "@/features/onboarding";
 import { usePlanLimits } from "@/features/plan";
@@ -84,7 +82,6 @@ export function ReportsClient() {
   const caregiversQuery = useCaregiversReport(dateRange);
   const satisfactionQuery = useSatisfactionReport(dateRange);
   const contractsQuery = useContractsReport(12);
-  const billingQuery = useBillingReport(12);
 
   const isPending = shiftsQuery.isLoading || checklistsQuery.isLoading || patientsQuery.isLoading;
 
@@ -177,12 +174,6 @@ export function ReportsClient() {
     downloadCsv(buildCsv(["Mês", "Novos", "Total"], rows), "contratos.csv");
   }
 
-  function exportBillingCsv() {
-    if (!billingQuery.data) return;
-    const rows = billingQuery.data.byMonth.map((m) => [m.month, m.revenue, m.paid, m.pending]);
-    downloadCsv(buildCsv(["Mês", "Receita", "Recebido", "Pendente"], rows), "faturamento.csv");
-  }
-
   return (
     <div className="space-y-6">
       {!canAccessReports && <FeatureUpgradePrompt featureName="Relatórios" />}
@@ -263,12 +254,6 @@ export function ReportsClient() {
             data={contractsQuery.data ?? null}
             loading={contractsQuery.isLoading}
             onExport={exportContractsCsv}
-          />
-
-          <BillingReport
-            data={billingQuery.data ?? null}
-            loading={billingQuery.isLoading}
-            onExport={exportBillingCsv}
           />
 
           <ComplianceSection />

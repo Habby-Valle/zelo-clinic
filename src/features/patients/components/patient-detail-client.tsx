@@ -18,6 +18,7 @@ import { CarePlanSection } from "@/features/care-plans/components/care-plan-sect
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientDocuments } from "./patient-documents";
 import { PatientRecordSection } from "./patient-record-section";
+import { FamilyInviteDialog } from "./family-invite-dialog";
 import { useAuthStore } from "@/store/authStore";
 import { HealthAlertsSection } from "@/features/health-alerts/components/health-alerts-section";
 import { useQueryClient } from "@tanstack/react-query";
@@ -290,6 +291,11 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              {!isNurse && (
+                <div className="mt-4">
+                  <FamilyInviteDialog patientId={patient.id} clinicId={patient.clinic_id} />
                 </div>
               )}
             </CardContent>

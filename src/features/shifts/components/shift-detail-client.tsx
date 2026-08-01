@@ -160,9 +160,7 @@ export function ShiftDetailClient({ id }: Props) {
             {shift.contract_number ? (
               <p className="font-medium">{shift.contract_number}</p>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Sem contrato vinculado — este turno não será faturado.
-              </p>
+              <p className="text-sm text-muted-foreground">Sem contrato vinculado.</p>
             )}
           </CardContent>
         </Card>

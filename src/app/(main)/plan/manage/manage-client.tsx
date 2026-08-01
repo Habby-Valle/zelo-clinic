@@ -31,7 +31,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/format";
-import { getPlanPaymentPix, manageGetClinic, cancelSubscription, type PlanPayment } from "../actions";
+import {
+  getPlanPaymentPix,
+  manageGetClinic,
+  cancelSubscription,
+  type PlanPayment,
+} from "../actions";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Pago",
@@ -41,13 +46,14 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
   chargeback: "Chargeback",
 };
 
-const PAYMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  paid: "default",
-  pending: "secondary",
-  overdue: "destructive",
-  refunded: "outline",
-  chargeback: "destructive",
-};
+const PAYMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> =
+  {
+    paid: "default",
+    pending: "secondary",
+    overdue: "destructive",
+    refunded: "outline",
+    chargeback: "destructive",
+  };
 
 function formatBRL(value: string) {
   const num = parseFloat(value);
@@ -262,11 +268,7 @@ export function ManageSubscriptionClient({
                                 : p.payment_method || "—"}
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                PAYMENT_STATUS_VARIANTS[p.status] ?? "outline"
-                              }
-                            >
+                            <Badge variant={PAYMENT_STATUS_VARIANTS[p.status] ?? "outline"}>
                               {PAYMENT_STATUS_LABELS[p.status] ?? p.status}
                             </Badge>
                           </TableCell>
@@ -277,8 +279,7 @@ export function ManageSubscriptionClient({
                             {(p.status === "overdue" ||
                               (p.status === "pending" &&
                                 p.due_date <= new Date().toLocaleDateString("en-CA"))) &&
-                            (p.payment_method === "PIX" ||
-                              subscription?.billing_type === "PIX") ? (
+                            (p.payment_method === "PIX" || subscription?.billing_type === "PIX") ? (
                               <Button variant="outline" size="sm" onClick={() => openPix(p)}>
                                 <QrCode className="mr-1 h-3 w-3" />
                                 Pagar
@@ -327,9 +328,7 @@ export function ManageSubscriptionClient({
               <CheckCircle className="h-14 w-14 text-green-500" />
               <div>
                 <p className="text-lg font-semibold">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground">
-                  Sua assinatura está em dia.
-                </p>
+                <p className="text-sm text-muted-foreground">Sua assinatura está em dia.</p>
               </div>
               <Button className="w-full" onClick={closePix}>
                 Concluir
@@ -348,6 +347,7 @@ export function ManageSubscriptionClient({
           ) : pixData ? (
             <div className="space-y-4">
               <div className="flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`data:image/png;base64,${pixData.pixQrCode}`}
                   alt="QR Code PIX"

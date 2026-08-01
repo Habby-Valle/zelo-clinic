@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  useApproveCarePlan,
   useCaregiverMatch,
   useSubmitCarePlan,
   useCaregiverOptionsForPlan,
@@ -64,6 +65,7 @@ export function CarePlanSection({
   const { data: planLimits } = usePlanLimits();
   const saveMutation = useSaveCarePlan(patientId, plan?.id);
   const submitMutation = useSubmitCarePlan(patientId);
+  const approveMutation = useApproveCarePlan();
 
   const [selected, setSelected] = useState<string[]>([]);
   const [caregiverId, setCaregiverId] = useState<string | null>(null);
@@ -258,8 +260,8 @@ export function CarePlanSection({
     })),
   });
 
-  // Só envia para revisão com pelo menos um checklist e um cuidador responsável
-  // escolhido — e desde que o plano não esteja já em revisão pelo enfermeiro.
+  // Só ativa o plano com pelo menos um checklist e um cuidador responsável
+  // escolhido — e desde que o plano não esteja já em revisão/ativação.
   const canSubmit = selected.length > 0 && !!caregiverId && !isPendingReview;
 
   async function handleSave() {
@@ -271,17 +273,18 @@ export function CarePlanSection({
     }
   }
 
-  async function handleSubmit() {
+  async function handleActivate() {
     try {
       const saved = await saveMutation.mutateAsync(buildInput());
-      await submitMutation.mutateAsync(saved.id);
-      toast.success("Plano enviado para revisão do enfermeiro.");
+      const submitted = await submitMutation.mutateAsync(saved.id);
+      await approveMutation.mutateAsync(submitted.id);
+      toast.success("Plano de cuidado ativado.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao enviar plano.");
+      toast.error(err instanceof Error ? err.message : "Erro ao ativar plano.");
     }
   }
 
-  const busy = saveMutation.isPending || submitMutation.isPending;
+  const busy = saveMutation.isPending || submitMutation.isPending || approveMutation.isPending;
 
   return (
     <Card>
@@ -320,14 +323,13 @@ export function CarePlanSection({
 
             {plan?.status === "pending_review" && (
               <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
-                Em revisão pelo enfermeiro. Aguarde a análise — o plano voltará como rascunho se
-                houver ajustes a fazer.
+                Plano aguardando ativação pela clínica.
               </p>
             )}
 
             {plan?.status === "draft" && plan.review_note && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-                <p className="font-medium text-destructive">Devolvido pelo enfermeiro</p>
+                <p className="font-medium text-destructive">Devolvido pela clínica</p>
                 <p className="mt-1 text-muted-foreground">{plan.review_note}</p>
               </div>
             )}
@@ -430,8 +432,8 @@ export function CarePlanSection({
                     autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">
-                    O cuidador escolhido será vinculado ao paciente quando o plano for aprovado pelo
-                    enfermeiro.
+                    O cuidador escolhido será vinculado ao paciente quando o plano for ativado pela
+                    clínica.
                   </p>
                   {caregiverId ? (
                     <p className="flex items-center gap-1 text-xs text-green-600">
@@ -664,7 +666,7 @@ export function CarePlanSection({
                 {selected.length > 0 && !caregiverId && (
                   <p className="flex items-center gap-1 text-xs text-amber-600">
                     <AlertTriangle className="h-3 w-3" />
-                    Escolha o cuidador responsável para enviar o plano para revisão.
+                    Escolha o cuidador responsável para ativar o plano.
                   </p>
                 )}
                 <div className="flex justify-end gap-2">
@@ -672,10 +674,12 @@ export function CarePlanSection({
                     {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Salvar rascunho
                   </Button>
-                  <Button onClick={handleSubmit} disabled={busy || !canSubmit}>
-                    {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button onClick={handleActivate} disabled={busy || !canSubmit}>
+                    {(submitMutation.isPending || approveMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Enviar para revisão
+                    Ativar plano
                   </Button>
                 </div>
               </div>

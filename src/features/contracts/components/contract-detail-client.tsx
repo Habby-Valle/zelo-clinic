@@ -1,32 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Loader2,
-  Receipt,
-  PauseCircle,
-  PlayCircle,
-  Ban,
-} from "lucide-react";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Loader2, PauseCircle, PlayCircle, Ban } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMutation } from "@tanstack/react-query";
-import { generateInvoiceApi } from "@/features/billing/services";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -38,11 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
-import { useContract,
-  useTransitionContract,
-} from "../hooks";
+import { useContract, useTransitionContract } from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -54,14 +32,6 @@ const STATUS_VARIANTS: Record<ContractStatus, "default" | "secondary" | "destruc
     cancelled: "destructive",
     expired: "outline",
   };
-
-function formatCurrency(value: string | null): string {
-  if (!value) return "—";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(value));
-}
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "—";
@@ -75,36 +45,10 @@ export function ContractDetailClient() {
   const { data: contract, isLoading } = useContract(id);
   const transitionContract = useTransitionContract(id);
 
-  const [rejectOpen, setRejectOpen] = useState(false);
-  // Ciclo de vida: 'suspend' | 'reactivate' | 'cancel' | null
   const [lifecycleAction, setLifecycleAction] = useState<
     "suspend" | "reactivate" | "cancel" | null
   >(null);
   const [lifecycleReason, setLifecycleReason] = useState("");
-  const [genInvoiceOpen, setGenInvoiceOpen] = useState(false);
-  const [genMonth, setGenMonth] = useState(new Date().getMonth());
-  const [genYear, setGenYear] = useState(new Date().getFullYear());
-
-  const router = useRouter();
-
-  const generateInvoice = useMutation({
-    mutationFn: () => {
-      const periodEnd = new Date(genYear, genMonth, 0);
-      const periodStart = new Date(genYear, genMonth - 1, 1);
-      return generateInvoiceApi({
-        contract_id: id,
-        period_start: periodStart.toISOString().slice(0, 10),
-        period_end: periodEnd.toISOString().slice(0, 10),
-      });
-    },
-    onSuccess: (data) => {
-      setGenInvoiceOpen(false);
-      const invoiceId = String(data.id ?? "");
-      if (invoiceId) {
-        router.push(`/billing/${invoiceId}`);
-      }
-    },
-  });
 
   if (isLoading) {
     return (
@@ -126,17 +70,6 @@ export function ContractDetailClient() {
       </div>
     );
   }
-
-  const handleReject = () => {
-    transitionContract.mutate(
-      { status: "cancelled", reason: "Recusado pela clínica" },
-      {
-        onSuccess: () => {
-          setRejectOpen(false);
-        },
-      }
-    );
-  };
 
   const closeLifecycle = () => {
     setLifecycleAction(null);
@@ -281,46 +214,6 @@ export function ContractDetailClient() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Valores</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <Row
-              label="Modo de cobrança"
-              value={
-                contract.billing_mode === "per_hour"
-                  ? "Por hora"
-                  : contract.billing_mode === "fixed"
-                    ? "Valor fixo mensal"
-                    : "Por turno"
-              }
-            />
-            {contract.billing_mode === "fixed" && (
-              <Row
-                label="Valor fixo mensal"
-                value={formatCurrency(contract.fixed_monthly_amount)}
-              />
-            )}
-            {contract.billing_mode === "per_hour" && (
-              <Row label="Preço por hora" value={formatCurrency(contract.price_per_hour)} />
-            )}
-            {contract.billing_mode === "per_shift" && (
-              <Row label="Preço por turno" value={formatCurrency(contract.price_per_shift)} />
-            )}
-            <Row
-              label="Adicional noturno"
-              value={
-                contract.night_surcharge
-                  ? contract.night_surcharge_type === "percentage"
-                    ? `${contract.night_surcharge}%`
-                    : formatCurrency(contract.night_surcharge)
-                  : "—"
-              }
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle className="text-base">Datas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -329,23 +222,6 @@ export function ContractDetailClient() {
           </CardContent>
         </Card>
       </div>
-
-      {contract.status === "active" && (
-        <Card className="border-dashed">
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-medium">Gerar fatura</p>
-              <p className="text-xs text-muted-foreground">
-                Cria uma fatura com base nos turnos conclu&iacute;dos do contrato.
-              </p>
-            </div>
-            <Button variant="outline" onClick={() => setGenInvoiceOpen(true)}>
-              <Receipt className="mr-2 h-4 w-4" />
-              Gerar Fatura
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       {(contract.status === "active" || contract.status === "suspended") && (
         <Card className="border-dashed">
@@ -433,68 +309,6 @@ export function ContractDetailClient() {
               </DialogFooter>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={genInvoiceOpen} onOpenChange={setGenInvoiceOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Gerar Fatura</DialogTitle>
-            <DialogDescription>
-              Selecione o m&ecirc;s de refer&ecirc;ncia para a fatura.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-4 py-4">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="gen-month">M&ecirc;s</Label>
-              <select
-                id="gen-month"
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm"
-                value={genMonth}
-                onChange={(e) => setGenMonth(Number(e.target.value))}
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(2024, i).toLocaleDateString("pt-BR", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="gen-year">Ano</Label>
-              <select
-                id="gen-year"
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm"
-                value={genYear}
-                onChange={(e) => setGenYear(Number(e.target.value))}
-              >
-                {Array.from({ length: 3 }, (_, i) => {
-                  const y = new Date().getFullYear() - 1 + i;
-                  return (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-          {generateInvoice.error && (
-            <p className="text-sm text-destructive">
-              {generateInvoice.error instanceof Error
-                ? generateInvoice.error.message
-                : "Erro ao gerar fatura"}
-            </p>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGenInvoiceOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => generateInvoice.mutate()} disabled={generateInvoice.isPending}>
-              {generateInvoice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Gerar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

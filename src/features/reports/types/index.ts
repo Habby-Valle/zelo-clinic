@@ -86,31 +86,6 @@ export interface ContractsReportData {
   avgWeeklyHours: number;
 }
 
-export interface BillingReportData {
-  summary: {
-    totalRevenue: string;
-    totalPending: string;
-    totalPaid: string;
-    pendingCount: number;
-    paidCount: number;
-    avgInvoiceValue: string;
-  };
-  byMonth: {
-    month: string;
-    revenue: string;
-    pending: string;
-    paid: string;
-    count: number;
-  }[];
-  byContract: {
-    contractId: string;
-    contractNumber: string;
-    patientName: string;
-    totalInvoiced: string;
-    totalPaid: string;
-  }[];
-}
-
 export interface SatisfactionSummary {
   avgSatisfaction: number | null;
   nps: number | null;

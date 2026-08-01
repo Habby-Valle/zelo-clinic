@@ -23,7 +23,6 @@ import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
 import { usePlanLimits } from "@/features/plan";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,8 +85,10 @@ export function SettingsClient() {
   ] as const;
 
   const [saving, setSaving] = useState(false);
-
-  const validTabs = ["geral", "notificacoes", "seguranca"];
+  const [passwordResult, setPasswordResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -250,7 +251,7 @@ export function SettingsClient() {
   }
 
   const searchParams = useSearchParams();
-  const validTabs = ["geral", "notificacoes", "pagamentos", "seguranca"];
+  const validTabs = ["geral", "notificacoes", "seguranca"];
   const requestedTab = searchParams.get("tab");
   const [tab, setTab] = useState(
     requestedTab && validTabs.includes(requestedTab) ? requestedTab : "geral"
@@ -747,33 +748,33 @@ export function SettingsClient() {
       {/* ───── Notificações ───── */}
       <TabsContent value="notificacoes" className="space-y-6">
         {planLimits?.limits?.has_daily_report !== false && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Relatório diário para familiares
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="daily-report" className="text-sm font-medium">
-                  Enviar resumo diário automático
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Todas as noites, familiares e responsáveis recebem por push e e-mail um resumo do
-                  dia de cada paciente — cuidados realizados e ocorrências registradas.
-                </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Relatório diário para familiares
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="daily-report" className="text-sm font-medium">
+                    Enviar resumo diário automático
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Todas as noites, familiares e responsáveis recebem por push e e-mail um resumo
+                    do dia de cada paciente — cuidados realizados e ocorrências registradas.
+                  </p>
+                </div>
+                <Switch
+                  id="daily-report"
+                  checked={clinic?.daily_report_enabled ?? true}
+                  onCheckedChange={handleToggleDailyReport}
+                  disabled={updateClinic.isPending}
+                />
               </div>
-              <Switch
-                id="daily-report"
-                checked={clinic?.daily_report_enabled ?? true}
-                onCheckedChange={handleToggleDailyReport}
-                disabled={updateClinic.isPending}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         )}
 
         <Card>

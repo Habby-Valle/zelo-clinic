@@ -1,6 +1,5 @@
 import { apiFetchClient } from "@/lib/api-client";
 import type {
-  BillingReportData,
   ClinicReportSummary,
   ContractsReportData,
   FamilyMembersGrowthData,
@@ -76,10 +75,4 @@ export async function fetchContractsReportApi(months: number = 12): Promise<Cont
   const qs = new URLSearchParams();
   qs.set("months", String(months));
   return apiFetchClient<ContractsReportData>(`/reports/contracts/?${qs}`);
-}
-
-export async function fetchBillingReportApi(months: number = 12): Promise<BillingReportData> {
-  const qs = new URLSearchParams();
-  qs.set("months", String(months));
-  return apiFetchClient<BillingReportData>(`/reports/billing/?${qs}`);
 }

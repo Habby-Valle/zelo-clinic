@@ -7,10 +7,7 @@ import type { ShiftItem } from "../types";
  */
 export type ShiftBadgeKey = ShiftItem["status"] | "not_performed";
 
-export function shiftBadgeKey(
-  status: ShiftItem["status"],
-  autoCancelled?: boolean,
-): ShiftBadgeKey {
+export function shiftBadgeKey(status: ShiftItem["status"], autoCancelled?: boolean): ShiftBadgeKey {
   return status === "cancelled" && autoCancelled ? "not_performed" : status;
 }
 

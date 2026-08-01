@@ -273,8 +273,8 @@ function CurrentPlanInfo({
           <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">
-              Acesso mantido até {expiresDate.toLocaleDateString("pt-BR")} (
-              {daysLeft} dia{daysLeft !== 1 ? "s" : ""}). Renove para continuar.
+              Acesso mantido até {expiresDate.toLocaleDateString("pt-BR")} ({daysLeft} dia
+              {daysLeft !== 1 ? "s" : ""}). Renove para continuar.
             </span>
           </div>
         )}
@@ -332,7 +332,7 @@ export function PlanManagementClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+  const [loadingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -404,13 +404,20 @@ export function PlanManagementClient({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [showPaymentModal, subscribeResult?.pixQrCode, pixConfirmed, currentStatus, queryClient, router]);
+  }, [
+    showPaymentModal,
+    subscribeResult?.pixQrCode,
+    pixConfirmed,
+    currentStatus,
+    queryClient,
+    router,
+  ]);
 
   const hasPaidPlan =
     currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
 
   async function handleSubscribe(planId: string) {
-    const result = await requestPlanChange(planId, "monthly");
+    const result = await requestPlanChange(planId);
     if (!result.success) {
       setError(result.error ?? "Erro ao processar");
       toast.error(result.error ?? "Erro ao processar");
@@ -527,8 +534,14 @@ export function PlanManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar assinatura</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso
-              aos recursos pagos até o fim do ciclo vigente (<strong>{currentPlan.clinicPlan?.expires_at ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR") : "—"}</strong>). Depois, o plano será bloqueado.
+              Tem certeza que deseja cancelar? A cobrança será encerrada, mas você mantém acesso aos
+              recursos pagos até o fim do ciclo vigente (
+              <strong>
+                {currentPlan.clinicPlan?.expires_at
+                  ? new Date(currentPlan.clinicPlan.expires_at).toLocaleDateString("pt-BR")
+                  : "—"}
+              </strong>
+              ). Depois, o plano será bloqueado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -569,100 +582,104 @@ export function PlanManagementClient({
 
           {subscribeResult?.pixQrCode ? (
             pixConfirmed ? (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <CheckCircle className="h-14 w-14 text-green-500" />
-              <div>
-                <p className="text-lg font-semibold">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground">
-                  Sua assinatura foi ativada com sucesso.
-                </p>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setSubscribeResult(null);
-                  setPixConfirmed(false);
-                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                  router.refresh();
-                }}
-              >
-                Concluir
-              </Button>
-            </div>
-            ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
-                <QrCode className="h-8 w-8 text-primary" />
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <CheckCircle className="h-14 w-14 text-green-500" />
                 <div>
-                  <p className="font-medium">Pagamento via PIX</p>
+                  <p className="text-lg font-semibold">Pagamento confirmado!</p>
                   <p className="text-sm text-muted-foreground">
-                    Escaneie o QR Code ou copie o código abaixo.
+                    Sua assinatura foi ativada com sucesso.
                   </p>
                 </div>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setSubscribeResult(null);
+                    setPixConfirmed(false);
+                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                    router.refresh();
+                  }}
+                >
+                  Concluir
+                </Button>
               </div>
-              <div className="flex justify-center">
-                <img
-                  src={`data:image/png;base64,${subscribeResult.pixQrCode}`}
-                  alt="QR Code PIX"
-                  className="h-48 w-48"
-                />
-              </div>
-              {subscribeResult.pixPayload && (
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
-                  <div className="flex gap-2">
-                    <input
-                      className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
-                      value={subscribeResult.pixPayload}
-                      readOnly
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(subscribeResult.pixPayload!);
-                        toast.success("Código PIX copiado!");
-                      }}
-                    >
-                      Copiar
-                    </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
+                  <QrCode className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="font-medium">Pagamento via PIX</p>
+                    <p className="text-sm text-muted-foreground">
+                      Escaneie o QR Code ou copie o código abaixo.
+                    </p>
                   </div>
                 </div>
-              )}
-              {subscribeResult.planChange && subscribeResult.prorataValue ? (
-                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  Valor proporcional do upgrade, referente aos dias restantes do ciclo atual:{" "}
-                  <strong>
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(subscribeResult.prorataValue)}
-                  </strong>
-                  . O novo plano já está ativo; o valor cheio passa a ser cobrado no próximo ciclo.
-                </p>
-              ) : null}
-
-              {!subscribeResult.planChange && (
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Aguardando confirmação do pagamento…
+                <div className="flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`data:image/png;base64,${subscribeResult.pixQrCode}`}
+                    alt="QR Code PIX"
+                    className="h-48 w-48"
+                  />
                 </div>
-              )}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setSubscribeResult(null);
-                  setPixConfirmed(false);
-                  queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                  router.refresh();
-                }}
-              >
-                Fechar
-              </Button>
-            </div>
+                {subscribeResult.pixPayload && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">
+                      Código PIX (copia e cola)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
+                        value={subscribeResult.pixPayload}
+                        readOnly
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(subscribeResult.pixPayload!);
+                          toast.success("Código PIX copiado!");
+                        }}
+                      >
+                        Copiar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {subscribeResult.planChange && subscribeResult.prorataValue ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    Valor proporcional do upgrade, referente aos dias restantes do ciclo atual:{" "}
+                    <strong>
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(subscribeResult.prorataValue)}
+                    </strong>
+                    . O novo plano já está ativo; o valor cheio passa a ser cobrado no próximo
+                    ciclo.
+                  </p>
+                ) : null}
+
+                {!subscribeResult.planChange && (
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Aguardando confirmação do pagamento…
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setSubscribeResult(null);
+                    setPixConfirmed(false);
+                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                    router.refresh();
+                  }}
+                >
+                  Fechar
+                </Button>
+              </div>
             )
           ) : (
             <div className="space-y-3">
@@ -731,7 +748,7 @@ export function PlanManagementClient({
                 setShowChangeDialog(false);
                 const pid = changeTargetPlanId;
                 if (!pid) return;
-                const resultPromise = requestPlanChange(pid, "monthly");
+                const resultPromise = requestPlanChange(pid);
                 resultPromise.then((result) => {
                   if (!result.success) {
                     setError(result.error ?? "Erro ao processar");

@@ -11,7 +11,6 @@ import {
   fetchCaregiversReportApi,
   fetchSatisfactionReportApi,
   fetchContractsReportApi,
-  fetchBillingReportApi,
 } from "../services";
 import type { DateRange } from "../types";
 
@@ -80,12 +79,5 @@ export function useContractsReport(months: number = 12) {
   return useQuery({
     queryKey: ["reports", "contracts", months],
     queryFn: () => fetchContractsReportApi(months),
-  });
-}
-
-export function useBillingReport(months: number = 12) {
-  return useQuery({
-    queryKey: ["reports", "billing", months],
-    queryFn: () => fetchBillingReportApi(months),
   });
 }

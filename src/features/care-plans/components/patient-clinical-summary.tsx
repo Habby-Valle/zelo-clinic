@@ -21,7 +21,7 @@ function calculateAge(birthDate: string): number {
 }
 
 /**
- * Resumo clínico do paciente exibido na curadoria do plano, para o enfermeiro
+ * Resumo clínico do paciente exibido na curadoria do plano, para a clínica
  * saber de quem se trata (condições, alergias, medicações declaradas, receitas).
  */
 export function PatientClinicalSummary({ patientId }: { patientId: string }) {

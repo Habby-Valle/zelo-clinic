@@ -37,7 +37,7 @@ interface Props {
 /**
  * Editor de um item do checklist dentro do plano: permite inativar o item e
  * sobrescrever faixa esperada (número) e horários (horários fixos). Usado tanto
- * na montagem (admin) quanto na curadoria (enfermeiro).
+ * na montagem quanto na ativação do plano pela clínica.
  */
 export function ChecklistItemOverrideEditor({
   item,

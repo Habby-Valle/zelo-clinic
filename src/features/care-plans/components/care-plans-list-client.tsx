@@ -24,7 +24,6 @@ import {
   useCarePlans,
   useApproveCarePlan,
   useReturnCarePlan,
-  useUpdateCarePlanChecklists,
 } from "../hooks/use-care-plans";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
@@ -71,7 +70,6 @@ export function CarePlansListClient() {
   });
   const approve = useApproveCarePlan();
   const returnPlan = useReturnCarePlan();
-  const updateChecklists = useUpdateCarePlanChecklists();
 
   const plans = data?.plans ?? [];
   const total = data?.total ?? 0;

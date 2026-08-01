@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { FileText, MoreHorizontal, Eye, Search } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,14 +42,6 @@ const STATUS_TABS = [
   { value: "", label: "Todos" },
   { value: "active", label: "Ativos" },
 ] as const;
-
-function formatCurrency(value: string | null): string {
-  if (!value) return "—";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(value));
-}
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "—";
@@ -121,7 +113,6 @@ export function ContractsListClient() {
                 <TableHead>Solicitante</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Início</TableHead>
-                <TableHead>Valor</TableHead>
                 <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -144,15 +135,12 @@ export function ContractsListClient() {
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
                     </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 ))
               ) : contracts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <FileText className="h-8 w-8" />
                       <p>Nenhum contrato encontrado</p>
@@ -184,9 +172,6 @@ export function ContractsListClient() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(contract.start_date)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatCurrency(contract.price_per_hour ?? contract.price_per_shift)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

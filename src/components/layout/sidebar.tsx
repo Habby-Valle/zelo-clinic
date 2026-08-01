@@ -20,7 +20,6 @@ import {
   TestTube,
   CheckCircle,
   FileText,
-  Receipt,
   HeartPulse,
   Clock,
 } from "lucide-react";
@@ -82,15 +81,13 @@ type NavItem = {
   roles?: UserRole[];
 };
 
-// Itens visíveis ao enfermeiro (leitura + planos). Sem `roles` = só admin.
+// Itens visíveis ao admin e ao enfermeiro. Sem `roles` = só admin.
 const CLINIC_STAFF: UserRole[] = ["clinic_admin", "clinic_nurse"];
-const NURSE_ONLY: UserRole[] = ["clinic_nurse"];
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contracts", label: "Contratos", icon: FileText },
-  { href: "/billing", label: "Faturas", icon: Receipt },
-  { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: NURSE_ONLY },
+  { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: CLINIC_STAFF },
   { href: "/patients", label: "Pacientes", icon: UserCircle, roles: CLINIC_STAFF },
   { href: "/clients", label: "Clientes", icon: UserCheck },
   { href: "/users", label: "Equipe", icon: Users },

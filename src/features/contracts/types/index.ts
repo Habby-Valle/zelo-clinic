@@ -1,9 +1,4 @@
-export type ContractStatus =
-  | "draft"
-  | "active"
-  | "suspended"
-  | "cancelled"
-  | "expired";
+export type ContractStatus = "draft" | "active" | "suspended" | "cancelled" | "expired";
 
 export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   draft: "Rascunho",

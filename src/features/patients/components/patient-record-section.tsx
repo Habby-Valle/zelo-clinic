@@ -34,7 +34,6 @@ interface RecordContract {
   id: string;
   contract_number: string;
   weekly_hours: number;
-  price_per_hour: string;
   start_date: string;
   status: string;
 }
@@ -291,7 +290,7 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
                   <div>
                     <p className="font-medium">{c.contract_number}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.weekly_hours}h/sem · R$ {c.price_per_hour}/h · Início: {c.start_date}
+                      {c.weekly_hours}h/sem · Início: {c.start_date}
                     </p>
                   </div>
                   {getStatusBadge(c.status)}

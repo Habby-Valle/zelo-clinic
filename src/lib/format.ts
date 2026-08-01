@@ -43,9 +43,7 @@ export function unformat(value: string): string {
  */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
-  const d = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? new Date(`${value}T00:00:00`)
-    : new Date(value);
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
   if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("pt-BR");
 }

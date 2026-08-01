@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState, useCallback } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Smartphone, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,7 @@ function CaregiverSetPasswordContent() {
     };
   }, [email, token, appUrl]);
 
-  const copyLink = useCallback(async () => {
+  const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(pageUrl);
       setCopied(true);
@@ -81,7 +81,7 @@ function CaregiverSetPasswordContent() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [pageUrl]);
+  };
 
   if (!email || !token) return null;
 

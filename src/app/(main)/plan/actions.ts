@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireClinicAdmin } from "@/lib/auth";
 import { apiFetchServer } from "@/lib/api";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
 
@@ -134,8 +133,7 @@ export async function arePlansEnabled(): Promise<boolean> {
 }
 
 export async function requestPlanChange(
-  planId: string,
-  billingCycle: "monthly" | "quarterly" | "annual" = "monthly"
+  planId: string
 ): Promise<{
   success: boolean;
   error?: string;
@@ -144,8 +142,6 @@ export async function requestPlanChange(
   pixPayload?: string;
   billingType?: "PIX" | "CREDIT_CARD" | null;
 }> {
-  const { user } = await requireClinicAdmin();
-
   let targetPlan: DjangoPlan | null = null;
   try {
     const data = await apiFetchServer<DjangoPlanList>(`/plans/?page_size=100&scope=clinic`);

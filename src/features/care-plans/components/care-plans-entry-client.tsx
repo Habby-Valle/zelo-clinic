@@ -6,8 +6,8 @@ import { CarePlansListClient } from "./care-plans-list-client";
 import { CarePlansReviewClient } from "./care-plans-review-client";
 
 /**
- * Ponto de entrada do enfermeiro em /care-plans: havendo plano pendente de
- * revisão, abre direto a tela de curadoria; caso contrário, a listagem.
+ * Ponto de entrada da clínica em /care-plans: havendo plano pendente de
+ * ativação, abre direto a tela de curadoria; caso contrário, a listagem.
  */
 export function CarePlansEntryClient() {
   const { data: pending = [], isLoading } = useCarePlansForReview();

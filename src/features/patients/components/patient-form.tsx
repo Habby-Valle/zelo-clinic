@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { patientSchema, type PatientFormValues } from "@/lib/validations/patient";
@@ -43,7 +43,6 @@ export function PatientForm({
     register,
     handleSubmit,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<PatientFormValues>({
@@ -64,6 +63,8 @@ export function PatientForm({
       ...defaultValues,
     },
   });
+
+  const phone = useWatch({ control, name: "phone" }) ?? "";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -140,7 +141,7 @@ export function PatientForm({
               id="phone"
               placeholder="(11) 99999-9999"
               disabled={isPending}
-              value={formatPhone(watch("phone"))}
+              value={formatPhone(phone)}
               onChange={(e) =>
                 setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
                   shouldValidate: true,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, CheckCircle2, Search } from "lucide-react";
 
@@ -60,7 +60,10 @@ export default function RegisterPage() {
     },
   });
 
-  const cepValue = form3.watch("zip_code") ?? "";
+  const cepValue = useWatch({ control: form3.control, name: "zip_code" }) ?? "";
+  const form1Phone = useWatch({ control: form1.control, name: "phone" }) ?? "";
+  const form2Document = useWatch({ control: form2.control, name: "clinic_document" }) ?? "";
+  const form2Phone = useWatch({ control: form2.control, name: "clinic_phone" }) ?? "";
 
   useEffect(() => {
     fetch(`/api/register/${params.token}`)
@@ -227,7 +230,7 @@ export default function RegisterPage() {
             <Input
               id="nurse-phone"
               placeholder="(11) 99999-9999"
-              value={formatPhone(form1.watch("phone"))}
+              value={formatPhone(form1Phone)}
               onChange={(e) =>
                 form1.setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
                   shouldValidate: true,
@@ -319,7 +322,7 @@ export default function RegisterPage() {
             <Input
               id="phone"
               placeholder="(11) 99999-9999"
-              value={formatPhone(form1.watch("phone"))}
+              value={formatPhone(form1Phone)}
               onChange={(e) =>
                 form1.setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
                   shouldValidate: true,
@@ -386,7 +389,7 @@ export default function RegisterPage() {
             <Input
               id="clinic_document"
               placeholder="00.000.000/0001-00"
-              value={formatCnpj(form2.watch("clinic_document"))}
+              value={formatCnpj(form2Document)}
               onChange={(e) =>
                 form2.setValue("clinic_document", e.target.value.replace(/\D/g, "").slice(0, 14), {
                   shouldValidate: true,
@@ -405,7 +408,7 @@ export default function RegisterPage() {
             <Input
               id="clinic_phone"
               placeholder="(11) 3333-3333"
-              value={formatPhone(form2.watch("clinic_phone"))}
+              value={formatPhone(form2Phone)}
               onChange={(e) =>
                 form2.setValue("clinic_phone", e.target.value.replace(/\D/g, "").slice(0, 11), {
                   shouldValidate: true,

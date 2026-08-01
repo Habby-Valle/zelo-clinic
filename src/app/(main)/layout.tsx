@@ -22,9 +22,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar role={user.role} />
-        <main className="flex-1 overflow-auto p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
       <OnboardingWrapper />
     </div>

@@ -3,7 +3,6 @@
 import {
   LayoutDashboard,
   FileText,
-  Receipt,
   UserCircle,
   UserCheck,
   Users,
@@ -27,7 +26,6 @@ import type { TourStep } from "../types";
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   FileText,
-  Receipt,
   UserCircle,
   UserCheck,
   Users,
@@ -58,22 +56,11 @@ const tourSteps: TourStep[] = [
     id: "contracts",
     icon: "FileText",
     title: "Contratos",
-    description: "Gerencie contratos de serviço com pacientes.",
+    description: "Gerencie os compromissos de cuidado com os pacientes.",
     details: [
       "Ciclo de vida: rascunho, ativo, suspenso, cancelado",
       "Validação de declaração de saúde",
-      "Geração de faturas por período",
-    ],
-  },
-  {
-    id: "billing",
-    icon: "Receipt",
-    title: "Faturas",
-    description: "Controle de faturamento recorrente.",
-    details: [
-      "Faturas por período com linhas de itens",
-      "Horas e valores detalhados",
-      "Controle de pagos e pendentes",
+      "Convite de familiares para acompanhar o paciente",
     ],
   },
   {

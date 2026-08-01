@@ -21,10 +21,7 @@ import type { ShiftItem } from "../types";
 import { mondayOf, addDays, localDateKey } from "../lib/shift-time";
 import { shiftBadgeKey, SHIFT_BADGE_LABELS, type ShiftBadgeKey } from "../lib/shift-status";
 
-const STATUS_BADGE: Record<
-  ShiftBadgeKey,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const STATUS_BADGE: Record<ShiftBadgeKey, "default" | "secondary" | "destructive" | "outline"> = {
   scheduled: "outline",
   in_progress: "default",
   completed: "secondary",
@@ -202,7 +199,9 @@ export function ShiftCalendar({
             <DialogTitle className="flex items-center gap-2">
               Turno
               {selected && (
-                <Badge variant={STATUS_BADGE[shiftBadgeKey(selected.status, selected.auto_cancelled)]}>
+                <Badge
+                  variant={STATUS_BADGE[shiftBadgeKey(selected.status, selected.auto_cancelled)]}
+                >
                   {SHIFT_BADGE_LABELS[shiftBadgeKey(selected.status, selected.auto_cancelled)]}
                 </Badge>
               )}
