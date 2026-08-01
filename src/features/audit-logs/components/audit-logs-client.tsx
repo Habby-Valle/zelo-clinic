@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { useAuditLogs } from "../hooks";
 import { fetchAuditLogsApi } from "../services";
-import { usePlanLimits } from "@/features/plan";
+import { usePlanLimits, usePlanFeature } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ function formatDate(dateString: string): string {
 export function AuditLogsClient() {
   const { data: planLimits } = usePlanLimits();
   const canAccessAuditLogs = (planLimits?.limits?.audit_log_days ?? 0) > 0;
+  const canExport = usePlanFeature("has_data_export");
 
   const [action, setAction] = useState("");
   const [contentType, setContentType] = useState("");
@@ -140,10 +141,12 @@ export function AuditLogsClient() {
               <p className="text-sm text-muted-foreground">
                 {total.toLocaleString("pt-BR")} registro{total !== 1 ? "s" : ""}
               </p>
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="mr-1.5 h-4 w-4" />
-                Exportar CSV
-              </Button>
+              {canExport && (
+                <Button variant="outline" size="sm" onClick={handleExport}>
+                  <Download className="mr-1.5 h-4 w-4" />
+                  Exportar CSV
+                </Button>
+              )}
             </div>
           </div>
 

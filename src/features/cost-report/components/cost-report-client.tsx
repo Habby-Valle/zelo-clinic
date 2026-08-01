@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePlanLimits } from "@/features/plan";
+import { usePlanLimits, usePlanFeature } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { useCostReport } from "../hooks";
 import type { CostReportFilters, CostShiftRow } from "../types";
@@ -88,6 +88,7 @@ function KpiSkeleton() {
 export function CostReportClient() {
   const { data: planLimits } = usePlanLimits();
   const canAccessReports = planLimits?.limits?.reports_level !== "none";
+  const canExport = usePlanFeature("has_data_export");
 
   const defaultRange = getDefaultRange();
   const [filters, setFilters] = useState<CostReportFilters>(defaultRange);
@@ -207,7 +208,7 @@ export function CostReportClient() {
                     className="w-44"
                   />
                 </div>
-                {data?.shifts?.length ? (
+                {data?.shifts?.length && canExport ? (
                   <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto">
                     <Download className="mr-1.5 h-4 w-4" />
                     Exportar CSV

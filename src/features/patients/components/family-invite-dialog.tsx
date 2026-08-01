@@ -21,6 +21,8 @@ import type { PendingInvite } from "../types";
 interface FamilyInviteDialogProps {
   patientId: string;
   clinicId: string | null;
+  currentCount?: number;
+  maxFamily?: number;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -30,7 +32,12 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
-export function FamilyInviteDialog({ patientId, clinicId }: FamilyInviteDialogProps) {
+export function FamilyInviteDialog({
+  patientId,
+  clinicId,
+  currentCount = 0,
+  maxFamily,
+}: FamilyInviteDialogProps) {
   const [open, setOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -41,6 +48,9 @@ export function FamilyInviteDialog({ patientId, clinicId }: FamilyInviteDialogPr
   const inviteFamily = useInviteFamily(patientId);
   const generateLinkCode = useGenerateFamilyLinkCode();
   const { data: pendingInvites = [] } = usePendingInvites(patientId);
+
+  const hasUnlimitedFamily = maxFamily === -1;
+  const familyLimitReached = !hasUnlimitedFamily && currentCount >= (maxFamily ?? 0);
 
   function reset() {
     setInviteEmail("");
@@ -115,6 +125,12 @@ export function FamilyInviteDialog({ patientId, clinicId }: FamilyInviteDialogPr
           </DialogHeader>
 
           <div className="space-y-4">
+            {familyLimitReached && (
+              <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                Limite de familiares atingido para este paciente ({currentCount}/
+                {maxFamily}). Faça upgrade do plano para adicionar mais.
+              </p>
+            )}
             {pendingInvites.length > 0 && (
               <div className="rounded-lg border bg-muted/30 p-3">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">Convites pendentes</p>
@@ -146,7 +162,7 @@ export function FamilyInviteDialog({ patientId, clinicId }: FamilyInviteDialogPr
                 />
               </div>
               <div className="flex justify-end">
-                <Button type="submit" disabled={inviteFamily.isPending}>
+                <Button type="submit" disabled={inviteFamily.isPending || familyLimitReached}>
                   {inviteFamily.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Enviar Convite
                 </Button>
@@ -186,7 +202,11 @@ export function FamilyInviteDialog({ patientId, clinicId }: FamilyInviteDialogPr
                     />
                   </div>
                   <div className="flex justify-end">
-                    <Button type="submit" variant="outline" disabled={generateLinkCode.isPending}>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={generateLinkCode.isPending || familyLimitReached}
+                    >
                       {generateLinkCode.isPending && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}

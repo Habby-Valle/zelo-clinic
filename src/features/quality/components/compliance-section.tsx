@@ -41,8 +41,8 @@ function ComplianceBadge({ pct }: { pct: number }) {
 export function ComplianceSection() {
   const { data: planLimits } = usePlanLimits();
   const { data: stats, isLoading } = useComplianceStats();
-  const hasQuality = planLimits?.limits?.has_quality_monitoring ?? true;
-  const hasCompliance = planLimits?.limits?.has_protocol_compliance ?? true;
+  const hasQuality = planLimits?.limits?.has_quality_monitoring === true;
+  const hasCompliance = planLimits?.limits?.has_protocol_compliance === true;
 
   if (!hasQuality && !hasCompliance) {
     return <FeatureUpgradePrompt featureName="Monitoria de Qualidade e Compliance" />;

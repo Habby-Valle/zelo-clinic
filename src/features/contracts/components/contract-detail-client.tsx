@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
+import { usePlanFeature } from "@/features/plan";
 import { useContract, useTransitionContract, useUpdateContract, usePricingSuggestion } from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
@@ -82,6 +83,7 @@ export function ContractDetailClient() {
   const [fixedMonthlyAmount, setFixedMonthlyAmount] = useState("");
   const [nightSurcharge, setNightSurcharge] = useState("");
   const [nightSurchargeType, setNightSurchargeType] = useState("percentage");
+  const canPricingSuggestion = usePlanFeature("has_pricing_suggestions");
 
   if (isLoading) {
     return (
@@ -480,65 +482,69 @@ export function ContractDetailClient() {
                 </Button>
               </div>
 
-              <div className="rounded-lg border border-dashed p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    Precificação Inteligente
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pricingLoading}
-                    onClick={() => setPricingEnabled(true)}
-                  >
-                    {pricingLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    Sugerir preços
-                  </Button>
-                </div>
-                {pricingSuggestion && (
-                  <div className="mt-3 space-y-2 rounded-md bg-muted/50 p-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Preço/h sugerido:</span>
-                      <span className="font-medium">
-                        {formatCurrency(pricingSuggestion.price_per_hour_suggested)}
-                      </span>
+              {canPricingSuggestion && (
+                <div className="rounded-lg border border-dashed p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      Precificação Inteligente
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Preço/turno sugerido:</span>
-                      <span className="font-medium">
-                        {formatCurrency(pricingSuggestion.price_per_shift_suggested)}
-                      </span>
-                    </div>
-                    {pricingSuggestion.factors.region && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Região de referência:</span>
-                        <span>{pricingSuggestion.factors.region}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Confiança:</span>
-                      <Badge
-                        variant={pricingSuggestion.confidence === "high" ? "default" : "secondary"}
-                      >
-                        {pricingSuggestion.confidence === "high" ? "Alta" : "Média"}
-                      </Badge>
-                    </div>
-                    {pricingSuggestion.explanation && (
-                      <p className="mt-1 text-xs italic text-muted-foreground">
-                        {pricingSuggestion.explanation}
-                      </p>
-                    )}
-                    <Button size="sm" className="mt-2 w-full" onClick={applySuggestion}>
-                      Aplicar sugestão
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pricingLoading}
+                      onClick={() => setPricingEnabled(true)}
+                    >
+                      {pricingLoading ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                      Sugerir preços
                     </Button>
                   </div>
-                )}
-              </div>
+                  {pricingSuggestion && (
+                    <div className="mt-3 space-y-2 rounded-md bg-muted/50 p-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Preço/h sugerido:</span>
+                        <span className="font-medium">
+                          {formatCurrency(pricingSuggestion.price_per_hour_suggested)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Preço/turno sugerido:</span>
+                        <span className="font-medium">
+                          {formatCurrency(pricingSuggestion.price_per_shift_suggested)}
+                        </span>
+                      </div>
+                      {pricingSuggestion.factors.region && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Região de referência:</span>
+                          <span>{pricingSuggestion.factors.region}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Confiança:</span>
+                        <Badge
+                          variant={
+                            pricingSuggestion.confidence === "high" ? "default" : "secondary"
+                          }
+                        >
+                          {pricingSuggestion.confidence === "high" ? "Alta" : "Média"}
+                        </Badge>
+                      </div>
+                      {pricingSuggestion.explanation && (
+                        <p className="mt-1 text-xs italic text-muted-foreground">
+                          {pricingSuggestion.explanation}
+                        </p>
+                      )}
+                      <Button size="sm" className="mt-2 w-full" onClick={applySuggestion}>
+                        Aplicar sugestão
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </CardContent>

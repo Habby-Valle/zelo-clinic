@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useClinic, useUpdateClinic } from "@/features/clinic/hooks";
-import { usePlanLimits } from "@/features/plan";
+import { usePlanLimits, usePlanFeature } from "@/features/plan";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 export function SettingsClient() {
   const { data: clinic, isLoading } = useClinic();
   const { data: planLimits } = usePlanLimits();
+  const canBrand = usePlanFeature("has_custom_branding");
   const updateClinic = useUpdateClinic();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -323,24 +324,32 @@ export function SettingsClient() {
                     {clinicName ? getInitials(clinicName) : "ZC"}
                   </AvatarFallback>
                 </Avatar>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs"
-                >
-                  <Camera className="h-3 w-3" />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoChange}
-                />
+                {canBrand && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs"
+                    >
+                      <Camera className="h-3 w-3" />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoChange}
+                    />
+                  </>
+                )}
               </div>
               <div className="space-y-1">
                 <p className="font-medium">{clinicName}</p>
-                <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
+                <p className="text-sm text-muted-foreground">
+                  {canBrand
+                    ? "Clique no ícone para alterar a foto"
+                    : "Personalização da logo disponível no plano Pro."}
+                </p>
               </div>
             </div>
 
@@ -747,7 +756,7 @@ export function SettingsClient() {
 
       {/* ───── Notificações ───── */}
       <TabsContent value="notificacoes" className="space-y-6">
-        {planLimits?.limits?.has_daily_report !== false && (
+        {planLimits?.limits?.has_daily_report === true && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

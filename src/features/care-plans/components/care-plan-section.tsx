@@ -412,7 +412,7 @@ export function CarePlanSection({
 
             {!isActive && (
               <>
-                {planLimits?.limits?.has_caregiver_matching !== false && (
+                {planLimits?.limits?.has_caregiver_matching === true && (
                   <CaregiverMatchSection patientId={patientId} onSelect={selectCaregiver} />
                 )}
 

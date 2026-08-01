@@ -95,7 +95,7 @@ export function HealthAlertsSection({ patientId }: HealthAlertsSectionProps) {
   const [severityFilter, setSeverityFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("open");
 
-  const hasHealthAlerts = planLimits?.limits?.has_health_alerts ?? true;
+  const hasHealthAlerts = planLimits?.limits?.has_health_alerts === true;
 
   const filters = {
     patient_id: patientId,

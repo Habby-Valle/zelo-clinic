@@ -26,7 +26,7 @@ import { SatisfactionReport } from "./satisfaction-report";
 import { ContractsReport } from "./contracts-report";
 import { ComplianceSection } from "@/features/quality";
 import { OnboardingSection } from "@/features/onboarding";
-import { usePlanLimits } from "@/features/plan";
+import { usePlanLimits, usePlanFeature } from "@/features/plan";
 import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import type { DateRange } from "../types";
 
@@ -70,6 +70,8 @@ function SummaryCardsSkeleton() {
 export function ReportsClient() {
   const { data: planLimits } = usePlanLimits();
   const canAccessReports = planLimits?.limits?.reports_level !== "none";
+  const hasAdvancedReports = planLimits?.limits?.reports_level === "advanced";
+  const canExport = usePlanFeature("has_data_export");
 
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
 
@@ -192,51 +194,53 @@ export function ReportsClient() {
             <ShiftsReport
               data={shiftsQuery.data ?? []}
               loading={isPending}
-              onExport={exportShiftsCsv}
+              onExport={canExport ? exportShiftsCsv : undefined}
             />
             <ChecklistsReport
               data={checklistsQuery.data ?? []}
               loading={isPending}
-              onExport={exportChecklistsCsv}
+              onExport={canExport ? exportChecklistsCsv : undefined}
             />
           </div>
 
           <PatientsGrowthReport
             data={patientsQuery.data ?? []}
             loading={isPending}
-            onExport={exportPatientsCsv}
+            onExport={canExport ? exportPatientsCsv : undefined}
           />
 
           <FamilyMembersGrowthReport
             data={familyMembersQuery.data ?? []}
             loading={familyMembersQuery.isLoading}
-            onExport={exportFamilyMembersCsv}
+            onExport={canExport ? exportFamilyMembersCsv : undefined}
           />
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <SosReport
-              data={
-                sosQuery.data ?? {
-                  summary: {
-                    total: 0,
-                    active: 0,
-                    acknowledged: 0,
-                    resolved: 0,
-                    avgResponseTimeMinutes: null,
-                  },
-                  byPatient: [],
-                  byDate: [],
+          {hasAdvancedReports && (
+            <div className="grid gap-6 md:grid-cols-2">
+              <SosReport
+                data={
+                  sosQuery.data ?? {
+                    summary: {
+                      total: 0,
+                      active: 0,
+                      acknowledged: 0,
+                      resolved: 0,
+                      avgResponseTimeMinutes: null,
+                    },
+                    byPatient: [],
+                    byDate: [],
+                  }
                 }
-              }
-              loading={sosQuery.isLoading}
-              onExport={exportSosCsv}
-            />
-            <CaregiversReport
-              data={caregiversQuery.data ?? []}
-              loading={caregiversQuery.isLoading}
-              onExport={exportCaregiversCsv}
-            />
-          </div>
+                loading={sosQuery.isLoading}
+                onExport={canExport ? exportSosCsv : undefined}
+              />
+              <CaregiversReport
+                data={caregiversQuery.data ?? []}
+                loading={caregiversQuery.isLoading}
+                onExport={canExport ? exportCaregiversCsv : undefined}
+              />
+            </div>
+          )}
 
           <SatisfactionReport
             data={
@@ -247,13 +251,13 @@ export function ReportsClient() {
               }
             }
             loading={satisfactionQuery.isLoading}
-            onExport={exportSatisfactionCsv}
+            onExport={canExport ? exportSatisfactionCsv : undefined}
           />
 
           <ContractsReport
             data={contractsQuery.data ?? null}
             loading={contractsQuery.isLoading}
-            onExport={exportContractsCsv}
+            onExport={canExport ? exportContractsCsv : undefined}
           />
 
           <ComplianceSection />

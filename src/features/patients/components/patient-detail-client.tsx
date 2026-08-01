@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePatient, useClinicCaregivers, useTogglePatientStatus } from "../hooks";
 import { useValidateHealth } from "@/features/contracts/hooks";
+import { usePlanLimits } from "@/features/plan";
 import { CarePlanSection } from "@/features/care-plans/components/care-plan-section";
 import { MedicationSection, DeclaredMedications } from "@/features/medications";
 import { PatientDocuments } from "./patient-documents";
@@ -93,6 +94,8 @@ interface PatientDetailClientProps {
 
 export function PatientDetailClient({ id }: PatientDetailClientProps) {
   const { data: patient, isLoading: patientLoading } = usePatient(id);
+  const { data: planLimits } = usePlanLimits();
+  const maxFamily = planLimits?.limits?.max_family_per_patient;
 
   const toggleStatus = useTogglePatientStatus(id);
   // Validação da saúde declarada — ação sobre o contrato ativo do paciente.
@@ -295,7 +298,12 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
               )}
               {!isNurse && (
                 <div className="mt-4">
-                  <FamilyInviteDialog patientId={patient.id} clinicId={patient.clinic_id} />
+                  <FamilyInviteDialog
+                    patientId={patient.id}
+                    clinicId={patient.clinic_id}
+                    currentCount={emergencyContacts.length}
+                    maxFamily={maxFamily}
+                  />
                 </div>
               )}
             </CardContent>

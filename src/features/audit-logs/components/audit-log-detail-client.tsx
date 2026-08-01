@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuditLog } from "../hooks";
+import { usePlanLimits } from "@/features/plan";
+import { FeatureUpgradePrompt } from "@/components/feature-upgrade-prompt";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,6 +61,12 @@ export function AuditLogDetailClient() {
   const params = useParams();
   const id = params.id as string;
   const { data: log, isLoading } = useAuditLog(id);
+  const { data: planLimits } = usePlanLimits();
+  const canAccessAuditLogs = (planLimits?.limits?.audit_log_days ?? 0) > 0;
+
+  if (!canAccessAuditLogs && !isLoading) {
+    return <FeatureUpgradePrompt featureName="Logs de Auditoria" />;
+  }
 
   if (isLoading) {
     return (

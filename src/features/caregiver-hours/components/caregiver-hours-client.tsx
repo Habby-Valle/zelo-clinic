@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePlanFeature } from "@/features/plan";
 import { useCaregiverHours, useCaregiverHoursSummary } from "../hooks";
 import type { CaregiverWorkLog } from "../types";
 
@@ -50,6 +51,7 @@ export function CaregiverHoursClient() {
   const [startDate, setStartDate] = useState(defaultRange.start);
   const [endDate, setEndDate] = useState(defaultRange.end);
   const [page, setPage] = useState(1);
+  const canExport = usePlanFeature("has_data_export");
 
   const filters = useMemo(
     () => ({ start_date: startDate, end_date: endDate, page }),
@@ -166,7 +168,7 @@ export function CaregiverHoursClient() {
                 className="w-44"
               />
             </div>
-            {pageData?.results?.length ? (
+            {pageData?.results?.length && canExport ? (
               <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto">
                 <Download className="mr-1.5 h-4 w-4" />
                 Exportar CSV

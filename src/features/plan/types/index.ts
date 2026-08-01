@@ -47,6 +47,7 @@ export interface PlanLimits {
   has_protocol_compliance?: boolean;
   has_pricing_suggestions?: boolean;
   has_daily_report?: boolean;
+  has_caregiver_hours?: boolean;
 }
 
 export interface PlanLimitsInfo {
