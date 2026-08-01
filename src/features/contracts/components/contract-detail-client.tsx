@@ -367,7 +367,15 @@ export function ContractDetailClient() {
                   <Label htmlFor="billing-mode">Modo de cobrança</Label>
                   <Select value={billingMode} onValueChange={(v) => setBillingMode(v ?? "per_hour")}>
                     <SelectTrigger id="billing-mode" className="w-full">
-                      <SelectValue />
+                      <SelectValue>
+                        {(v: string | null) =>
+                          v === "per_shift"
+                            ? "Por turno"
+                            : v === "fixed"
+                              ? "Mensal fixo"
+                              : "Por hora"
+                        }
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="per_hour">Por hora</SelectItem>
@@ -440,7 +448,11 @@ export function ContractDetailClient() {
                     onValueChange={(v) => setNightSurchargeType(v ?? "percentage")}
                   >
                     <SelectTrigger id="night-surcharge-type" className="w-full">
-                      <SelectValue />
+                      <SelectValue>
+                        {(v: string | null) =>
+                          v === "fixed_amount" ? "Valor fixo (R$)" : "Percentual (%)"
+                        }
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="percentage">Percentual (%)</SelectItem>
