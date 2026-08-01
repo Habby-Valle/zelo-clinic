@@ -21,11 +21,19 @@ import type { CaregiverAssignment } from "../types";
 export function usePatients(params: {
   search: string;
   isActive: string;
+  healthStatus?: string;
   page: number;
   pageSize: number;
 }) {
   return useQuery({
-    queryKey: ["patients", params.search, params.isActive, params.page, params.pageSize],
+    queryKey: [
+      "patients",
+      params.search,
+      params.isActive,
+      params.healthStatus,
+      params.page,
+      params.pageSize,
+    ],
     queryFn: () => fetchPatients(params),
   });
 }

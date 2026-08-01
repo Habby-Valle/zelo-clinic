@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchCaregivers,
   fetchCaregiver,
-  verifyCaregiverApi,
   fetchCaregiverInvites,
   inviteCaregiverApi,
   resendInviteApi,
@@ -46,19 +45,6 @@ export function useCaregiver(id: string) {
     queryKey: ["caregiver", id],
     queryFn: () => fetchCaregiver(id),
     enabled: !!id,
-  });
-}
-
-export function useVerifyCaregiver(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ action, note }: { action: "approve" | "reject"; note?: string }) =>
-      verifyCaregiverApi(id, action, note),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["caregiver", id], data);
-      queryClient.invalidateQueries({ queryKey: ["caregivers"] });
-      queryClient.invalidateQueries({ queryKey: ["nurses"] });
-    },
   });
 }
 

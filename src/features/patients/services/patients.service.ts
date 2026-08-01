@@ -57,12 +57,14 @@ function mapPatient(r: Record<string, unknown>): ClinicPatient {
 export async function fetchPatients(params: {
   search: string;
   isActive: string;
+  healthStatus?: string;
   page: number;
   pageSize: number;
 }): Promise<PatientsPage> {
   const qs = new URLSearchParams();
   if (params.search) qs.set("search", params.search);
   if (params.isActive) qs.set("is_active", params.isActive);
+  if (params.healthStatus) qs.set("health_status", params.healthStatus);
   qs.set("page", String(params.page));
   qs.set("page_size", String(params.pageSize));
 

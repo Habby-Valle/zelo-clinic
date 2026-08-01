@@ -90,10 +90,11 @@ export function PatientsClient({ role }: PatientsClientProps) {
 
   const search = searchParams.get("search") ?? "";
   const isActive = searchParams.get("is_active") ?? "";
+  const healthStatus = searchParams.get("health_status") ?? "";
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const pageSize = 20;
 
-  const { data, isLoading } = usePatients({ search, isActive, page, pageSize });
+  const { data, isLoading } = usePatients({ search, isActive, healthStatus, page, pageSize });
 
   const patients = data?.patients ?? [];
   const total = data?.total ?? 0;
@@ -152,6 +153,32 @@ export function PatientsClient({ role }: PatientsClientProps) {
             <SelectItem value="false">Inativo</SelectItem>
           </SelectContent>
         </Select>
+        <Select
+          value={healthStatus || "all"}
+          onValueChange={(v) =>
+            updateParams({ health_status: (v ?? "") === "all" ? "" : (v ?? ""), page: "" })
+          }
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue>
+              {(v: string | null) => {
+                const labels: Record<string, string> = {
+                  all: "Saúde: todas",
+                  pending: "Saúde: pendente",
+                  declared: "Saúde: declarada",
+                  validated: "Saúde: validada",
+                };
+                return labels[v ?? ""] ?? v ?? "Saúde";
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Saúde: todas</SelectItem>
+            <SelectItem value="pending">Saúde: pendente</SelectItem>
+            <SelectItem value="declared">Saúde: declarada</SelectItem>
+            <SelectItem value="validated">Saúde: validada</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -163,6 +190,7 @@ export function PatientsClient({ role }: PatientsClientProps) {
                 <TableHead>Idade</TableHead>
                 <TableHead>Sexo</TableHead>
                 <TableHead>Cuidadores</TableHead>
+                <TableHead>Saúde</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[60px]"></TableHead>
               </TableRow>
@@ -194,7 +222,7 @@ export function PatientsClient({ role }: PatientsClientProps) {
                 ))
               ) : patients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Users className="h-8 w-8" />
                       <p>Nenhum paciente encontrado</p>
@@ -231,6 +259,22 @@ export function PatientsClient({ role }: PatientsClientProps) {
                         <Badge variant="outline">{patient.caregiver_count}</Badge>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {patient.health_status === "validated" ? (
+                        <Badge variant="secondary" className="gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Validada
+                        </Badge>
+                      ) : patient.health_status === "declared" ? (
+                        <Badge variant="outline" className="gap-1 border-amber-300 bg-amber-50 text-amber-800">
+                          Declarada
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          Pendente
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell>

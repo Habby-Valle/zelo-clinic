@@ -23,17 +23,6 @@ export async function fetchCaregiver(id: string): Promise<CaregiverProfile> {
   return apiFetchClient<CaregiverProfile>(`/users/${id}/`);
 }
 
-export async function verifyCaregiverApi(
-  id: string,
-  action: "approve" | "reject",
-  note = ""
-): Promise<CaregiverProfile> {
-  return apiFetchClient<CaregiverProfile>(`/caregivers/${id}/verify/`, {
-    method: "POST",
-    body: JSON.stringify({ action, note }),
-  });
-}
-
 export async function fetchCaregiverInvites(params: {
   search: string;
   page: number;
