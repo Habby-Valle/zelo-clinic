@@ -9,3 +9,10 @@ export function usePlanLimits() {
     retry: false,
   });
 }
+
+/** True quando a clínica está sem plano ativo (modo somente leitura). */
+export function usePlanBlocked() {
+  const { data } = usePlanLimits();
+  const effective = data?.effective_status;
+  return effective === "expired";
+}

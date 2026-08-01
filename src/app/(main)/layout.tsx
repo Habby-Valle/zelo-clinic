@@ -4,6 +4,7 @@ import { apiFetchServer } from "@/lib/api";
 import type { Clinic } from "@/features/clinic/types";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { PlanBlockedBanner } from "@/components/plan-blocked-banner";
 import { OnboardingWrapper } from "@/features/onboarding/components/onboarding-wrapper";
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,12 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar role={user.role} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-6">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+            <PlanBlockedBanner />
+            {children}
+          </div>
+        </main>
       </div>
       <OnboardingWrapper />
     </div>
