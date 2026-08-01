@@ -66,6 +66,7 @@ function PlanCard({
   disabledReason,
 }: PlanCardProps) {
   const isLoading = loadingPlanId === plan.id;
+  const [benefitsOpen, setBenefitsOpen] = useState(false);
 
   return (
     <Card
@@ -109,8 +110,14 @@ function PlanCard({
                 </li>
               ))}
               {plan.benefits.length > 5 && (
-                <li className="text-xs text-muted-foreground">
-                  +{plan.benefits.length - 5} mais...
+                <li className="text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setBenefitsOpen(true)}
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    +{plan.benefits.length - 5} mais...
+                  </button>
                 </li>
               )}
             </ul>
@@ -139,6 +146,26 @@ function PlanCard({
           </Button>
         )}
       </CardContent>
+
+      <Dialog open={benefitsOpen} onOpenChange={setBenefitsOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{plan.name}</DialogTitle>
+            <DialogDescription>Todos os recursos incluídos neste plano.</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2">
+            {plan.benefits.map((benefit, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                <span className="text-muted-foreground">
+                  {benefit.benefit_label}
+                  {benefit.value ? `: ${benefit.value}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
