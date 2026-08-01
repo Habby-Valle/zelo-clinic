@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, PauseCircle, PlayCircle, Ban } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  PauseCircle,
+  PlayCircle,
+  Ban,
+  Pencil,
+  Sparkles,
+  Check,
+  X,
+  Coins,
+} from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +22,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
-import { useContract, useTransitionContract } from "../hooks";
+import { useContract, useTransitionContract, useUpdateContract, usePricingSuggestion } from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -44,11 +63,25 @@ export function ContractDetailClient() {
 
   const { data: contract, isLoading } = useContract(id);
   const transitionContract = useTransitionContract(id);
+  const updateContract = useUpdateContract(id);
 
   const [lifecycleAction, setLifecycleAction] = useState<
     "suspend" | "reactivate" | "cancel" | null
   >(null);
   const [lifecycleReason, setLifecycleReason] = useState("");
+  const [pricingEnabled, setPricingEnabled] = useState(false);
+  const { data: pricingSuggestion, isLoading: pricingLoading } = usePricingSuggestion(
+    id,
+    pricingEnabled
+  );
+
+  const [editPricing, setEditPricing] = useState(false);
+  const [billingMode, setBillingMode] = useState("per_hour");
+  const [pricePerHour, setPricePerHour] = useState("");
+  const [pricePerShift, setPricePerShift] = useState("");
+  const [fixedMonthlyAmount, setFixedMonthlyAmount] = useState("");
+  const [nightSurcharge, setNightSurcharge] = useState("");
+  const [nightSurchargeType, setNightSurchargeType] = useState("percentage");
 
   if (isLoading) {
     return (
@@ -87,6 +120,52 @@ export function ContractDetailClient() {
       { status: statusMap[lifecycleAction], reason: lifecycleReason.trim() },
       { onSuccess: closeLifecycle }
     );
+  };
+
+  const formatCurrency = (value: string | null | undefined): string => {
+    if (!value) return "—";
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+      Number(value)
+    );
+  };
+
+  const startEditPricing = () => {
+    setBillingMode(contract.billing_mode);
+    setPricePerHour(contract.price_per_hour ?? "");
+    setPricePerShift(contract.price_per_shift ?? "");
+    setFixedMonthlyAmount(contract.fixed_monthly_amount ?? "");
+    setNightSurcharge(contract.night_surcharge || "0");
+    setNightSurchargeType(contract.night_surcharge_type);
+    setEditPricing(true);
+  };
+
+  const savePricing = () => {
+    const payload: Parameters<typeof updateContract.mutate>[0] = {
+      billing_mode: billingMode as "per_hour" | "per_shift" | "fixed",
+      price_per_hour: billingMode === "per_hour" && pricePerHour ? Number(pricePerHour) : undefined,
+      price_per_shift:
+        billingMode === "per_shift" && pricePerShift ? Number(pricePerShift) : undefined,
+      fixed_monthly_amount:
+        billingMode === "fixed" && fixedMonthlyAmount ? Number(fixedMonthlyAmount) : undefined,
+      night_surcharge: nightSurcharge ? Number(nightSurcharge) : 0,
+      night_surcharge_type: nightSurchargeType as "percentage" | "fixed_amount",
+    };
+    updateContract.mutate(payload, {
+      onSuccess: () => setEditPricing(false),
+    });
+  };
+
+  const applySuggestion = () => {
+    if (!pricingSuggestion) return;
+    if (billingMode === "per_hour" && pricingSuggestion.price_per_hour_suggested) {
+      setPricePerHour(pricingSuggestion.price_per_hour_suggested);
+    }
+    if (billingMode === "per_shift" && pricingSuggestion.price_per_shift_suggested) {
+      setPricePerShift(pricingSuggestion.price_per_shift_suggested);
+    }
+    if (pricingSuggestion.night_surcharge_suggested) {
+      setNightSurcharge(pricingSuggestion.night_surcharge_suggested);
+    }
   };
 
   const LIFECYCLE_COPY = {
@@ -222,6 +301,236 @@ export function ContractDetailClient() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Coins className="h-4 w-4 text-muted-foreground" />
+            Cobrança / Valor
+          </CardTitle>
+          {!editPricing && (
+            <Button variant="outline" size="sm" onClick={startEditPricing}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Editar
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-xs text-muted-foreground">
+            Referência de custo para o relatório — a cobrança do cuidado é feita pela clínica,
+            fora do Zelo.
+          </p>
+
+          {!editPricing ? (
+            <div className="space-y-3">
+              <Row
+                label="Modo de cobrança"
+                value={
+                  contract.billing_mode === "per_hour"
+                    ? "Por hora"
+                    : contract.billing_mode === "per_shift"
+                      ? "Por turno"
+                      : "Mensal fixo"
+                }
+              />
+              {contract.billing_mode === "per_hour" && (
+                <Row
+                  label="Preço por hora"
+                  value={formatCurrency(contract.price_per_hour)}
+                />
+              )}
+              {contract.billing_mode === "per_shift" && (
+                <Row
+                  label="Preço por turno"
+                  value={formatCurrency(contract.price_per_shift)}
+                />
+              )}
+              {contract.billing_mode === "fixed" && (
+                <Row
+                  label="Valor mensal fixo"
+                  value={formatCurrency(contract.fixed_monthly_amount)}
+                />
+              )}
+              <Row
+                label="Adicional noturno"
+                value={
+                  contract.night_surcharge && Number(contract.night_surcharge) > 0
+                    ? `${contract.night_surcharge}${contract.night_surcharge_type === "percentage" ? "%" : " (fixo)"}`
+                    : "Nenhum"
+                }
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="billing-mode">Modo de cobrança</Label>
+                  <Select value={billingMode} onValueChange={(v) => setBillingMode(v ?? "per_hour")}>
+                    <SelectTrigger id="billing-mode" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_hour">Por hora</SelectItem>
+                      <SelectItem value="per_shift">Por turno</SelectItem>
+                      <SelectItem value="fixed">Mensal fixo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="night-surcharge">Adicional noturno</Label>
+                  <Input
+                    id="night-surcharge"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={nightSurcharge}
+                    onChange={(e) => setNightSurcharge(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                {billingMode === "per_hour" && (
+                  <div className="space-y-1">
+                    <Label htmlFor="price-per-hour">Preço por hora (R$)</Label>
+                    <Input
+                      id="price-per-hour"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex.: 40,00"
+                      value={pricePerHour}
+                      onChange={(e) => setPricePerHour(e.target.value)}
+                    />
+                  </div>
+                )}
+                {billingMode === "per_shift" && (
+                  <div className="space-y-1">
+                    <Label htmlFor="price-per-shift">Preço por turno (R$)</Label>
+                    <Input
+                      id="price-per-shift"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex.: 300,00"
+                      value={pricePerShift}
+                      onChange={(e) => setPricePerShift(e.target.value)}
+                    />
+                  </div>
+                )}
+                {billingMode === "fixed" && (
+                  <div className="space-y-1">
+                    <Label htmlFor="fixed-monthly">Valor mensal (R$)</Label>
+                    <Input
+                      id="fixed-monthly"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex.: 5000,00"
+                      value={fixedMonthlyAmount}
+                      onChange={(e) => setFixedMonthlyAmount(e.target.value)}
+                    />
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <Label htmlFor="night-surcharge-type">Tipo do adicional</Label>
+                  <Select
+                    value={nightSurchargeType}
+                    onValueChange={(v) => setNightSurchargeType(v ?? "percentage")}
+                  >
+                    <SelectTrigger id="night-surcharge-type" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentual (%)</SelectItem>
+                      <SelectItem value="fixed_amount">Valor fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  disabled={updateContract.isPending}
+                  onClick={savePricing}
+                >
+                  {updateContract.isPending && (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  )}
+                  <Check className="mr-1.5 h-3.5 w-3.5" />
+                  Salvar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setEditPricing(false)}>
+                  <X className="mr-1.5 h-3.5 w-3.5" />
+                  Cancelar
+                </Button>
+              </div>
+
+              <div className="rounded-lg border border-dashed p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    Precificação Inteligente
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pricingLoading}
+                    onClick={() => setPricingEnabled(true)}
+                  >
+                    {pricingLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    Sugerir preços
+                  </Button>
+                </div>
+                {pricingSuggestion && (
+                  <div className="mt-3 space-y-2 rounded-md bg-muted/50 p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Preço/h sugerido:</span>
+                      <span className="font-medium">
+                        {formatCurrency(pricingSuggestion.price_per_hour_suggested)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Preço/turno sugerido:</span>
+                      <span className="font-medium">
+                        {formatCurrency(pricingSuggestion.price_per_shift_suggested)}
+                      </span>
+                    </div>
+                    {pricingSuggestion.factors.region && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Região de referência:</span>
+                        <span>{pricingSuggestion.factors.region}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Confiança:</span>
+                      <Badge
+                        variant={pricingSuggestion.confidence === "high" ? "default" : "secondary"}
+                      >
+                        {pricingSuggestion.confidence === "high" ? "Alta" : "Média"}
+                      </Badge>
+                    </div>
+                    {pricingSuggestion.explanation && (
+                      <p className="mt-1 text-xs italic text-muted-foreground">
+                        {pricingSuggestion.explanation}
+                      </p>
+                    )}
+                    <Button size="sm" className="mt-2 w-full" onClick={applySuggestion}>
+                      Aplicar sugestão
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {(contract.status === "active" || contract.status === "suspended") && (
         <Card className="border-dashed">

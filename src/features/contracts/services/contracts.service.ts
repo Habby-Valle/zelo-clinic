@@ -97,8 +97,10 @@ export async function fetchPricingSuggestion(contractId: string): Promise<Pricin
 export async function updateContractApi(
   id: string,
   data: Partial<{
+    billing_mode: "per_hour" | "per_shift" | "fixed";
     price_per_hour: number;
     price_per_shift: number;
+    fixed_monthly_amount: number;
     night_surcharge: number;
     night_surcharge_type: string;
     weekly_hours: number;

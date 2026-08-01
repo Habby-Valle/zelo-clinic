@@ -22,6 +22,7 @@ import {
   FileText,
   HeartPulse,
   Clock,
+  Coins,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -95,6 +96,7 @@ const allNavItems: NavItem[] = [
   { href: "/sos", label: "SOS", icon: AlertTriangle },
   { href: "/caregiver-hours", label: "Horas", icon: Clock },
   { href: "/reports", label: "Relatórios", icon: BarChart2 },
+  { href: "/cost-report", label: "Relatório de Custos", icon: Coins },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/plan", label: "Plano", icon: CreditCard },
   { href: "/audit-logs", label: "Logs de Auditoria", icon: ScrollText },
