@@ -234,7 +234,6 @@ export function CarePlanSection({
 
   const isValidated = healthStatus === "validated";
   const isActive = plan?.status === "active";
-  const isPendingReview = plan?.status === "pending_review";
 
   const buildInput = () => ({
     patient_id: patientId,
@@ -260,9 +259,9 @@ export function CarePlanSection({
     })),
   });
 
-  // Só ativa o plano com pelo menos um checklist e um cuidador responsável
-  // escolhido — e desde que o plano não esteja já em revisão/ativação.
-  const canSubmit = selected.length > 0 && !!caregiverId && !isPendingReview;
+  // Ativa o plano com pelo menos um checklist e um cuidador responsável
+  // escolhido. Plano em revisão ainda pode ser reativado pela clínica.
+  const canSubmit = selected.length > 0 && !!caregiverId;
 
   async function handleSave() {
     try {

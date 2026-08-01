@@ -111,6 +111,7 @@ export function useApproveCarePlan() {
   return useMutation({
     mutationFn: (planId: string) => approveCarePlan(planId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plan"] });
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },
   });
@@ -122,6 +123,7 @@ export function useReturnCarePlan() {
     mutationFn: ({ planId, note }: { planId: string; note: string }) =>
       returnCarePlan(planId, note),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plan"] });
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },
   });
@@ -133,6 +135,7 @@ export function useUpdateCarePlanChecklists() {
     mutationFn: ({ planId, checklists }: { planId: string; checklists: SaveCarePlanChecklist[] }) =>
       updateCarePlanChecklists(planId, checklists),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["care-plan"] });
       queryClient.invalidateQueries({ queryKey: ["care-plans"] });
     },
   });
