@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPhone } from "@/lib/format";
 import { useFamilyMembers } from "../hooks";
+import { FamilyMemberInviteDialog } from "./family-member-invite-dialog";
 
 export function FamilyMembersListClient() {
   const router = useRouter();
@@ -33,12 +34,15 @@ export function FamilyMembersListClient() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          <Users className="h-6 w-6" />
-          Clientes
-        </h1>
-        <p className="mt-1 text-muted-foreground">Familiares vinculados à clínica.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <Users className="h-6 w-6" />
+            Clientes
+          </h1>
+          <p className="mt-1 text-muted-foreground">Familiares vinculados à clínica.</p>
+        </div>
+        <FamilyMemberInviteDialog />
       </div>
 
       <Input

@@ -1,7 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchFamilyMembers, fetchFamilyMember } from "../services";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchFamilyMembers,
+  fetchFamilyMember,
+  inviteFamilyMemberApi,
+  generateFamilyLinkCodeApi,
+} from "../services";
 
 export function useFamilyMembers(params: { search: string; page: number; pageSize: number }) {
   return useQuery({
@@ -15,5 +20,22 @@ export function useFamilyMember(id: string) {
     queryKey: ["family-members", id],
     queryFn: () => fetchFamilyMember(id),
     enabled: !!id,
+  });
+}
+
+export function useInviteFamilyMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ email, clinicId }: { email: string; clinicId: string }) =>
+      inviteFamilyMemberApi(email, clinicId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["family-members"] });
+    },
+  });
+}
+
+export function useGenerateFamilyLinkCode() {
+  return useMutation({
+    mutationFn: (email: string) => generateFamilyLinkCodeApi(email),
   });
 }

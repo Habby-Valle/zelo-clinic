@@ -20,11 +20,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useCarePlans,
-  useApproveCarePlan,
-  useReturnCarePlan,
-} from "../hooks/use-care-plans";
+import { useCarePlans, useApproveCarePlan, useReturnCarePlan } from "../hooks/use-care-plans";
 import { CARE_PLAN_STATUS_LABELS, type CarePlanStatus } from "../types";
 
 const STATUS_VARIANTS: Record<CarePlanStatus, "default" | "secondary" | "destructive" | "outline"> =

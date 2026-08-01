@@ -19,3 +19,26 @@ export async function fetchFamilyMembers(params: {
 export async function fetchFamilyMember(id: string): Promise<FamilyMemberDetail> {
   return apiFetchClient<FamilyMemberDetail>(`/family/members/${id}/`);
 }
+
+export async function inviteFamilyMemberApi(email: string, clinicId: string): Promise<void> {
+  await apiFetchClient("/invites/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      role: "family",
+      clinic_id: clinicId,
+    }),
+  });
+}
+
+export async function generateFamilyLinkCodeApi(email: string): Promise<{
+  id: string;
+  email: string;
+  role: string;
+  code: string;
+}> {
+  return apiFetchClient("/invites/link-codes/", {
+    method: "POST",
+    body: JSON.stringify({ email, role: "family" }),
+  });
+}

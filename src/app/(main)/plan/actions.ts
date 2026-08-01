@@ -132,9 +132,7 @@ export async function arePlansEnabled(): Promise<boolean> {
   }
 }
 
-export async function requestPlanChange(
-  planId: string
-): Promise<{
+export async function requestPlanChange(planId: string): Promise<{
   success: boolean;
   error?: string;
   checkoutUrl?: string;
