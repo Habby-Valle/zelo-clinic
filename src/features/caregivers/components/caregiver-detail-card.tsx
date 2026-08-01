@@ -27,7 +27,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   return (
     <div>
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <p className="text-sm mt-0.5">{value}</p>
+      <p className="mt-0.5 text-sm">{value}</p>
     </div>
   );
 }
@@ -80,10 +80,7 @@ export function CaregiverDetailCard({ caregiverId }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <DetailRow label="Email" value={caregiver.email} />
           <DetailRow label="Telefone" value={caregiver.phone || "—"} />
-          <DetailRow
-            label="Registro profissional"
-            value={caregiver.professional_register || "—"}
-          />
+          <DetailRow label="Registro profissional" value={caregiver.professional_register || "—"} />
           <DetailRow label="Especialização" value={caregiver.specialization || "—"} />
           <DetailRow
             label="Data de nascimento"

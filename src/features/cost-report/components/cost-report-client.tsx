@@ -252,12 +252,18 @@ export function CostReportClient() {
                         <TableCell className="font-medium">{c.contractNumber}</TableCell>
                         <TableCell>{c.patientName || "—"}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{BILLING_MODE_LABELS[c.billingMode] ?? c.billingMode}</Badge>
+                          <Badge variant="secondary">
+                            {BILLING_MODE_LABELS[c.billingMode] ?? c.billingMode}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">{c.shifts}</TableCell>
                         <TableCell className="text-right">{formatHours(c.hours)}</TableCell>
                         <TableCell className="text-right font-medium">
-                          {c.cost != null ? formatCurrency(c.cost) : <span className="text-muted-foreground">Sem preço</span>}
+                          {c.cost != null ? (
+                            formatCurrency(c.cost)
+                          ) : (
+                            <span className="text-muted-foreground">Sem preço</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

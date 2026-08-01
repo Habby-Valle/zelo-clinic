@@ -127,8 +127,8 @@ export function FamilyInviteDialog({
           <div className="space-y-4">
             {familyLimitReached && (
               <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                Limite de familiares atingido para este paciente ({currentCount}/
-                {maxFamily}). Faça upgrade do plano para adicionar mais.
+                Limite de familiares atingido para este paciente ({currentCount}/{maxFamily}). Faça
+                upgrade do plano para adicionar mais.
               </p>
             )}
             {pendingInvites.length > 0 && (

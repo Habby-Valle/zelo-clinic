@@ -268,7 +268,10 @@ export function PatientsClient({ role }: PatientsClientProps) {
                           Validada
                         </Badge>
                       ) : patient.health_status === "declared" ? (
-                        <Badge variant="outline" className="gap-1 border-amber-300 bg-amber-50 text-amber-800">
+                        <Badge
+                          variant="outline"
+                          className="gap-1 border-amber-300 bg-amber-50 text-amber-800"
+                        >
                           Declarada
                         </Badge>
                       ) : (

@@ -18,8 +18,8 @@ export function PlanBlockedBanner() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Assinatura expirada — modo somente leitura</p>
           <p className="text-sm text-muted-foreground">
-            A assinatura da clínica está vencida. Você pode consultar os dados existentes, mas
-            novas alterações estão bloqueadas até a renovação do plano.
+            A assinatura da clínica está vencida. Você pode consultar os dados existentes, mas novas
+            alterações estão bloqueadas até a renovação do plano.
           </p>
         </div>
         <Link

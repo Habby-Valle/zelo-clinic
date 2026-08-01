@@ -40,7 +40,12 @@ import {
 } from "@/components/ui/dialog";
 import { WEEKDAY_LABELS } from "@/features/shifts/lib/shift-time";
 import { usePlanFeature } from "@/features/plan";
-import { useContract, useTransitionContract, useUpdateContract, usePricingSuggestion } from "../hooks";
+import {
+  useContract,
+  useTransitionContract,
+  useUpdateContract,
+  usePricingSuggestion,
+} from "../hooks";
 import type { ContractStatus } from "../types";
 import { CONTRACT_STATUS_LABELS, PATIENT_HEALTH_STATUS_LABELS } from "../types";
 
@@ -319,8 +324,8 @@ export function ContractDetailClient() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p className="text-xs text-muted-foreground">
-            Referência de custo para o relatório — a cobrança do cuidado é feita pela clínica,
-            fora do Zelo.
+            Referência de custo para o relatório — a cobrança do cuidado é feita pela clínica, fora
+            do Zelo.
           </p>
 
           {!editPricing ? (
@@ -336,16 +341,10 @@ export function ContractDetailClient() {
                 }
               />
               {contract.billing_mode === "per_hour" && (
-                <Row
-                  label="Preço por hora"
-                  value={formatCurrency(contract.price_per_hour)}
-                />
+                <Row label="Preço por hora" value={formatCurrency(contract.price_per_hour)} />
               )}
               {contract.billing_mode === "per_shift" && (
-                <Row
-                  label="Preço por turno"
-                  value={formatCurrency(contract.price_per_shift)}
-                />
+                <Row label="Preço por turno" value={formatCurrency(contract.price_per_shift)} />
               )}
               {contract.billing_mode === "fixed" && (
                 <Row
@@ -367,7 +366,10 @@ export function ContractDetailClient() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="billing-mode">Modo de cobrança</Label>
-                  <Select value={billingMode} onValueChange={(v) => setBillingMode(v ?? "per_hour")}>
+                  <Select
+                    value={billingMode}
+                    onValueChange={(v) => setBillingMode(v ?? "per_hour")}
+                  >
                     <SelectTrigger id="billing-mode" className="w-full">
                       <SelectValue>
                         {(v: string | null) =>
@@ -465,11 +467,7 @@ export function ContractDetailClient() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  disabled={updateContract.isPending}
-                  onClick={savePricing}
-                >
+                <Button size="sm" disabled={updateContract.isPending} onClick={savePricing}>
                   {updateContract.isPending && (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   )}
@@ -534,7 +532,7 @@ export function ContractDetailClient() {
                         </Badge>
                       </div>
                       {pricingSuggestion.explanation && (
-                        <p className="mt-1 text-xs italic text-muted-foreground">
+                        <p className="mt-1 text-xs text-muted-foreground italic">
                           {pricingSuggestion.explanation}
                         </p>
                       )}
