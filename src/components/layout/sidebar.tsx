@@ -83,14 +83,13 @@ type NavItem = {
 
 // Itens visíveis ao admin e ao enfermeiro. Sem `roles` = só admin.
 const CLINIC_STAFF: UserRole[] = ["clinic_admin", "clinic_nurse"];
-
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contracts", label: "Contratos", icon: FileText },
   { href: "/care-plans", label: "Planos de Cuidado", icon: HeartPulse, roles: CLINIC_STAFF },
   { href: "/patients", label: "Pacientes", icon: UserCircle, roles: CLINIC_STAFF },
   { href: "/clients", label: "Clientes", icon: UserCheck },
-  { href: "/users", label: "Equipe", icon: Users },
+  { href: "/users", label: "Cuidadores", icon: Users },
   { href: "/shifts", label: "Turnos", icon: Calendar, roles: CLINIC_STAFF },
   { href: "/checklists", label: "Checklists", icon: ClipboardList, roles: CLINIC_STAFF },
   { href: "/sos", label: "SOS", icon: AlertTriangle },
