@@ -29,7 +29,7 @@ const BILLING_MODE_LABELS: Record<string, string> = {
 
 function getDefaultRange(): { date_from: string; date_to: string } {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+  const from = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const to = now.toISOString().split("T")[0];
   return { date_from: from, date_to: to };
 }
