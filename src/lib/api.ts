@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+import { extractApiErrorMessage } from "@/lib/api-error";
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -22,9 +24,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const message =
-      body?.non_field_errors?.[0] ?? body?.detail ?? body?.error ?? "Erro desconhecido";
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, extractApiErrorMessage(body));
   }
 
   if (res.status === 204) return undefined as T;
