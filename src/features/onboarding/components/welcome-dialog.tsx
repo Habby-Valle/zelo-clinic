@@ -26,8 +26,8 @@ export function WelcomeDialog({ open, onOpenChange, onStartTour }: WelcomeDialog
           </div>
           <DialogTitle className="text-center text-xl">Bem-vindo ao Zelo!</DialogTitle>
           <DialogDescription className="text-center">
-            Vamos conhecer o painel da sua clínica? Este tour rápido mostra cada seção e suas
-            funcionalidades.
+            Vamos conhecer o painel da sua clínica? Em poucos passos você vê para que serve cada
+            parte e o que dá para fazer em cada uma.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 pt-2">
