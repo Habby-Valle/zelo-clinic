@@ -68,10 +68,12 @@ export function ComplianceSection() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border p-3">
             <p className="text-sm text-muted-foreground">Conformidade Média</p>
-            {avgCompliance !== null ? (
-              <p className="mt-1 text-2xl font-bold">{formatPct(avgCompliance)}</p>
-            ) : (
+            {isLoading ? (
               <Skeleton className="mt-1 h-7 w-20" />
+            ) : (
+              <p className="mt-1 text-2xl font-bold">
+                {avgCompliance !== null ? formatPct(avgCompliance) : "—"}
+              </p>
             )}
           </div>
           <div className="rounded-lg border p-3">
