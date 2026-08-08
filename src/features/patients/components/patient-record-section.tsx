@@ -39,36 +39,38 @@ interface RecordContract {
 }
 
 const EVENT_ICONS: Record<string, React.ReactNode> = {
-  checklist_completed: <ClipboardList className="h-4 w-4 text-green-600" />,
-  checklist_in_progress: <ClipboardList className="h-4 w-4 text-blue-600" />,
-  shift_started: <Clock className="h-4 w-4 text-blue-600" />,
-  shift_ended: <Check className="h-4 w-4 text-green-600" />,
-  shift_cancelled: <X className="h-4 w-4 text-red-600" />,
-  sos_triggered: <AlertTriangle className="h-4 w-4 text-red-600" />,
-  sos_acknowledged: <AlertTriangle className="h-4 w-4 text-yellow-600" />,
-  sos_resolved: <AlertTriangle className="h-4 w-4 text-green-600" />,
-  health_alert_open: <Heart className="h-4 w-4 text-red-600" />,
-  health_alert_resolved: <Heart className="h-4 w-4 text-green-600" />,
-  rating_given: <Star className="h-4 w-4 text-yellow-600" />,
-  contract_active: <FileText className="h-4 w-4 text-green-600" />,
-  contract_suspended: <FileText className="h-4 w-4 text-orange-600" />,
-  contract_cancelled: <FileText className="h-4 w-4 text-red-600" />,
+  checklist_completed: <ClipboardList className="h-4 w-4 text-green-600 dark:text-green-400" />,
+  checklist_in_progress: <ClipboardList className="h-4 w-4 text-blue-600 dark:text-blue-400" />,
+  shift_started: <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />,
+  shift_ended: <Check className="h-4 w-4 text-green-600 dark:text-green-400" />,
+  shift_cancelled: <X className="h-4 w-4 text-red-600 dark:text-red-400" />,
+  sos_triggered: <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />,
+  sos_acknowledged: <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
+  sos_resolved: <AlertTriangle className="h-4 w-4 text-green-600 dark:text-green-400" />,
+  health_alert_open: <Heart className="h-4 w-4 text-red-600 dark:text-red-400" />,
+  health_alert_resolved: <Heart className="h-4 w-4 text-green-600 dark:text-green-400" />,
+  rating_given: <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
+  contract_active: <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />,
+  contract_suspended: <FileText className="h-4 w-4 text-orange-600 dark:text-orange-400" />,
+  contract_cancelled: <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />,
 };
 
 function getEventIcon(event_type: string): React.ReactNode {
-  return EVENT_ICONS[event_type] || <Calendar className="h-4 w-4 text-gray-600" />;
+  return EVENT_ICONS[event_type] || <Calendar className="h-4 w-4 text-muted-foreground" />;
 }
 
 function getStatusBadge(status: string): React.ReactNode {
   const colors: Record<string, string> = {
-    active: "bg-green-100 text-green-800",
-    suspended: "bg-orange-100 text-orange-800",
-    cancelled: "bg-red-100 text-red-800",
-    expired: "bg-gray-100 text-gray-800",
+    active: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+    suspended: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+    cancelled: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+    expired: "bg-muted text-muted-foreground",
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-800"}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+        colors[status] || "bg-muted text-muted-foreground"
+      }`}
     >
       {status}
     </span>
@@ -95,30 +97,32 @@ function TimelineEntry({ entry }: { entry: TimelineEvent }) {
     (d.status != null || d.items != null || d.notes != null || d.details != null);
 
   return (
-    <div className="relative border-l-2 border-gray-200 pb-4 pl-8 last:border-l-0 last:pb-0">
-      <div className="absolute top-0 -left-3 rounded-full bg-white p-0.5">
+    <div className="relative border-l-2 border-border pb-4 pl-8 last:border-l-0 last:pb-0">
+      <div className="absolute top-0 -left-3 rounded-full bg-background p-0.5">
         {getEventIcon(entry.event_type)}
       </div>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-gray-900">{entry.title}</p>
-          <p className="text-xs text-gray-500">
+          <p className="truncate text-sm font-medium text-foreground">{entry.title}</p>
+          <p className="text-xs text-muted-foreground">
             {formatTimestamp(entry.timestamp)}
             {entry.actor_name && ` — ${entry.actor_name}`}
           </p>
-          {entry.description && <p className="mt-0.5 text-xs text-gray-600">{entry.description}</p>}
+          {entry.description && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{entry.description}</p>
+          )}
         </div>
         {hasExtra && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="shrink-0 rounded p-1 hover:bg-gray-100"
+            className="shrink-0 rounded p-1 hover:bg-muted"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </button>
         )}
       </div>
       {expanded && hasExtra && (
-        <div className="mt-2 space-y-1 rounded bg-gray-50 p-2 text-xs text-gray-600">
+        <div className="mt-2 space-y-1 rounded bg-muted p-2 text-xs text-muted-foreground">
           {!!d.status && <p>Status: {String(d.status)}</p>}
           {!!d.details && <p>{String(d.details)}</p>}
           {!!d.notes && <p>Observações: {String(d.notes)}</p>}
@@ -129,14 +133,20 @@ function TimelineEntry({ entry }: { entry: TimelineEvent }) {
                 <div key={i} className="ml-2">
                   <span>{String(item.item_name ?? "")}: </span>
                   {item.checked !== null && item.checked !== undefined ? (
-                    <span className={item.checked ? "text-green-600" : "text-red-600"}>
+                    <span
+                      className={
+                        item.checked
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }
+                    >
                       {item.checked ? "✓" : "✗"}
                     </span>
                   ) : (
                     <span>{String(item.value ?? "")}</span>
                   )}
                   {item.observation && (
-                    <span className="text-gray-400"> ({String(item.observation)})</span>
+                    <span className="text-muted-foreground"> ({String(item.observation)})</span>
                   )}
                 </div>
               ))}
@@ -244,8 +254,8 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
         {(record.patient.health_conditions ||
           record.patient.allergies ||
           record.patient.medications) && (
-          <div className="space-y-2 rounded-lg bg-blue-50 p-4 text-sm">
-            <h4 className="flex items-center gap-2 font-semibold text-blue-900">
+          <div className="space-y-2 rounded-lg bg-blue-50 p-4 text-sm dark:bg-blue-950/40">
+            <h4 className="flex items-center gap-2 font-semibold text-blue-900 dark:text-blue-200">
               <Heart className="h-4 w-4" />
               Dados de Saúde
             </h4>
@@ -302,8 +312,10 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
 
         {/* Plano de Cuidado */}
         {record.care_plan && (
-          <div className="rounded-lg bg-green-50 p-4 text-sm">
-            <h4 className="mb-1 font-semibold text-green-900">Plano de Cuidado</h4>
+          <div className="rounded-lg bg-green-50 p-4 text-sm dark:bg-green-950/40">
+            <h4 className="mb-1 font-semibold text-green-900 dark:text-green-200">
+              Plano de Cuidado
+            </h4>
             <p>Responsável: {String(record.care_plan.responsible_name ?? "")}</p>
             <p>Registro: {String(record.care_plan.responsible_register ?? "")}</p>
           </div>
@@ -324,7 +336,7 @@ export function PatientRecordSection({ patientId }: PatientRecordSectionProps) {
                   className={`rounded-md px-2 py-1 text-xs transition-colors ${
                     filter === f.value
                       ? "bg-primary text-primary-foreground"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70"
                   }`}
                 >
                   {f.label}

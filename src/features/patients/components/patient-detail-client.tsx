@@ -375,7 +375,7 @@ export function PatientDetailClient({ id }: PatientDetailClientProps) {
                   </Button>
                 </div>
 
-                <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm">
+                <div className="space-y-3 rounded-md border border-amber-200 bg-white p-3 text-sm dark:border-amber-900/50 dark:bg-amber-950/20">
                   <div>
                     <span className="font-medium">Condições:</span>{" "}
                     {patient.health_conditions || "—"}
