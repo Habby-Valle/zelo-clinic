@@ -161,7 +161,6 @@ export function ChecklistsPageClient() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Origem</TableHead>
               <TableHead>Itens</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[60px]" />
@@ -175,9 +174,6 @@ export function ChecklistsPageClient() {
                     <Skeleton className="h-4 w-40" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                  </TableCell>
-                  <TableCell>
                     <Skeleton className="h-4 w-12" />
                   </TableCell>
                   <TableCell>
@@ -188,7 +184,7 @@ export function ChecklistsPageClient() {
               ))
             ) : checklists.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center">
+                <TableCell colSpan={4} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <ListChecks className="h-8 w-8" />
                     <p>Nenhum checklist encontrado</p>
@@ -216,11 +212,6 @@ export function ChecklistsPageClient() {
                         )}
                         {cl.name}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={isGlobal ? "default" : "secondary"}>
-                        {isGlobal ? "Global" : "Da clínica"}
-                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{cl.items_count}</TableCell>
                     <TableCell>
