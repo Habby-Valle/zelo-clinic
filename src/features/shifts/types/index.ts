@@ -23,17 +23,6 @@ export interface ShiftItem {
   updated_at: string;
 }
 
-export interface ShiftTemplateItem {
-  id: string;
-  clinic_id: string;
-  name: string;
-  start_time: string;
-  end_time: string;
-  instructions: string;
-  is_active: boolean;
-  created_at: string;
-}
-
 export interface PatientOption {
   id: string;
   name: string;

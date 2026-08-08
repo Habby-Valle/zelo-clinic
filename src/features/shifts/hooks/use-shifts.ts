@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchShiftsApi,
   fetchShiftApi,
-  fetchShiftTemplatesApi,
   fetchClinicPatientsApi,
   fetchClinicCaregiversApi,
   fetchChecklistOptionsApi,
@@ -53,13 +52,6 @@ export function useShift(id: string) {
     queryKey: ["shift", id],
     queryFn: () => fetchShiftApi(id),
     enabled: !!id,
-  });
-}
-
-export function useShiftTemplates() {
-  return useQuery({
-    queryKey: ["shift-templates"],
-    queryFn: fetchShiftTemplatesApi,
   });
 }
 

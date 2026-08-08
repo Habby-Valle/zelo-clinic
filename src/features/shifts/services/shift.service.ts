@@ -1,11 +1,5 @@
 import { apiFetchClient } from "@/lib/api-client";
-import type {
-  ShiftItem,
-  ShiftTemplateItem,
-  PatientOption,
-  CaregiverOption,
-  ShiftFilters,
-} from "../types";
+import type { ShiftItem, PatientOption, CaregiverOption, ShiftFilters } from "../types";
 
 interface ListResult<T> {
   count: number;
@@ -29,13 +23,6 @@ export async function fetchShiftsApi(
 
 export async function fetchShiftApi(id: string): Promise<ShiftItem> {
   return apiFetchClient<ShiftItem>(`/shifts/${id}/`);
-}
-
-export async function fetchShiftTemplatesApi(): Promise<ShiftTemplateItem[]> {
-  const data = await apiFetchClient<ListResult<ShiftTemplateItem>>(
-    "/shifts/templates/?page_size=100"
-  );
-  return data.results;
 }
 
 export async function fetchClinicPatientsApi(): Promise<PatientOption[]> {
