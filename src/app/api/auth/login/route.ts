@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginApi } from "@/features/auth";
 import { ApiError } from "@/lib/api";
-import { decodeJwt } from "@/lib/jwt";
+import { setAuthCookies } from "@/lib/auth-cookies";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -38,29 +38,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const isProduction = process.env.NODE_ENV === "production";
-
-  const accessPayload = decodeJwt(data.access);
-  const refreshPayload = decodeJwt(data.refresh);
-  const now = Math.floor(Date.now() / 1000);
-  const accessMaxAge = accessPayload ? accessPayload.exp - now : 60 * 60 * 24;
-  const refreshMaxAge = refreshPayload ? refreshPayload.exp - now : 60 * 60 * 24 * 7;
-
-  response.cookies.set("ze_access", data.access, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
-    maxAge: accessMaxAge,
-    path: "/",
-  });
-
-  response.cookies.set("ze_refresh", data.refresh, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
-    maxAge: refreshMaxAge,
-    path: "/",
-  });
+  setAuthCookies(response, data.access, data.refresh);
 
   return response;
 }
