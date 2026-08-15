@@ -68,6 +68,11 @@ function normalizePlan(d: DjangoPlan): Plan {
     monthly_price: Number(d.monthly_price),
     yearly_price: d.yearly_price ? Number(d.yearly_price) : null,
     is_active: d.is_active,
+    // Sem isto o card do trial nunca sabe que é trial: `is_trial` é opcional
+    // no tipo, então esquecê-lo aqui compila em silêncio e deixa o botão
+    // habilitado para quem já usou o teste — que então recebe um 400 do
+    // backend em vez do aviso na tela.
+    is_trial: d.is_trial,
     benefits: d.benefits.map((b) => ({
       id: b.id,
       benefit_id: b.benefit_id,
@@ -113,7 +118,10 @@ export async function getMyClinicPlan(): Promise<ClinicPlanInfo | null> {
         monthly_price: data.plan.monthly_price,
         yearly_price: data.plan.yearly_price,
         is_active: true,
-        is_trial: false,
+        // O `/subscriptions/me/` não devolve `is_trial` no plano; o status do
+        // ClinicPlan diz a mesma coisa. Chumbar `false` aqui era mentira em
+        // silêncio — hoje ninguém lê, e é assim que uma mentira sobrevive.
+        is_trial: data.status === "trial",
         benefits: [],
       }),
       hasUsedTrial: data.has_used_trial ?? false,
