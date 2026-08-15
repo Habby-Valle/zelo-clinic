@@ -205,14 +205,23 @@ aberto:
 
 ## Ordem sugerida
 
-1. Backend: endpoints `/stripe/clinic/*` + `sync_stripe_prices` no escopo clinic
-2. Decidir o trial (pergunta acima) — muda a vitrine
-3. `actions.ts`: novas actions, remover PIX, mover para `features/plan/services/`
-4. `plan-client.tsx`: checkout direto, cópia de proporcionalidade no cartão
-5. `manage-client.tsx`: Portal + histórico do `StripeInvoice`
-6. Renomear `asaas_*` → `gateway_*` nas duas pontas, mesmo PR
-7. Roteiro de testes espelhando o da família — inclusive ler a caixa de e-mail
-   a cada passo, que foi onde a família achou 10 dos 26 defeitos
+1. ~~Backend: endpoints `/stripe/clinic/*` + `sync_stripe_prices`~~ — **feito**
+2. Decidir o trial (pergunta acima) — **em aberto**; a implementação não o
+   quebrou: o plano "Trial" continua ativando localmente
+3. ~~`actions.ts`~~ — **feito**, com as chamadas em
+   `features/plan/services/clinic-billing.service.ts`
+4. ~~`plan-client.tsx`~~ — **feito**: checkout direto, sem modal de pagamento
+5. ~~`manage-client.tsx`~~ — **feito**: portal + histórico do `StripeInvoice`
+6. Renomear `asaas_*` → `gateway_*` — **adiado**. Os campos são do painel
+   super-admin, que não está nesta migração; passaram a ler o gateway vigente
+   mantendo o nome antigo. Renomear vira limpeza quando o Asaas sair.
+7. Roteiro de testes espelhando o da família — **pendente**; inclusive ler a
+   caixa de e-mail a cada passo, que foi onde a família achou 10 dos 26 defeitos
+
+### Antes de testar de ponta a ponta
+
+- Assinar `checkout.session.completed` no endpoint de webhook do Stripe.
+- No dashboard (Billing → Customer portal), deixar só **cartão** e **faturas**.
 
 ---
 
