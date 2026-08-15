@@ -51,6 +51,10 @@ export interface ClinicBilling {
 export interface SubscribeResult {
   checkout_url: string | null;
   plan_change: boolean;
+  /** Subiu de plano? Decide se a diferença é cobrada agora ou vira crédito. */
+  is_upgrade?: boolean;
+  /** Quanto o upgrade acabou de cobrar. Zero num downgrade. */
+  charged_now?: number;
   prorata_value?: number;
   next_charge_date?: string | null;
 }

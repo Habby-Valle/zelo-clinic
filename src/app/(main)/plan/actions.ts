@@ -205,6 +205,8 @@ export async function subscribeToPlan(planId: string): Promise<{
   error?: string;
   checkoutUrl?: string | null;
   planChange?: boolean;
+  isUpgrade?: boolean;
+  chargedNow?: number;
   prorataValue?: number;
   nextChargeDate?: string | null;
 }> {
@@ -216,6 +218,8 @@ export async function subscribeToPlan(planId: string): Promise<{
       success: true,
       checkoutUrl: data.checkout_url,
       planChange: data.plan_change,
+      isUpgrade: data.is_upgrade,
+      chargedNow: data.charged_now,
       prorataValue: data.prorata_value,
       nextChargeDate: data.next_charge_date ?? null,
     };

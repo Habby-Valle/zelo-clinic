@@ -401,6 +401,13 @@ export function PlanManagementClient({
   const hasPaidPlan =
     currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
 
+  // Subir e descer de plano cobram de formas diferentes, e o modal precisa
+  // dizer qual das duas antes de a pessoa confirmar. Quem decide de verdade é
+  // o backend, comparando os mesmos preços.
+  const changeTargetPlan = availablePlans.find((p) => p.id === changeTargetPlanId);
+  const isUpgradeTarget =
+    (changeTargetPlan?.monthly_price ?? 0) > (currentPlan.plan?.monthly_price ?? 0);
+
   /** Leva ao checkout do gateway — ou ativa na hora, se não houver cobrança. */
   async function startSubscription(planId: string) {
     if (subscribingRef.current) return;
@@ -420,9 +427,11 @@ export function PlanManagementClient({
       // proporcional é nativo do gateway.
       if (result.planChange) {
         toast.success("Plano alterado com sucesso!", {
-          description: result.prorataValue
-            ? `A diferença proporcional de ${formatPrice(result.prorataValue)} entra na próxima fatura.`
-            : "O novo plano já está valendo.",
+          description: result.chargedNow
+            ? `Cobramos ${formatPrice(result.chargedNow)} no seu cartão, referente aos dias que faltam deste ciclo.`
+            : result.isUpgrade === false
+              ? "O valor que sobrou do plano anterior vira crédito na sua próxima fatura."
+              : "O novo plano já está valendo.",
           icon: <CheckCircle className="h-5 w-5 text-green-500" />,
         });
         queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -535,11 +544,19 @@ export function PlanManagementClient({
       <AlertDialog open={showChangeDialog} onOpenChange={setShowChangeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Alterar plano</AlertDialogTitle>
+            <AlertDialogTitle>
+              {!hasPaidPlan
+                ? "Alterar plano"
+                : isUpgradeTarget
+                  ? "Mudar para um plano maior"
+                  : "Mudar para um plano menor"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {hasPaidPlan
-                ? "O novo plano passa a valer agora. A diferença proporcional aos dias que faltam deste ciclo entra na próxima fatura, e o valor cheio começa no ciclo seguinte."
-                : "Deseja alterar para este plano?"}
+              {!hasPaidPlan
+                ? "Deseja alterar para este plano?"
+                : isUpgradeTarget
+                  ? "O novo plano passa a valer agora, e a diferença proporcional aos dias que faltam deste ciclo é cobrada no seu cartão em seguida. A partir do próximo ciclo você paga o valor cheio do plano novo."
+                  : "O novo plano passa a valer agora. Nada é cobrado: o valor que sobra do plano atual vira crédito e abate a sua próxima fatura."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
