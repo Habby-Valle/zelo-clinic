@@ -11,7 +11,6 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  QrCode,
   Settings,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -36,7 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { requestPlanChange, asaasSubscribe, cancelSubscription, getMyClinicPlan } from "./actions";
+import { activateFreePlan, subscribeToPlan, cancelSubscription } from "./actions";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
 
 interface PlanCardProps {
@@ -359,25 +358,15 @@ export function PlanManagementClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [loadingPlanId] = useState<string | null>(null);
+  // Qual card está esperando resposta. Com o checkout hospedado o feedback
+  // importa mais do que antes: entre o clique e o redirect há uma ida ao
+  // servidor, e sem sinal a pessoa clica de novo.
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showChangeDialog, setShowChangeDialog] = useState(false);
   const [changeTargetPlanId, setChangeTargetPlanId] = useState<string | null>(null);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [subscribeResult, setSubscribeResult] = useState<{
-    pixQrCode?: string;
-    pixPayload?: string;
-    checkoutUrl?: string;
-    billingType?: string;
-    error?: string;
-    planChange?: boolean;
-    prorataValue?: number;
-  } | null>(null);
-  const [subscribing, setSubscribing] = useState(false);
-  const [pixConfirmed, setPixConfirmed] = useState(false);
   const subscribingRef = useRef(false);
   const hasUsedTrial = currentPlan.hasUsedTrial;
   const currentStatus = currentPlan.clinicPlan?.status;
@@ -409,53 +398,60 @@ export function PlanManagementClient({
     }
   }, [searchParams, router, queryClient]);
 
-  // Enquanto o QR PIX está na tela e o plano ainda não está ativo, consulta o
-  // status periodicamente até o webhook confirmar o pagamento e ativar a
-  // assinatura — então troca o QR por uma tela de sucesso.
-  useEffect(() => {
-    if (!showPaymentModal || !subscribeResult?.pixQrCode || pixConfirmed) return;
-    // Upgrade (plano já ativo) não gera transição clara de status; mantém o QR.
-    if (currentStatus === "active") return;
-
-    let cancelled = false;
-    const interval = setInterval(async () => {
-      const info = await getMyClinicPlan();
-      if (!cancelled && info?.clinicPlan?.status === "active") {
-        setPixConfirmed(true);
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        router.refresh();
-      }
-    }, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [
-    showPaymentModal,
-    subscribeResult?.pixQrCode,
-    pixConfirmed,
-    currentStatus,
-    queryClient,
-    router,
-  ]);
-
   const hasPaidPlan =
     currentPlan.clinicPlan?.status === "active" && (currentPlan.plan?.monthly_price ?? 0) > 0;
 
-  async function handleSubscribe(planId: string) {
-    const result = await requestPlanChange(planId);
-    if (!result.success) {
-      setError(result.error ?? "Erro ao processar");
-      toast.error(result.error ?? "Erro ao processar");
-      return;
-    }
+  /** Leva ao checkout do gateway — ou ativa na hora, se não houver cobrança. */
+  async function startSubscription(planId: string) {
+    if (subscribingRef.current) return;
+    subscribingRef.current = true;
+    setLoadingPlanId(planId);
 
-    if (result.billingType === null) {
-      // Sem plano: se tiver plano pago, pede confirmacao
-      if (hasPaidPlan) {
-        setChangeTargetPlanId(planId);
-        setShowChangeDialog(true);
+    try {
+      const result = await subscribeToPlan(planId);
+
+      if (!result.success) {
+        setError(result.error ?? "Erro ao processar");
+        toast.error(result.error ?? "Erro ao processar");
+        return;
+      }
+
+      // Troca de plano não passa pelo checkout: o cartão já está salvo e o
+      // proporcional é nativo do gateway.
+      if (result.planChange) {
+        toast.success("Plano alterado com sucesso!", {
+          description: result.prorataValue
+            ? `A diferença proporcional de ${formatPrice(result.prorataValue)} entra na próxima fatura.`
+            : "O novo plano já está valendo.",
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+        });
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        router.refresh();
+        return;
+      }
+
+      if (result.checkoutUrl) {
+        // Daqui em diante quem conduz é o Stripe. O acesso só é liberado
+        // quando o webhook confirmar — a volta com ?success=true apenas
+        // recarrega a tela.
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
+    } finally {
+      subscribingRef.current = false;
+      setLoadingPlanId(null);
+    }
+  }
+
+  async function handleSubscribe(planId: string) {
+    const activation = await activateFreePlan(planId);
+
+    if (activation.handled) {
+      if (!activation.success) {
+        setError(activation.error ?? "Erro ao processar");
+        toast.error(activation.error ?? "Erro ao processar");
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -464,62 +460,14 @@ export function PlanManagementClient({
       return;
     }
 
-    // Plano pago: se ja tem outro plano pago, pede confirmacao
+    // Já tem plano pago: a troca muda a cobrança, então confirma antes.
     if (hasPaidPlan) {
       setChangeTargetPlanId(planId);
       setShowChangeDialog(true);
       return;
     }
 
-    setSelectedPlanId(planId);
-    setSubscribeResult(null);
-    setShowPaymentModal(true);
-  }
-
-  async function handlePaymentChoice(billingType: "PIX" | "CREDIT_CARD") {
-    if (!selectedPlanId || subscribingRef.current) return;
-    subscribingRef.current = true;
-    setSubscribing(true);
-    setSubscribeResult(null);
-    setPixConfirmed(false);
-
-    try {
-      const result = await asaasSubscribe(selectedPlanId, billingType, "MONTHLY");
-
-      if (!result.success) {
-        setSubscribeResult({ error: result.error });
-        return;
-      }
-
-      if (result.billingType === "CREDIT_CARD" && result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
-        return;
-      }
-
-      // Downgrade: sem cobrança agora — passa a valer no próximo ciclo.
-      if (result.scheduled) {
-        setShowPaymentModal(false);
-        setSubscribeResult(null);
-        toast.success("Alteração de plano agendada", {
-          description: "O novo plano passa a valer no próximo ciclo de cobrança.",
-          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-        });
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        router.refresh();
-        return;
-      }
-
-      setSubscribeResult({
-        pixQrCode: result.pixQrCode,
-        pixPayload: result.pixPayload,
-        billingType: result.billingType,
-        planChange: result.planChange,
-        prorataValue: result.prorataValue,
-      });
-    } finally {
-      setSubscribing(false);
-      subscribingRef.current = false;
-    }
+    await startSubscription(planId);
   }
 
   async function handleCancelConfirm() {
@@ -583,180 +531,6 @@ export function PlanManagementClient({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Payment Method Modal */}
-      <Dialog
-        open={showPaymentModal}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowPaymentModal(false);
-            setSubscribeResult(null);
-            setPixConfirmed(false);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Forma de Pagamento</DialogTitle>
-            <DialogDescription>Escolha como deseja pagar sua assinatura.</DialogDescription>
-          </DialogHeader>
-
-          {subscribeResult?.error && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {subscribeResult.error}
-            </div>
-          )}
-
-          {subscribeResult?.pixQrCode ? (
-            pixConfirmed ? (
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
-                <CheckCircle className="h-14 w-14 text-green-500" />
-                <div>
-                  <p className="text-lg font-semibold">Pagamento confirmado!</p>
-                  <p className="text-sm text-muted-foreground">
-                    Sua assinatura foi ativada com sucesso.
-                  </p>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    setSubscribeResult(null);
-                    setPixConfirmed(false);
-                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                    router.refresh();
-                  }}
-                >
-                  Concluir
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
-                  <QrCode className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="font-medium">Pagamento via PIX</p>
-                    <p className="text-sm text-muted-foreground">
-                      Escaneie o QR Code ou copie o código abaixo.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`data:image/png;base64,${subscribeResult.pixQrCode}`}
-                    alt="QR Code PIX"
-                    className="h-48 w-48"
-                  />
-                </div>
-                {subscribeResult.pixPayload && (
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">
-                      Código PIX (copia e cola)
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
-                        value={subscribeResult.pixPayload}
-                        readOnly
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(subscribeResult.pixPayload!);
-                          toast.success("Código PIX copiado!");
-                        }}
-                      >
-                        Copiar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {subscribeResult.planChange && subscribeResult.prorataValue ? (
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                    Valor proporcional do upgrade, referente aos dias restantes do ciclo atual:{" "}
-                    <strong>
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(subscribeResult.prorataValue)}
-                    </strong>
-                    . O novo plano já está ativo; o valor cheio passa a ser cobrado no próximo
-                    ciclo.
-                  </p>
-                ) : null}
-
-                {!subscribeResult.planChange && (
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Aguardando confirmação do pagamento…
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    setSubscribeResult(null);
-                    setPixConfirmed(false);
-                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                    router.refresh();
-                  }}
-                >
-                  Fechar
-                </Button>
-              </div>
-            )
-          ) : (
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="h-14 w-full justify-start gap-3"
-                onClick={() => handlePaymentChoice("PIX")}
-                disabled={subscribing}
-              >
-                <QrCode className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">PIX</p>
-                  <p className="text-xs text-muted-foreground">Pagamento instantâneo via QR Code</p>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-14 w-full justify-start gap-3"
-                onClick={() => handlePaymentChoice("CREDIT_CARD")}
-                disabled={subscribing}
-              >
-                <CreditCard className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">Cartão de Crédito</p>
-                  <p className="text-xs text-muted-foreground">
-                    Pagamento via checkout seguro ASAAS
-                  </p>
-                </div>
-              </Button>
-              {subscribing && (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processando...
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setSubscribeResult(null);
-                }}
-              >
-                Cancelar
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Change plan confirmation */}
       <AlertDialog open={showChangeDialog} onOpenChange={setShowChangeDialog}>
         <AlertDialogContent>
@@ -764,7 +538,7 @@ export function PlanManagementClient({
             <AlertDialogTitle>Alterar plano</AlertDialogTitle>
             <AlertDialogDescription>
               {hasPaidPlan
-                ? "Você já possui um plano pago ativo. Ao alterar, a diferença proporcional dos dias restantes do ciclo atual será cobrada no PIX (se aplicável). Deseja continuar?"
+                ? "O novo plano passa a valer agora. A diferença proporcional aos dias que faltam deste ciclo entra na próxima fatura, e o valor cheio começa no ciclo seguinte."
                 : "Deseja alterar para este plano?"}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -774,24 +548,7 @@ export function PlanManagementClient({
               onClick={() => {
                 setShowChangeDialog(false);
                 const pid = changeTargetPlanId;
-                if (!pid) return;
-                const resultPromise = requestPlanChange(pid);
-                resultPromise.then((result) => {
-                  if (!result.success) {
-                    setError(result.error ?? "Erro ao processar");
-                    toast.error(result.error ?? "Erro ao processar");
-                    return;
-                  }
-                  if (result.billingType === null) {
-                    queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                    toast.success("Plano alterado com sucesso!");
-                    router.refresh();
-                  } else {
-                    setSelectedPlanId(pid);
-                    setSubscribeResult(null);
-                    setShowPaymentModal(true);
-                  }
-                });
+                if (pid) void startSubscription(pid);
               }}
             >
               Continuar
