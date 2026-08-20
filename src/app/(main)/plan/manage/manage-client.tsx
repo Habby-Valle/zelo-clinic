@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CreditCard,
-  QrCode,
   AlertCircle,
   Loader2,
   ChevronLeft,
   History,
-  CheckCircle,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,27 +22,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { formatDate } from "@/lib/format";
-import {
-  getPlanPaymentPix,
-  manageGetClinic,
-  cancelSubscription,
-  type PlanPayment,
-} from "../actions";
+import { cancelSubscription, openBillingPortal } from "../actions";
+import type {
+  GatewaySubscription,
+  PlanPayment,
+} from "@/features/plan/services/clinic-billing.service";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Pago",
   pending: "Pendente",
   overdue: "Vencido",
+  canceled: "Cancelado",
   refunded: "Estornado",
-  chargeback: "Chargeback",
 };
 
 const PAYMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> =
@@ -51,8 +42,8 @@ const PAYMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destruc
     paid: "default",
     pending: "secondary",
     overdue: "destructive",
+    canceled: "outline",
     refunded: "outline",
-    chargeback: "destructive",
   };
 
 function formatBRL(value: string) {
@@ -63,11 +54,7 @@ function formatBRL(value: string) {
 
 interface ManageSubscriptionClientProps {
   clinicName: string;
-  subscription: {
-    asaas_subscription_id: string;
-    billing_type: string;
-    status: string;
-  } | null;
+  subscription: GatewaySubscription | null;
   payments: PlanPayment[];
 }
 
@@ -78,59 +65,7 @@ export function ManageSubscriptionClient({
 }: ManageSubscriptionClientProps) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
-  const [pixPayment, setPixPayment] = useState<PlanPayment | null>(null);
-  const [pixData, setPixData] = useState<{ pixQrCode: string; pixPayload: string } | null>(null);
-  const [pixLoading, setPixLoading] = useState(false);
-  const [pixError, setPixError] = useState<string | null>(null);
-  const [pixPaid, setPixPaid] = useState(false);
-
-  async function openPix(payment: PlanPayment) {
-    setPixPayment(payment);
-    setPixData(null);
-    setPixError(null);
-    setPixPaid(false);
-    setPixLoading(true);
-    const data = await getPlanPaymentPix(payment.id);
-    if (data && data.pixQrCode) {
-      setPixData(data);
-    } else {
-      setPixError("Não foi possível carregar o PIX. Tente novamente em instantes.");
-    }
-    setPixLoading(false);
-  }
-
-  function closePix() {
-    setPixPayment(null);
-    setPixData(null);
-    setPixError(null);
-    setPixPaid(false);
-    router.refresh();
-  }
-
-  // Enquanto o modal do PIX está aberto, verifica se o pagamento foi confirmado
-  // (via webhook) para trocar o QR por uma tela de sucesso.
-  useEffect(() => {
-    if (!pixPayment || pixPaid) return;
-    let cancelled = false;
-    const interval = setInterval(async () => {
-      const clinic = await manageGetClinic();
-      const updated = clinic?.payments.find((p) => p.id === pixPayment.id);
-      if (!cancelled && updated?.status === "paid") {
-        setPixPaid(true);
-      }
-    }, 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [pixPayment, pixPaid]);
-
-  const billingTypeLabel =
-    subscription?.billing_type === "PIX"
-      ? "PIX"
-      : subscription?.billing_type === "CREDIT_CARD"
-        ? "Cartão de Crédito"
-        : (subscription?.billing_type ?? "—");
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   const statusLabel =
     subscription?.status === "active"
@@ -146,9 +81,27 @@ export function ManageSubscriptionClient({
       ? "default"
       : subscription?.status === "past_due"
         ? "destructive"
-        : subscription?.status === "canceled"
-          ? "outline"
-          : "outline";
+        : "outline";
+
+  const periodEnd = subscription?.current_period_end
+    ? formatDate(subscription.current_period_end)
+    : "—";
+
+  /** O portal do Stripe cuida da troca de cartão e das faturas.
+   *
+   *  Cancelamento e troca de plano ficam de fora dele de propósito: passam
+   *  pelas nossas telas, que é onde estão o aviso no ato e as regras de
+   *  proporcionalidade. */
+  async function handleChangeCard() {
+    setOpeningPortal(true);
+    const res = await openBillingPortal();
+    if (res.success && res.portalUrl) {
+      window.location.href = res.portalUrl;
+      return;
+    }
+    toast.error(res.error ?? "Não foi possível abrir o gerenciamento de pagamento");
+    setOpeningPortal(false);
+  }
 
   async function handleCancel() {
     if (
@@ -176,7 +129,7 @@ export function ManageSubscriptionClient({
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gerenciar Assinatura</h1>
-          <p className="text-muted-foreground">Detalhes da sua assinatura ASAAS.</p>
+          <p className="text-muted-foreground">Forma de pagamento e histórico de cobranças.</p>
         </div>
       </div>
 
@@ -186,7 +139,7 @@ export function ManageSubscriptionClient({
             <AlertCircle className="h-8 w-8 text-muted-foreground" />
             <p className="font-medium">Nenhuma assinatura ativa</p>
             <p className="text-sm text-muted-foreground">
-              Você ainda não possui uma assinatura ASAAS ativa.
+              Sua clínica ainda não possui uma assinatura em andamento.
             </p>
             <Button onClick={() => router.push("/plan")}>Ver planos</Button>
           </CardContent>
@@ -195,15 +148,11 @@ export function ManageSubscriptionClient({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {subscription.billing_type === "PIX" ? (
-                <QrCode className="h-5 w-5" />
-              ) : (
-                <CreditCard className="h-5 w-5" />
-              )}
-              Assinatura ASAAS
+              <CreditCard className="h-5 w-5" />
+              Assinatura
             </CardTitle>
             <CardDescription>
-              Gerencie sua assinatura de plano diretamente pelo ASAAS.
+              A cobrança é mensal, no cartão, e renova sozinha até você cancelar.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -217,22 +166,40 @@ export function ManageSubscriptionClient({
                 <Badge variant={statusVariant}>{statusLabel}</Badge>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Método</p>
-                <p className="font-medium">{billingTypeLabel}</p>
+                <p className="text-xs text-muted-foreground">Plano</p>
+                <p className="font-medium">{subscription.plan_name ?? "—"}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">ID Assinatura</p>
-                <p className="font-mono text-xs">{subscription.asaas_subscription_id}</p>
+                <p className="text-xs text-muted-foreground">
+                  {subscription.cancel_at_period_end ? "Acesso até" : "Próxima cobrança"}
+                </p>
+                <p className="font-medium">{periodEnd}</p>
               </div>
             </div>
 
-            <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
-              <p className="font-medium">Trocar forma de pagamento</p>
-              <p className="mt-1">
-                Para mudar entre PIX e cartão, cancele a assinatura atual e assine novamente
-                escolhendo o novo método. Em caso de dúvidas, fale com o suporte.
-              </p>
-            </div>
+            {subscription.cancel_at_period_end && (
+              <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>
+                  Assinatura cancelada. Você mantém acesso aos recursos pagos até {periodEnd} e não
+                  haverá nova cobrança.
+                </p>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleChangeCard}
+              disabled={openingPortal}
+            >
+              {openingPortal ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="mr-2 h-4 w-4" />
+              )}
+              Atualizar forma de pagamento
+            </Button>
 
             {payments.length > 0 && (
               <div className="space-y-2">
@@ -240,15 +207,15 @@ export function ManageSubscriptionClient({
                   <History className="h-4 w-4" />
                   Histórico de Pagamentos
                 </h3>
-                <div className="rounded-md border">
+                <div className="overflow-x-auto rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Data</TableHead>
                         <TableHead>Valor</TableHead>
-                        <TableHead>Forma</TableHead>
+                        <TableHead>Recibo</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ação</TableHead>
+                        <TableHead className="text-right">Fatura</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -260,12 +227,8 @@ export function ManageSubscriptionClient({
                           <TableCell className="text-sm font-medium">
                             {formatBRL(p.amount)}
                           </TableCell>
-                          <TableCell className="text-sm">
-                            {p.payment_method === "PIX"
-                              ? "PIX"
-                              : p.payment_method === "CREDIT_CARD"
-                                ? "Cartão"
-                                : p.payment_method || "—"}
+                          <TableCell className="font-mono text-xs">
+                            {p.receipt_number ?? "—"}
                           </TableCell>
                           <TableCell>
                             <Badge variant={PAYMENT_STATUS_VARIANTS[p.status] ?? "outline"}>
@@ -273,16 +236,16 @@ export function ManageSubscriptionClient({
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {/* Só permite pagar cobrança já vencida ou que vence
-                                hoje — cobranças de ciclos futuros não devem ser
-                                pagas adiantado (adiantaria o ciclo). */}
-                            {(p.status === "overdue" ||
-                              (p.status === "pending" &&
-                                p.due_date <= new Date().toLocaleDateString("en-CA"))) &&
-                            (p.payment_method === "PIX" || subscription?.billing_type === "PIX") ? (
-                              <Button variant="outline" size="sm" onClick={() => openPix(p)}>
-                                <QrCode className="mr-1 h-3 w-3" />
-                                Pagar
+                            {p.hosted_invoice_url ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  window.open(p.hosted_invoice_url, "_blank", "noopener")
+                                }
+                              >
+                                <ExternalLink className="mr-1 h-3 w-3" />
+                                Ver
                               </Button>
                             ) : null}
                           </TableCell>
@@ -294,7 +257,7 @@ export function ManageSubscriptionClient({
               </div>
             )}
 
-            {subscription.status === "active" && (
+            {subscription.status === "active" && !subscription.cancel_at_period_end && (
               <Button
                 variant="destructive"
                 className="w-full"
@@ -308,82 +271,6 @@ export function ManageSubscriptionClient({
           </CardContent>
         </Card>
       )}
-
-      <Dialog
-        open={!!pixPayment}
-        onOpenChange={(open) => {
-          if (!open) closePix();
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Pagar via PIX</DialogTitle>
-            <DialogDescription>
-              {pixPayment ? `Cobrança de ${formatBRL(pixPayment.amount)}` : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          {pixPaid ? (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <CheckCircle className="h-14 w-14 text-green-500" />
-              <div>
-                <p className="text-lg font-semibold">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground">Sua assinatura está em dia.</p>
-              </div>
-              <Button className="w-full" onClick={closePix}>
-                Concluir
-              </Button>
-            </div>
-          ) : pixLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando PIX…
-            </div>
-          ) : pixError ? (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {pixError}
-            </div>
-          ) : pixData ? (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`data:image/png;base64,${pixData.pixQrCode}`}
-                  alt="QR Code PIX"
-                  className="h-48 w-48"
-                />
-              </div>
-              {pixData.pixPayload && (
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Código PIX (copia e cola)</label>
-                  <div className="flex gap-2">
-                    <input
-                      className="flex-1 rounded-lg border bg-muted px-3 py-2 font-mono text-xs"
-                      value={pixData.pixPayload}
-                      readOnly
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(pixData.pixPayload);
-                        toast.success("Código PIX copiado!");
-                      }}
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Aguardando confirmação do pagamento…
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

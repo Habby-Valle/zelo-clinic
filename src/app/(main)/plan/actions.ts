@@ -2,7 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { apiFetchServer } from "@/lib/api";
+import {
+  cancelClinicSubscription,
+  createCheckoutSession,
+  createPortalSession,
+  getClinicBilling,
+  type GatewaySubscription,
+  type PlanPayment,
+} from "@/features/plan/services/clinic-billing.service";
 import type { Plan, ClinicPlan } from "@/features/plan/types";
+
+// Os tipos não são reexportados daqui: num módulo "use server" todo export
+// vira uma action, e reexportar tipo quebra o build. Quem precisa importa do
+// serviço — `import type` some na compilação, então o cliente não carrega
+// nada do servidor junto.
 
 // ─── Django API Types ─────────────────────────────────────────────────────────
 
@@ -55,6 +68,11 @@ function normalizePlan(d: DjangoPlan): Plan {
     monthly_price: Number(d.monthly_price),
     yearly_price: d.yearly_price ? Number(d.yearly_price) : null,
     is_active: d.is_active,
+    // Sem isto o card do trial nunca sabe que é trial: `is_trial` é opcional
+    // no tipo, então esquecê-lo aqui compila em silêncio e deixa o botão
+    // habilitado para quem já usou o teste — que então recebe um 400 do
+    // backend em vez do aviso na tela.
+    is_trial: d.is_trial,
     benefits: d.benefits.map((b) => ({
       id: b.id,
       benefit_id: b.benefit_id,
@@ -100,7 +118,10 @@ export async function getMyClinicPlan(): Promise<ClinicPlanInfo | null> {
         monthly_price: data.plan.monthly_price,
         yearly_price: data.plan.yearly_price,
         is_active: true,
-        is_trial: false,
+        // O `/subscriptions/me/` não devolve `is_trial` no plano; o status do
+        // ClinicPlan diz a mesma coisa. Chumbar `false` aqui era mentira em
+        // silêncio — hoje ninguém lê, e é assim que uma mentira sobrevive.
+        is_trial: data.status === "trial",
         benefits: [],
       }),
       hasUsedTrial: data.has_used_trial ?? false,
@@ -132,148 +153,111 @@ export async function arePlansEnabled(): Promise<boolean> {
   }
 }
 
-export async function requestPlanChange(planId: string): Promise<{
+/** Ativa um plano sem cobrança (trial).
+ *
+ *  Não passa por gateway porque não há o que cobrar: o trial da clínica é um
+ *  plano próprio de R$ 0, e não dias de teste sobre um plano pago como no
+ *  familiar. Devolve `handled: false` quando o plano é pago — aí quem assume é
+ *  o `subscribeToPlan`. */
+export async function activateFreePlan(planId: string): Promise<{
   success: boolean;
+  handled: boolean;
   error?: string;
-  checkoutUrl?: string;
-  pixQrCode?: string;
-  pixPayload?: string;
-  billingType?: "PIX" | "CREDIT_CARD" | null;
 }> {
   let targetPlan: DjangoPlan | null = null;
   try {
     const data = await apiFetchServer<DjangoPlanList>(`/plans/?page_size=100&scope=clinic`);
     targetPlan = (data.results ?? []).find((p) => String(p.id) === planId) ?? null;
   } catch {
-    return { success: false, error: "Plano não encontrado" };
+    return { success: false, handled: true, error: "Plano não encontrado" };
   }
 
-  if (!targetPlan) return { success: false, error: "Plano não encontrado" };
+  if (!targetPlan) return { success: false, handled: true, error: "Plano não encontrado" };
 
-  const isFreeOrTrial = Number(targetPlan.monthly_price) === 0 || targetPlan.is_trial;
-
-  if (isFreeOrTrial) {
-    try {
-      const endpoint = targetPlan.is_trial
-        ? "/subscriptions/me/activate-trial/"
-        : "/subscriptions/me/activate-free/";
-
-      await apiFetchServer(endpoint, {
-        method: "POST",
-        body: JSON.stringify({ plan_id: targetPlan.id }),
-      });
-      revalidatePath("/plan");
-      revalidatePath("/dashboard");
-      return { success: true, billingType: null };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro ao ativar plano";
-      return { success: false, error: msg };
-    }
+  // Só o trial entra aqui. O plano "Gratuito" foi removido do catálogo — a
+  // clínica nasce sem plano —, então não há mais um caminho de ativação sem
+  // cobrança fora do teste.
+  if (!targetPlan.is_trial) {
+    return { success: true, handled: false };
   }
 
-  return { success: true };
+  try {
+    await apiFetchServer("/subscriptions/me/activate-trial/", {
+      method: "POST",
+      body: JSON.stringify({ plan_id: targetPlan.id }),
+    });
+    revalidatePath("/plan");
+    revalidatePath("/dashboard");
+    return { success: true, handled: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Erro ao ativar plano";
+    return { success: false, handled: true, error: msg };
+  }
 }
 
-export async function asaasSubscribe(
-  planId: string,
-  billingType: "PIX" | "CREDIT_CARD",
-  billingCycle: "MONTHLY" | "QUARTERLY" | "YEARLY"
-): Promise<{
+/** Assina um plano pago.
+ *
+ *  Devolve a URL do checkout hospedado — quem cobra o cartão é o gateway, numa
+ *  página dele. Trocar de plano não passa por lá: já existe cartão salvo e o
+ *  proporcional é nativo, então a resposta volta com `planChange`. */
+export async function subscribeToPlan(planId: string): Promise<{
   success: boolean;
   error?: string;
-  checkoutUrl?: string;
-  pixQrCode?: string;
-  pixPayload?: string;
-  billingType?: "PIX" | "CREDIT_CARD";
+  checkoutUrl?: string | null;
   planChange?: boolean;
-  scheduled?: boolean;
+  isUpgrade?: boolean;
+  chargedNow?: number;
   prorataValue?: number;
+  nextChargeDate?: string | null;
 }> {
   try {
-    const data = await apiFetchServer<{
-      subscription_id: string;
-      checkout_url?: string;
-      pix_qr_code?: string;
-      pix_payload?: string;
-      billing_type: "PIX" | "CREDIT_CARD";
-      plan_change?: boolean;
-      scheduled?: boolean;
-      prorata_value?: number;
-    }>("/asaas/plans/subscribe/", {
-      method: "POST",
-      body: JSON.stringify({
-        plan_id: planId,
-        billing_type: billingType,
-        billing_cycle: billingCycle,
-      }),
-    });
+    const data = await createCheckoutSession(planId);
     revalidatePath("/plan");
     revalidatePath("/dashboard");
     return {
       success: true,
       checkoutUrl: data.checkout_url,
-      pixQrCode: data.pix_qr_code,
-      pixPayload: data.pix_payload,
-      billingType: data.billing_type,
       planChange: data.plan_change,
-      scheduled: data.scheduled,
+      isUpgrade: data.is_upgrade,
+      chargedNow: data.charged_now,
       prorataValue: data.prorata_value,
+      nextChargeDate: data.next_charge_date ?? null,
     };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Erro ao criar assinatura";
+    const msg = err instanceof Error ? err.message : "Erro ao iniciar a assinatura";
     return { success: false, error: msg };
   }
 }
 
-export interface PlanPayment {
-  id: string;
-  asaas_payment_id: string;
-  amount: string;
-  status: string;
-  payment_method: string;
-  paid_at: string | null;
-  due_date: string;
-  created_at: string;
-}
-
-export async function getPlanPaymentPix(
-  paymentId: string
-): Promise<{ pixQrCode: string; pixPayload: string } | null> {
+/** Abre o portal de cobrança para trocar o cartão. */
+export async function openBillingPortal(): Promise<{
+  success: boolean;
+  error?: string;
+  portalUrl?: string;
+}> {
   try {
-    const data = await apiFetchServer<{ pix_qr_code: string; pix_payload: string }>(
-      `/asaas/plan-payments/${paymentId}/pix/`
-    );
-    return { pixQrCode: data.pix_qr_code, pixPayload: data.pix_payload };
-  } catch {
-    return null;
+    const { portal_url } = await createPortalSession();
+    return { success: true, portalUrl: portal_url };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Erro ao abrir o gerenciamento";
+    return { success: false, error: msg };
   }
 }
 
 export async function manageGetClinic(): Promise<{
   id: string;
   name: string;
-  subscription: {
-    asaas_subscription_id: string;
-    billing_type: string;
-    status: string;
-  } | null;
+  subscription: GatewaySubscription | null;
   payments: PlanPayment[];
 } | null> {
   try {
     const clinicData = await apiFetchServer<{ id: string; name: string }>("/clinics/me/");
-    const subData = await apiFetchServer<{
-      subscription: {
-        asaas_subscription_id: string;
-        billing_type: string;
-        status: string;
-      } | null;
-      payments: PlanPayment[];
-    }>("/asaas/plans/me/");
+    const billing = await getClinicBilling();
     return {
       id: clinicData.id,
       name: clinicData.name,
-      subscription: subData.subscription ?? null,
-      payments: subData.payments ?? [],
+      subscription: billing.subscription,
+      payments: billing.payments,
     };
   } catch {
     return null;
@@ -285,7 +269,7 @@ export async function cancelSubscription(): Promise<{
   error?: string;
 }> {
   try {
-    await apiFetchServer("/asaas/plans/cancel/", { method: "POST" });
+    await cancelClinicSubscription();
     revalidatePath("/plan");
     revalidatePath("/dashboard");
     return { success: true };
